@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+:root {
+  /* Colors */
+  --midnight: #0B1623;
+  --royal-blue: #152C45;
+  --gold-leaf: #D4AF37;
+  --gold-light: #F3E5AB;
+  --marble: #F9F9F9;
+  --text-dark: #1A1A1A;
+  --text-grey: #4A4A4A;
+  
+  /* Status Colors */
+  --success: #4ADE80;
+  --warning: #FBBF24;
+  --danger: #F87171;
+}
+
+@theme inline {
+  /* Color System */
+  --color-midnight: var(--midnight);
+  --color-royal-blue: var(--royal-blue);
+  --color-gold-leaf: var(--gold-leaf);
+  --color-gold-light: var(--gold-light);
+  --color-marble: var(--marble);
+  --color-text-dark: var(--text-dark);
+  --color-text-grey: var(--text-grey);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  
+  /* Font System */
+  --font-heading: var(--font-heading);
+  --font-body: var(--font-body);
+  
+  /* Spacing (4px base unit) */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+  --spacing-4xl: 80px;
+}
+
+body {
+  background: var(--midnight);
+  color: rgba(255, 255, 255, 1);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+/* Typography Utilities */
+.font-heading {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+/* Heading Styles */
+h1 {
+  font-family: var(--font-heading);
+  font-size: 60px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+h2 {
+  font-family: var(--font-heading);
+  font-size: 48px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+h3 {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+h4 {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* Container */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
