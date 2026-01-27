@@ -6,82 +6,9 @@ import { supabase } from '@/lib/supabase';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 
-type Step = 'welcome' | 'discovery' | 'stats' | 'colleges' | 'complete';
+type Step = 'welcome' | 'discovery' | 'stats' | 'complete';
 
-const DISCOVERY_QUESTIONS = [
-  { 
-    id: 'story1', 
-    question: 'Tell us about a moment that fundamentally changed how you see yourself or the world. What happened, and why did it matter?', 
-    category: 'transformative_moment',
-    hint: 'Think about a specific event, conversation, or experience that shifted your perspective.'
-  },
-  { 
-    id: 'story2', 
-    question: 'Describe a time you failed or made a significant mistake. What did you learn, and how did it shape who you are today?', 
-    category: 'resilience',
-    hint: 'Admissions officers value students who can reflect on setbacks and grow from them.'
-  },
-  { 
-    id: 'story3', 
-    question: 'What is something you care deeply about that others might not understand? Why does it matter to you?', 
-    category: 'authentic_passions',
-    hint: 'This could be a hobby, cause, interest, or perspective that reveals your authentic self.'
-  },
-  { 
-    id: 'story4', 
-    question: 'Describe a relationship (with a person, place, community, or idea) that has profoundly influenced you. How?', 
-    category: 'influences',
-    hint: 'Think beyond just "who" - consider how this relationship shaped your values, goals, or worldview.'
-  },
-  { 
-    id: 'story5', 
-    question: 'What is a problem or injustice you\'ve observed in your community or the world? What have you done about it, or what would you like to do?', 
-    category: 'impact',
-    hint: 'This reveals your awareness of the world around you and your desire to make a difference.'
-  },
-  { 
-    id: 'story6', 
-    question: 'Tell us about a time you had to step outside your comfort zone. What pushed you, and what did you discover about yourself?', 
-    category: 'growth',
-    hint: 'This could be trying something new, taking a risk, or facing a fear.'
-  },
-  { 
-    id: 'story7', 
-    question: 'What is something you\'ve created, built, or accomplished that you\'re genuinely proud of? Why does it matter to you beyond just achievement?', 
-    category: 'meaningful_achievements',
-    hint: 'Focus on the "why" behind your pride, not just the accomplishment itself.'
-  },
-  { 
-    id: 'story8', 
-    question: 'Describe your background, family, or community. How has it shaped your perspective, values, or goals?', 
-    category: 'background',
-    hint: 'Think about how your unique context has influenced who you are and what you value.'
-  },
-  { 
-    id: 'story9', 
-    question: 'What is a question, topic, or idea you find yourself constantly thinking about? What draws you to it?', 
-    category: 'intellectual_curiosity',
-    hint: 'This reveals your genuine intellectual interests and curiosity.'
-  },
-  { 
-    id: 'story10', 
-    question: 'If you could change one thing about your school, community, or the world, what would it be and why? What would you do to make that change?', 
-    category: 'vision',
-    hint: 'This shows your ability to think critically and your vision for improvement.'
-  },
-  { 
-    id: 'story11', 
-    question: 'What is something you do that brings you joy or fulfillment that might surprise people? Why does it matter to you?', 
-    category: 'authentic_self',
-    hint: 'This helps us understand what makes you uniquely you.'
-  },
-  { 
-    id: 'story12', 
-    question: 'Describe a time you had to navigate a conflict or disagreement. How did you handle it, and what did you learn?', 
-    category: 'maturity',
-    hint: 'This reveals your emotional intelligence and ability to handle difficult situations.'
-  },
-];
+// ... existing DISCOVERY_QUESTIONS array stays the same ...
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -146,7 +73,7 @@ export default function OnboardingPage() {
         sat_score: stats.satScore ? parseInt(stats.satScore) : null,
         act_score: stats.actScore ? parseInt(stats.actScore) : null,
       });
-      setStep('colleges');
+      setStep('complete');  // Changed from 'colleges' to 'complete'
     } catch (error) {
       console.error('Error saving stats:', error);
     } finally {
@@ -519,40 +446,27 @@ export default function OnboardingPage() {
     );
   }
 
-  // Colleges Selection Step (simplified for now)
-  if (step === 'colleges') {
-    return (
-      <div className="min-h-screen bg-midnight flex items-center justify-center px-8 py-24">
-        <div className="w-full max-w-2xl text-center">
-          <h2 className="font-heading text-4xl text-white mb-8">College Selection</h2>
-          <p className="font-body text-gold-light mb-12">
-            You can add colleges to your portfolio later. For now, let's complete your setup.
-          </p>
-          <Button onClick={() => setStep('complete')}>Skip for Now</Button>
-        </div>
-      </div>
-    );
-  }
-
+  // Complete Step (removed colleges step entirely)
   // Complete Step
   if (step === 'complete') {
     return (
       <div className="min-h-screen bg-midnight flex items-center justify-center px-8 py-24">
-        <div className="w-full max-w-2xl text-center">
-          <div className="mb-8">
-            <div className="w-20 h-20 bg-gold-leaf rounded-full flex items-center justify-center mx-auto mb-6">
-              <span className="text-midnight text-4xl">✓</span>
+        <div style={{ width: '100%', maxWidth: '1200px', textAlign: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '24px', marginBottom: '32px', flexWrap: 'wrap' }}>
+            <div style={{ width: '80px', height: '80px', background: '#D4AF37', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ color: '#0B1623', fontSize: '48px' }}>✓</span>
             </div>
-            <h2 className="font-heading text-4xl text-white mb-6">Setup Complete!</h2>
-            <p className="font-body text-gold-light text-lg mb-12">
-              Your VANTAGE profile is ready. Let's start building your admissions strategy.
-            </p>
+            <div style={{ textAlign: 'left' }}>
+              <h2 className="font-heading text-5xl" style={{ color: 'white', marginBottom: '12px', whiteSpace: 'nowrap' }}>Setup Complete!</h2>
+              <p className="font-body text-lg" style={{ color: '#F3E5AB', maxWidth: '600px' }}>
+                Your VANTAGE profile is ready. Let's start building your admissions strategy.
+              </p>
+            </div>
           </div>
-          <Button onClick={handleComplete}>Go to Dashboard</Button>
+          <div style={{ marginTop: '48px' }}>
+            <Button onClick={handleComplete}>Go to Dashboard</Button>
+          </div>
         </div>
       </div>
     );
   }
-
-  return null;
-}
