@@ -200,6 +200,10 @@ export default function CommonAppEssayPage() {
         setIsOwner(essayData.user_id === user.id);
         setHasPermission(true);
         loadVersions(essayData.id);
+      } else {
+        // No essay yet – current user can create one
+        setIsOwner(true);
+        setHasPermission(true);
       }
     } catch (error) {
       console.error('Error loading data:', error);

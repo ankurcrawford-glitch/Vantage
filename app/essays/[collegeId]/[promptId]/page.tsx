@@ -213,32 +213,24 @@ export default function EssayWritingPage() {
         return;
       }
 
-      // Check if essay exists
+      // Check if essay exists (use maybeSingle so no error when no row)
       const { data: essayData } = await supabase
         .from('essays')
         .select('id, user_id')
+        .eq('user_id', user.id)
         .eq('college_prompt_id', promptId)
-        .single();
+        .maybeSingle();
 
       if (essayData) {
         setEssayId(essayData.id);
         setEssayOwnerId(essayData.user_id);
-        
-        if (essayData.user_id === user.id) {
-          setIsOwner(true);
-          setHasPermission(true);
-        } else {
-          const { data: permissionData } = await supabase
-            .from('essay_permissions')
-            .select('*')
-            .eq('essay_id', essayData.id)
-            .eq('user_id', user.id)
-            .single();
-          
-          setHasPermission(!!permissionData);
-        }
-
+        setIsOwner(true);
+        setHasPermission(true);
         loadVersions(essayData.id);
+      } else {
+        // No essay yet – current user is the “owner” and can create one
+        setIsOwner(true);
+        setHasPermission(true);
       }
     } catch (error) {
       console.error('Error loading data:', error);
