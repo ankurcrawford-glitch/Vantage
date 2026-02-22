@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Card from '@/components/Card';
@@ -50,6 +50,7 @@ interface Invitation {
 export default function EssayWritingPage() {
   const params = useParams();
   const router = useRouter();
+  const pathname = usePathname();
   const collegeId = params.collegeId as string;
   const promptId = params.promptId as string;
 
@@ -80,6 +81,8 @@ export default function EssayWritingPage() {
   const [showThinkingPartner, setShowThinkingPartner] = useState(false);
   const [thinkingPartnerResponse, setThinkingPartnerResponse] = useState<string | null>(null);
   const [loadingThinkingPartner, setLoadingThinkingPartner] = useState(false);
+
+  const [hasSubscription, setHasSubscription] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -165,6 +168,24 @@ export default function EssayWritingPage() {
         return;
       }
 
+      // Subscription required for essay writing
+      let subscribed = false;
+      try {
+        const { data: sub } = await supabase
+          .from('user_subscriptions')
+          .select('status')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .maybeSingle();
+        subscribed = !!sub;
+        setHasSubscription(subscribed);
+      } catch {
+        setHasSubscription(false);
+      }
+      // Bypass payment for now – let everyone in
+      subscribed = true;
+      setHasSubscription(true);
+
       // Load college
       const { data: collegeData } = await supabase
         .from('colleges')
@@ -185,6 +206,11 @@ export default function EssayWritingPage() {
 
       if (promptData) {
         setPrompt(promptData);
+      }
+
+      if (!subscribed) {
+        setLoading(false);
+        return;
       }
 
       // Check if essay exists
@@ -453,7 +479,7 @@ export default function EssayWritingPage() {
 
       if (versionError) throw versionError;
 
-      await loadVersions(currentEssayId);
+      if (currentEssayId) await loadVersions(currentEssayId);
       alert('Essay saved as version ' + nextVersion);
     } catch (error: any) {
       console.error('Error saving version:', error);
@@ -551,6 +577,42 @@ export default function EssayWritingPage() {
     );
   }
 
+  if (!hasSubscription) {
+    return (
+      <div className="min-h-screen" style={{ background: '#0B1623' }}>
+        <nav style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '24px 32px' }}>
+          <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Link href="/colleges" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+              <span className="font-heading text-2xl font-semibold" style={{ color: 'white' }}>VANTAGE</span>
+              <span className="text-2xl" style={{ color: '#D4AF37' }}>.</span>
+            </Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+              <Link href="/dashboard" style={{ color: pathname === '/dashboard' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/dashboard' ? 600 : 400 }}>Dashboard</Link>
+              <Link href="/personal-statement" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays') || pathname.startsWith('/common-app')) ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays') || pathname.startsWith('/common-app')) ? 600 : 400 }}>Essays</Link>
+              <Link href="/colleges" style={{ color: pathname.startsWith('/colleges') ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname.startsWith('/colleges') ? 600 : 400 }}>Portfolio</Link>
+              <Link href="/profile" style={{ color: pathname === '/profile' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/profile' ? 600 : 400 }}>Profile</Link>
+              <button onClick={async () => { await supabase.auth.signOut(); router.push('/'); }} style={{ background: 'transparent', color: 'rgba(255,255,255,0.7)', border: 'none', fontFamily: 'var(--font-body)', fontSize: '14px', cursor: 'pointer', padding: 0 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#F3E5AB'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}>Logout</button>
+            </div>
+          </div>
+        </nav>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '64px 32px' }}>
+          <Link href={`/colleges/${collegeId}`} style={{ color: '#D4AF37', textDecoration: 'none', fontSize: '14px', display: 'inline-block', marginBottom: '16px' }}>← Back to {college.name}</Link>
+          <div style={{ marginTop: '24px' }}>
+            <Card>
+              <h1 className="font-heading text-3xl mb-4" style={{ color: 'white' }}>Essay writing requires a subscription</h1>
+            <p className="font-body text-lg mb-6" style={{ color: 'rgba(255,255,255,0.9)' }}>
+              To write, save, and use Strategic Intelligence for essays (including {college.name} – Prompt {prompt.sort_order}), subscribe to VANTAGE.
+            </p>
+            <Link href="/pricing">
+              <button style={{ background: '#D4AF37', color: '#0B1623', padding: '12px 24px', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, border: 'none', borderRadius: '2px', cursor: 'pointer' }}>Subscribe to unlock</button>
+            </Link>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const canEdit = isOwner;
   const canComment = hasPermission || isOwner;
 
@@ -563,9 +625,11 @@ export default function EssayWritingPage() {
             <span className="text-2xl" style={{ color: '#D4AF37' }}>.</span>
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <Link href="/dashboard" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px' }}>Dashboard</Link>
-            <Link href="/colleges" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px' }}>Portfolio</Link>
-            <Link href="/personal-statement" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px' }}>Essays</Link>
+            <Link href="/dashboard" style={{ color: pathname === '/dashboard' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/dashboard' ? 600 : 400 }}>Dashboard</Link>
+            <Link href="/personal-statement" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays') || pathname.startsWith('/common-app')) ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays') || pathname.startsWith('/common-app')) ? 600 : 400 }}>Essays</Link>
+            <Link href="/colleges" style={{ color: pathname.startsWith('/colleges') ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname.startsWith('/colleges') ? 600 : 400 }}>Portfolio</Link>
+            <Link href="/profile" style={{ color: pathname === '/profile' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/profile' ? 600 : 400 }}>Profile</Link>
+            <button onClick={async () => { await supabase.auth.signOut(); router.push('/'); }} style={{ background: 'transparent', color: 'rgba(255,255,255,0.7)', border: 'none', fontFamily: 'var(--font-body)', fontSize: '14px', cursor: 'pointer', padding: 0 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#F3E5AB'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}>Logout</button>
           </div>
         </div>
       </nav>

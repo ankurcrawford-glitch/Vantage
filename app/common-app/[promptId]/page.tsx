@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Card from '@/components/Card';
@@ -60,9 +60,30 @@ interface EssayVersion {
   is_current: boolean;
 }
 
+interface Comment {
+  id: string;
+  counselor_id: string;
+  counselor_name: string;
+  comment_text: string;
+  section_start: number | null;
+  section_end: number | null;
+  comment_type: string;
+  created_at: string;
+}
+
+interface Invitation {
+  id: string;
+  invitee_email: string;
+  invitee_name: string | null;
+  role: string;
+  status: string;
+  created_at: string;
+}
+
 export default function CommonAppEssayPage() {
   const params = useParams();
   const router = useRouter();
+  const pathname = usePathname();
   const promptId = params.promptId as string;
 
   const [prompt, setPrompt] = useState<any>(null);
@@ -73,11 +94,37 @@ export default function CommonAppEssayPage() {
   const [wordCount, setWordCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [showCommentForm, setShowCommentForm] = useState(false);
+  const [newComment, setNewComment] = useState({ text: '', type: 'general' });
+  const [savingComment, setSavingComment] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+  const [hasPermission, setHasPermission] = useState(false);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [showInviteForm, setShowInviteForm] = useState(false);
+  const [newInvitation, setNewInvitation] = useState({ email: '', name: '', role: 'parent' });
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [showThinkingPartner, setShowThinkingPartner] = useState(false);
+  const [thinkingPartnerResponse, setThinkingPartnerResponse] = useState<string | null>(null);
+  const [loadingThinkingPartner, setLoadingThinkingPartner] = useState(false);
+  const [hasSubscription, setHasSubscription] = useState(false);
 
   useEffect(() => {
     checkAuth();
     loadData();
   }, [promptId]);
+
+  useEffect(() => {
+    if (currentVersion) {
+      loadComments(currentVersion.id);
+    }
+  }, [currentVersion]);
+
+  useEffect(() => {
+    if (essayId && currentUser && isOwner) {
+      loadInvitations();
+    }
+  }, [essayId, currentUser, isOwner]);
 
   useEffect(() => {
     setWordCount(countWords(content));
@@ -98,6 +145,8 @@ export default function CommonAppEssayPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       router.push('/login');
+    } else {
+      setCurrentUser(user);
     }
   };
 
@@ -109,23 +158,47 @@ export default function CommonAppEssayPage() {
         return;
       }
 
+      // Subscription required for essay writing
+      let subscribed = false;
+      try {
+        const { data: sub } = await supabase
+          .from('user_subscriptions')
+          .select('status')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .maybeSingle();
+        subscribed = !!sub;
+        setHasSubscription(subscribed);
+      } catch {
+        setHasSubscription(false);
+      }
+      // Bypass payment for now – let everyone in
+      subscribed = true;
+      setHasSubscription(true);
+
       // Find the prompt
       const selectedPrompt = COMMON_APP_PROMPTS.find(p => p.id === promptId);
       if (selectedPrompt) {
         setPrompt(selectedPrompt);
       }
 
-      // Check if essay exists
+      if (!subscribed) {
+        setLoading(false);
+        return;
+      }
+
+      // Check if essay exists (no row is normal; maybeSingle returns null instead of throwing)
       const { data: essayData } = await supabase
         .from('essays')
-        .select('id')
+        .select('id, user_id')
         .eq('user_id', user.id)
         .eq('college_prompt_id', promptId)
-        .single()
-        .catch(() => ({ data: null }));
+        .maybeSingle();
 
       if (essayData) {
         setEssayId(essayData.id);
+        setIsOwner(essayData.user_id === user.id);
+        setHasPermission(true);
         loadVersions(essayData.id);
       }
     } catch (error) {
@@ -156,6 +229,200 @@ export default function CommonAppEssayPage() {
     }
   };
 
+  const loadComments = async (versionId: string) => {
+    try {
+      const { data: commentsData, error } = await supabase
+        .from('counselor_comments')
+        .select(`
+          id,
+          counselor_id,
+          comment_text,
+          section_start,
+          section_end,
+          comment_type,
+          created_at,
+          counselors:counselor_id (
+            id,
+            email,
+            user_metadata
+          )
+        `)
+        .eq('essay_version_id', versionId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (commentsData) {
+        const formattedComments: Comment[] = commentsData.map((comment: any) => {
+          const u = comment.counselors;
+          const name = u?.user_metadata?.full_name ||
+                      u?.user_metadata?.name ||
+                      u?.email?.split('@')[0] ||
+                      'Commenter';
+          return {
+            id: comment.id,
+            counselor_id: comment.counselor_id,
+            counselor_name: name,
+            comment_text: comment.comment_text,
+            section_start: comment.section_start,
+            section_end: comment.section_end,
+            comment_type: comment.comment_type,
+            created_at: comment.created_at,
+          };
+        });
+        setComments(formattedComments);
+      }
+    } catch (error) {
+      console.error('Error loading comments:', error);
+    }
+  };
+
+  const loadInvitations = async () => {
+    if (!essayId) return;
+    try {
+      const { data: invitationsData, error } = await supabase
+        .from('essay_invitations')
+        .select('*')
+        .eq('essay_id', essayId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      if (invitationsData) {
+        setInvitations(invitationsData);
+      }
+    } catch (error) {
+      console.error('Error loading invitations:', error);
+    }
+  };
+
+  const handleSendInvitation = async () => {
+    if (!newInvitation.email.trim() || !essayId) {
+      alert('Please enter an email address.');
+      return;
+    }
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !isOwner) {
+        alert('Only the essay owner can send invitations.');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('essay_invitations')
+        .insert({
+          essay_id: essayId,
+          student_id: user.id,
+          invitee_email: newInvitation.email.trim(),
+          invitee_name: newInvitation.name.trim() || null,
+          role: newInvitation.role,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const invitationLink = (data as any).token
+        ? `${window.location.origin}/invitations/${(data as any).token}`
+        : `${window.location.origin}/essays/common-app/${promptId}`;
+      alert(`Invitation sent! Share this link with ${newInvitation.email}: ${invitationLink}`);
+
+      setNewInvitation({ email: '', name: '', role: 'parent' });
+      setShowInviteForm(false);
+      loadInvitations();
+    } catch (error: any) {
+      console.error('Error sending invitation:', error);
+      alert('Error sending invitation: ' + (error.message || 'Unknown error'));
+    }
+  };
+
+  const loadThinkingPartner = async () => {
+    if (!currentUser || !promptId) return;
+
+    setLoadingThinkingPartner(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('Please log in to get strategic guidance.');
+        return;
+      }
+
+      const response = await fetch('/api/thinking-partner', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          promptId,
+          collegeId: 'common-app',
+          userId: currentUser.id,
+          essayContent: content.trim() || null,
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to load guidance');
+      }
+
+      const data = await response.json();
+      setThinkingPartnerResponse(data.response);
+      setShowThinkingPartner(true);
+    } catch (error: any) {
+      console.error('Error loading thinking partner:', error);
+      alert('Error loading strategic guidance: ' + (error.message || 'Unknown error'));
+    } finally {
+      setLoadingThinkingPartner(false);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!newComment.text.trim()) {
+      alert('Please enter a comment before posting.');
+      return;
+    }
+    if (!currentVersion) {
+      alert('Please select a version to comment on.');
+      return;
+    }
+    if (!hasPermission && !isOwner) {
+      alert('You do not have permission to comment on this essay.');
+      return;
+    }
+    if (savingComment) return;
+
+    setSavingComment(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert('You must be logged in to comment.');
+        setSavingComment(false);
+        return;
+      }
+
+      const { data: savedComment, error } = await supabase
+        .from('counselor_comments')
+        .insert({
+          essay_version_id: currentVersion.id,
+          counselor_id: user.id,
+          comment_text: newComment.text.trim(),
+          comment_type: newComment.type || 'general',
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      if (!savedComment) throw new Error('Comment was not saved.');
+
+      setNewComment({ text: '', type: 'general' });
+      setShowCommentForm(false);
+      await loadComments(currentVersion.id);
+      alert('Comment posted successfully!');
+    } catch (error: any) {
+      console.error('Error adding comment:', error);
+      alert('Error adding comment: ' + (error.message || 'Unknown error'));
+    } finally {
+      setSavingComment(false);
+    }
+  };
+
   const saveNewVersion = async () => {
     if (!content.trim()) {
       alert('Please write something before saving.');
@@ -179,8 +446,7 @@ export default function CommonAppEssayPage() {
           .from('college_prompts')
           .select('id')
           .eq('id', promptId)
-          .single()
-          .catch(() => ({ data: null }));
+          .maybeSingle();
 
         let promptDbId = promptData?.id;
 
@@ -218,6 +484,8 @@ export default function CommonAppEssayPage() {
         if (essayError) throw essayError;
         currentEssayId = newEssay.id;
         setEssayId(currentEssayId);
+        setIsOwner(true);
+        setHasPermission(true);
       }
 
       // Get next version number
@@ -281,6 +549,44 @@ export default function CommonAppEssayPage() {
     );
   }
 
+  if (!hasSubscription) {
+    return (
+      <div className="min-h-screen" style={{ background: '#0B1623' }}>
+        <nav style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '24px 32px' }}>
+          <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Link href="/common-app" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+              <span className="font-heading text-2xl font-semibold" style={{ color: 'white' }}>VANTAGE</span>
+              <span className="text-2xl" style={{ color: '#D4AF37' }}>.</span>
+            </Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+              <Link href="/dashboard" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px' }}>Dashboard</Link>
+              <Link href="/colleges" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px' }}>Portfolio</Link>
+              <Link href="/personal-statement" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px' }}>Essays</Link>
+              <button onClick={async () => { await supabase.auth.signOut(); router.push('/'); }} style={{ background: 'transparent', color: 'rgba(255,255,255,0.7)', border: 'none', fontFamily: 'var(--font-body)', fontSize: '14px', cursor: 'pointer', padding: 0 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#D4AF37'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}>Logout</button>
+            </div>
+          </div>
+        </nav>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '64px 32px' }}>
+          <Link href="/common-app" style={{ color: '#D4AF37', textDecoration: 'none', fontSize: '14px', display: 'inline-block', marginBottom: '16px' }}>← Back to Common App Prompts</Link>
+          <div style={{ marginTop: '24px' }}>
+            <Card>
+              <h1 className="font-heading text-3xl mb-4" style={{ color: 'white' }}>Essay writing requires a subscription</h1>
+            <p className="font-body text-lg mb-6" style={{ color: 'rgba(255,255,255,0.9)' }}>
+              To write, save, and use Strategic Intelligence for Common App essays (Prompt {prompt.number}), subscribe to VANTAGE.
+            </p>
+            <Link href="/pricing">
+              <button style={{ background: '#D4AF37', color: '#0B1623', padding: '12px 24px', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, border: 'none', borderRadius: '2px', cursor: 'pointer' }}>Subscribe to unlock</button>
+            </Link>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const canEdit = isOwner;
+  const canComment = hasPermission || isOwner;
+
   return (
     <div className="min-h-screen" style={{ background: '#0B1623' }}>
       <nav style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '24px 32px' }}>
@@ -290,108 +596,328 @@ export default function CommonAppEssayPage() {
             <span className="text-2xl" style={{ color: '#D4AF37' }}>.</span>
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <Link href="/dashboard" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px' }}>Dashboard</Link>
-            <Link href="/colleges" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px' }}>Portfolio</Link>
-            <Link href="/personal-statement" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px' }}>Essays</Link>
+            <Link href="/dashboard" style={{ color: pathname === '/dashboard' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/dashboard' ? 600 : 400 }}>Dashboard</Link>
+            <Link href="/personal-statement" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays') || pathname.startsWith('/common-app')) ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays') || pathname.startsWith('/common-app')) ? 600 : 400 }}>Essays</Link>
+            <Link href="/colleges" style={{ color: pathname.startsWith('/colleges') ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname.startsWith('/colleges') ? 600 : 400 }}>Portfolio</Link>
+            <Link href="/profile" style={{ color: pathname === '/profile' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/profile' ? 600 : 400 }}>Profile</Link>
+            <button onClick={async () => { await supabase.auth.signOut(); router.push('/'); }} style={{ background: 'transparent', color: 'rgba(255,255,255,0.7)', border: 'none', fontFamily: 'var(--font-body)', fontSize: '14px', cursor: 'pointer', padding: 0 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#F3E5AB'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}>Logout</button>
           </div>
         </div>
       </nav>
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '64px 32px' }}>
         <div style={{ marginBottom: '32px' }}>
-          <Link 
-            href="/common-app" 
+          <Link
+            href="/common-app"
             style={{ color: '#D4AF37', textDecoration: 'none', fontSize: '14px', display: 'inline-block', marginBottom: '16px' }}
           >
             ← Back to Common App Prompts
           </Link>
-          <h1 className="font-heading text-4xl mb-2" style={{ color: 'white' }}>Common Application Essay</h1>
-          <h2 className="font-heading text-xl mb-4" style={{ color: '#D4AF37' }}>Prompt {prompt.number}</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <h1 className="font-heading text-4xl mb-2" style={{ color: 'white' }}>Common Application Essay</h1>
+              <h2 className="font-heading text-xl mb-4" style={{ color: '#D4AF37' }}>Prompt {prompt.number}</h2>
+            </div>
+            {!isOwner && hasPermission && (
+              <div style={{
+                padding: '8px 16px',
+                background: 'rgba(212,175,55,0.1)',
+                border: '1px solid rgba(212,175,55,0.3)',
+                borderRadius: '4px',
+              }}>
+                <p className="font-body text-sm" style={{ color: '#D4AF37' }}>
+                  View Only - You can comment but cannot edit
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '32px' }}>
+          {/* Main Writing Area */}
           <div>
             <Card>
               <div style={{ marginBottom: '24px' }}>
                 <p className="font-body" style={{ color: 'rgba(255,255,255,0.9)', lineHeight: '1.6', marginBottom: '12px' }}>
                   {prompt.prompt}
                 </p>
-                <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                  Word Limit: {prompt.word_limit} words
-                </p>
+                {prompt.word_limit && (
+                  <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                    Word Limit: {prompt.word_limit} words
+                  </p>
+                )}
               </div>
             </Card>
 
-            <Card style={{ marginTop: '32px' }}>
-              <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 className="font-heading text-lg" style={{ color: '#D4AF37' }}>Your Essay</h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                    {wordCount} / {prompt.word_limit} words
-                  </span>
-                  {wordCount > prompt.word_limit && (
-                    <span className="font-body text-sm" style={{ color: '#F87171' }}>
-                      Over limit
+            <div style={{ marginTop: '32px' }}>
+              <Card>
+                <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 className="font-heading text-lg" style={{ color: '#D4AF37' }}>Your Essay</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                      {wordCount} {prompt.word_limit ? `/ ${prompt.word_limit}` : ''} words
                     </span>
-                  )}
+                    {prompt.word_limit && wordCount > prompt.word_limit && (
+                      <span className="font-body text-sm" style={{ color: '#F87171' }}>Over limit</span>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Start writing your Common App essay here..."
-                style={{
-                  width: '100%',
-                  minHeight: '400px',
-                  background: 'rgba(0,0,0,0.2)',
-                  border: '1px solid rgba(212,175,55,0.2)',
-                  color: 'white',
-                  padding: '20px',
-                  fontFamily: 'var(--font-body)',
-                  fontSize: '16px',
-                  lineHeight: '1.6',
-                  outline: 'none',
-                  resize: 'vertical',
-                  boxSizing: 'border-box',
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = 'rgba(212,175,55,0.5)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = 'rgba(212,175,55,0.2)';
-                }}
-              />
-              <div style={{ marginTop: '16px', display: 'flex', gap: '12px' }}>
-                <button
-                  onClick={saveNewVersion}
-                  disabled={saving}
+                <textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Start writing your essay here..."
+                  disabled={!canEdit}
                   style={{
-                    background: saving ? 'rgba(212,175,55,0.5)' : '#D4AF37',
-                    color: '#0B1623',
-                    padding: '12px 24px',
+                    width: '100%',
+                    minHeight: '400px',
+                    background: canEdit ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.1)',
+                    border: '1px solid rgba(212,175,55,0.2)',
+                    color: canEdit ? 'white' : 'rgba(255,255,255,0.7)',
+                    padding: '20px',
                     fontFamily: 'var(--font-body)',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    border: 'none',
-                    borderRadius: '2px',
-                    cursor: saving ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s',
+                    fontSize: '16px',
+                    lineHeight: '1.6',
+                    outline: 'none',
+                    resize: 'vertical',
+                    boxSizing: 'border-box',
+                    cursor: canEdit ? 'text' : 'not-allowed',
                   }}
-                >
-                  {saving ? 'Saving...' : 'Save New Version'}
-                </button>
+                  onFocus={(e) => {
+                    if (canEdit) e.target.style.borderColor = 'rgba(212,175,55,0.5)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'rgba(212,175,55,0.2)';
+                  }}
+                />
+                {canEdit && (
+                  <div style={{ marginTop: '16px', display: 'flex', gap: '12px' }}>
+                    <button
+                      onClick={saveNewVersion}
+                      disabled={saving}
+                      style={{
+                        background: saving ? 'rgba(212,175,55,0.5)' : '#D4AF37',
+                        color: '#0B1623',
+                        padding: '12px 24px',
+                        fontFamily: 'var(--font-body)',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        border: 'none',
+                        borderRadius: '2px',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      {saving ? 'Saving...' : 'Save New Version'}
+                    </button>
+                  </div>
+                )}
+              </Card>
+            </div>
+
+            {/* Comments Section */}
+            {currentVersion && comments.length > 0 && (
+              <div style={{ marginTop: '32px' }}>
+                <Card>
+                  <h3 className="font-heading text-lg mb-4" style={{ color: '#D4AF37' }}>Comments</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {comments.map((comment) => (
+                      <div key={comment.id} style={{ padding: '16px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px', borderLeft: '3px solid #D4AF37' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                          <div>
+                            <p className="font-body font-semibold text-sm" style={{ color: '#D4AF37', marginBottom: '4px' }}>
+                              Comment from {comment.counselor_name}
+                            </p>
+                            <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                              {new Date(comment.created_at).toLocaleDateString()} at {new Date(comment.created_at).toLocaleTimeString()}
+                            </p>
+                          </div>
+                          <span className="font-body text-xs" style={{
+                            color: comment.comment_type === 'praise' ? '#10B981' : comment.comment_type === 'concern' ? '#F87171' : '#D4AF37',
+                            textTransform: 'capitalize',
+                            padding: '4px 8px',
+                            background: 'rgba(0,0,0,0.3)',
+                            borderRadius: '4px',
+                          }}>
+                            {comment.comment_type}
+                          </span>
+                        </div>
+                        <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.9)', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                          {comment.comment_text}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
               </div>
-            </Card>
+            )}
+
+            {/* Add Comment Form */}
+            {currentVersion && canComment && (
+              <div style={{ marginTop: '32px' }}>
+                <Card>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <h3 className="font-heading text-lg" style={{ color: '#D4AF37' }}>Add Comment</h3>
+                    <button
+                      onClick={() => setShowCommentForm(!showCommentForm)}
+                      style={{
+                        background: 'transparent',
+                        color: '#D4AF37',
+                        border: '1px solid rgba(212,175,55,0.5)',
+                        padding: '8px 16px',
+                        fontFamily: 'var(--font-body)',
+                        fontSize: '14px',
+                        borderRadius: '2px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {showCommentForm ? 'Cancel' : 'Add Comment'}
+                    </button>
+                  </div>
+                  {showCommentForm && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <select
+                        value={newComment.type}
+                        onChange={(e) => setNewComment({ ...newComment, type: e.target.value })}
+                        style={{
+                          height: '40px',
+                          background: 'rgba(0,0,0,0.2)',
+                          border: '1px solid rgba(212,175,55,0.2)',
+                          color: 'white',
+                          padding: '0 12px',
+                          fontFamily: 'var(--font-body)',
+                          fontSize: '14px',
+                          outline: 'none',
+                          borderRadius: '2px',
+                        }}
+                      >
+                        <option value="general">General</option>
+                        <option value="suggestion">Suggestion</option>
+                        <option value="praise">Praise</option>
+                        <option value="concern">Concern</option>
+                      </select>
+                      <textarea
+                        value={newComment.text}
+                        onChange={(e) => setNewComment({ ...newComment, text: e.target.value })}
+                        placeholder="Write your comment..."
+                        style={{
+                          minHeight: '100px',
+                          background: 'rgba(0,0,0,0.2)',
+                          border: '1px solid rgba(212,175,55,0.2)',
+                          color: 'white',
+                          padding: '12px',
+                          fontFamily: 'var(--font-body)',
+                          fontSize: '14px',
+                          outline: 'none',
+                          borderRadius: '2px',
+                          resize: 'vertical',
+                        }}
+                      />
+                      <button
+                        onClick={handleAddComment}
+                        disabled={savingComment}
+                        style={{
+                          background: savingComment ? 'rgba(212,175,55,0.5)' : '#D4AF37',
+                          color: '#0B1623',
+                          padding: '10px 20px',
+                          fontFamily: 'var(--font-body)',
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          border: 'none',
+                          borderRadius: '2px',
+                          cursor: savingComment ? 'not-allowed' : 'pointer',
+                          alignSelf: 'flex-start',
+                          opacity: savingComment ? 0.7 : 1,
+                        }}
+                      >
+                        {savingComment ? 'Posting...' : 'Post Comment'}
+                      </button>
+                    </div>
+                  )}
+                </Card>
+              </div>
+            )}
+
+            {/* Strategic Intelligence */}
+            <div style={{ marginTop: '32px' }}>
+              <Card>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <div>
+                    <h3 className="font-heading text-lg" style={{ color: '#D4AF37' }}>Strategic Intelligence</h3>
+                    <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>
+                      {content.trim() ? 'Get strategic guidance + feedback on your essay' : 'Get strategic guidance on how to approach this prompt'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={loadThinkingPartner}
+                    disabled={loadingThinkingPartner}
+                    style={{
+                      background: loadingThinkingPartner ? 'rgba(212,175,55,0.5)' : '#D4AF37',
+                      color: '#0B1623',
+                      padding: '10px 20px',
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      border: 'none',
+                      borderRadius: '2px',
+                      cursor: loadingThinkingPartner ? 'not-allowed' : 'pointer',
+                      opacity: loadingThinkingPartner ? 0.7 : 1,
+                    }}
+                  >
+                    {loadingThinkingPartner ? 'Analyzing...' : content.trim() ? 'Get Feedback' : 'Get Strategic Guidance'}
+                  </button>
+                </div>
+
+                {thinkingPartnerResponse && (
+                  <div style={{
+                    marginTop: '16px',
+                    padding: '20px',
+                    background: 'rgba(0,0,0,0.3)',
+                    borderRadius: '4px',
+                    borderLeft: '3px solid #D4AF37',
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                      <h4 className="font-heading text-md" style={{ color: '#D4AF37' }}>
+                        {content.trim() ? 'Strategic Guidance & Feedback' : 'Strategic Guidance'}
+                      </h4>
+                      <button
+                        onClick={() => { setShowThinkingPartner(false); setThinkingPartnerResponse(null); }}
+                        style={{
+                          background: 'transparent',
+                          color: 'rgba(255,255,255,0.5)',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontSize: '18px',
+                          padding: 0,
+                          lineHeight: 1,
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.9)', lineHeight: '1.8', whiteSpace: 'pre-wrap' }}>
+                      {thinkingPartnerResponse}
+                    </div>
+                  </div>
+                )}
+
+                {showThinkingPartner && !thinkingPartnerResponse && !loadingThinkingPartner && (
+                  <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)', marginTop: '16px' }}>
+                    Click the button above to get strategic guidance tailored to your entire application.
+                  </p>
+                )}
+              </Card>
+            </div>
           </div>
 
+          {/* Sidebar */}
           <div>
             <Card>
               <h3 className="font-heading text-lg mb-4" style={{ color: '#D4AF37' }}>Versions</h3>
               {versions.length === 0 ? (
                 <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                  No versions saved yet. Write your essay and click "Save New Version" to create your first version.
+                  No versions saved yet.
                 </p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -407,16 +933,6 @@ export default function CommonAppEssayPage() {
                         borderRadius: '4px',
                         cursor: 'pointer',
                         transition: 'all 0.2s',
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!version.is_current) {
-                          e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!version.is_current) {
-                          e.currentTarget.style.background = 'transparent';
-                        }
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
@@ -440,6 +956,124 @@ export default function CommonAppEssayPage() {
                 </div>
               )}
             </Card>
+
+            {isOwner && (
+              <div style={{ marginTop: '24px' }}>
+                <Card>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <h3 className="font-heading text-lg" style={{ color: '#D4AF37' }}>Invite Commenters</h3>
+                    <button
+                      onClick={() => setShowInviteForm(!showInviteForm)}
+                      style={{
+                        background: 'transparent',
+                        color: '#D4AF37',
+                        border: '1px solid rgba(212,175,55,0.5)',
+                        padding: '6px 12px',
+                        fontFamily: 'var(--font-body)',
+                        fontSize: '12px',
+                        borderRadius: '2px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {showInviteForm ? 'Cancel' : '+ Invite'}
+                    </button>
+                  </div>
+
+                  {showInviteForm && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+                      <input
+                        type="email"
+                        value={newInvitation.email}
+                        onChange={(e) => setNewInvitation({ ...newInvitation, email: e.target.value })}
+                        placeholder="Email address"
+                        style={{
+                          height: '36px',
+                          background: 'rgba(0,0,0,0.2)',
+                          border: '1px solid rgba(212,175,55,0.2)',
+                          color: 'white',
+                          padding: '0 12px',
+                          fontFamily: 'var(--font-body)',
+                          fontSize: '14px',
+                          outline: 'none',
+                          borderRadius: '2px',
+                        }}
+                      />
+                      <input
+                        type="text"
+                        value={newInvitation.name}
+                        onChange={(e) => setNewInvitation({ ...newInvitation, name: e.target.value })}
+                        placeholder="Name (optional)"
+                        style={{
+                          height: '36px',
+                          background: 'rgba(0,0,0,0.2)',
+                          border: '1px solid rgba(212,175,55,0.2)',
+                          color: 'white',
+                          padding: '0 12px',
+                          fontFamily: 'var(--font-body)',
+                          fontSize: '14px',
+                          outline: 'none',
+                          borderRadius: '2px',
+                        }}
+                      />
+                      <select
+                        value={newInvitation.role}
+                        onChange={(e) => setNewInvitation({ ...newInvitation, role: e.target.value })}
+                        style={{
+                          height: '36px',
+                          background: 'rgba(0,0,0,0.2)',
+                          border: '1px solid rgba(212,175,55,0.2)',
+                          color: 'white',
+                          padding: '0 12px',
+                          fontFamily: 'var(--font-body)',
+                          fontSize: '14px',
+                          outline: 'none',
+                          borderRadius: '2px',
+                        }}
+                      >
+                        <option value="parent">Parent</option>
+                        <option value="counselor">Counselor</option>
+                        <option value="mentor">Mentor</option>
+                        <option value="other">Other</option>
+                      </select>
+                      <button
+                        onClick={handleSendInvitation}
+                        style={{
+                          background: '#D4AF37',
+                          color: '#0B1623',
+                          padding: '8px 16px',
+                          fontFamily: 'var(--font-body)',
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          border: 'none',
+                          borderRadius: '2px',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Send Invitation
+                      </button>
+                    </div>
+                  )}
+
+                  {invitations.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
+                      <p className="font-body text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '8px' }}>
+                        Sent Invitations:
+                      </p>
+                      {invitations.map((inv) => (
+                        <div key={inv.id} style={{ padding: '8px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px' }}>
+                          <p className="font-body text-xs" style={{ color: 'white' }}>
+                            {inv.invitee_name || inv.invitee_email}
+                          </p>
+                          <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                            {inv.role} • {inv.status}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              </div>
+            )}
           </div>
         </div>
       </div>
