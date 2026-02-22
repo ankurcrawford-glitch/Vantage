@@ -31,9 +31,14 @@ export default function Home() {
           <p className="font-body text-xl md:text-2xl mb-12 mx-auto font-light leading-relaxed" style={{ color: '#F3E5AB', maxWidth: '900px' }}>
             A secure, private platform that learns your history to architect your future.
           </p>
-          <Link href="/signup">
-            <Button>Begin Assessment</Button>
-          </Link>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <Link href="/signup">
+              <Button>Begin Assessment</Button>
+            </Link>
+            <Link href="/login">
+              <Button variant="secondary">Sign In</Button>
+            </Link>
+          </div>
         </div>
       </section>
 
