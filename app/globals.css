@@ -1,6 +1,10 @@
 @import "tailwindcss";
 
 :root {
+  /* Fonts (loaded via link in layout – no build-time fetch) */
+  --font-heading: "Cormorant Garamond", serif;
+  --font-body: "Montserrat", sans-serif;
+
   /* Colors */
   --midnight: #0B1623;
   --royal-blue: #152C45;
