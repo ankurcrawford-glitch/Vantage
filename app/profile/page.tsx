@@ -1195,21 +1195,6 @@ export default function ProfilePage() {
               12 reflective questions that help us understand your story, values, and what makes you unique. Your answers power Strategic Intelligence for your essays. Available after you subscribe.
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-              <Link href="/pricing">
-                <button style={{
-                  background: '#D4AF37',
-                  color: '#0B1623',
-                  padding: '10px 20px',
-                  fontFamily: 'var(--font-body)',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  border: 'none',
-                  borderRadius: '2px',
-                  cursor: 'pointer',
-                }}>
-                  Subscribe to unlock
-                </button>
-              </Link>
               <Link href="/discovery" style={{ color: '#D4AF37', textDecoration: 'none', fontSize: '14px' }}>
                 Go to Insight Questions →
               </Link>

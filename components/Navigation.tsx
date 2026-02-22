@@ -54,9 +54,6 @@ export default function Navigation() {
     if (path === '/discovery') {
       return pathname === '/discovery';
     }
-    if (path === '/pricing') {
-      return pathname.startsWith('/pricing');
-    }
     if (path === '/colleges') {
       return pathname.startsWith('/colleges');
     }
@@ -91,7 +88,6 @@ export default function Navigation() {
               <Link href="/colleges" style={getLinkStyle('/colleges')}>Portfolio</Link>
               <Link href="/profile" style={getLinkStyle('/profile')}>Profile</Link>
               <Link href="/discovery" style={getLinkStyle('/discovery')}>Insight Questions</Link>
-              <Link href="/pricing" style={getLinkStyle('/pricing')}>Subscribe</Link>
               <button
                 onClick={handleLogout}
                 style={{

@@ -142,7 +142,7 @@ export default function DiscoveryPage() {
             <p className="font-body text-lg mb-6" style={{ color: 'rgba(255,255,255,0.9)' }}>
               The 12 reflective questions are available after you subscribe. They help us understand your story, values, and what makes you unique—and power Strategic Intelligence for your essays.
             </p>
-            <Link href="/pricing">
+            <Link href="/dashboard">
               <button style={{
                 background: '#D4AF37',
                 color: '#0B1623',
@@ -154,7 +154,7 @@ export default function DiscoveryPage() {
                 borderRadius: '2px',
                 cursor: 'pointer',
               }}>
-                Subscribe to unlock
+                Go to Dashboard
               </button>
             </Link>
           </Card>

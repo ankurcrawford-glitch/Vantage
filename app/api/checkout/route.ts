@@ -12,8 +12,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const origin = request.headers.get('origin') || request.nextUrl.origin;
-    const successUrl = `${origin}/pricing/success?session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = `${origin}/pricing`;
+    const successUrl = `${origin}/dashboard?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${origin}/dashboard`;
 
     const userId = typeof body.userId === 'string' ? body.userId : undefined;
 

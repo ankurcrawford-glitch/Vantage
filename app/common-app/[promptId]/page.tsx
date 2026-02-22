@@ -576,8 +576,8 @@ export default function CommonAppEssayPage() {
             <p className="font-body text-lg mb-6" style={{ color: 'rgba(255,255,255,0.9)' }}>
               To write, save, and use Strategic Intelligence for Common App essays (Prompt {prompt.number}), subscribe to VANTAGE.
             </p>
-            <Link href="/pricing">
-              <button style={{ background: '#D4AF37', color: '#0B1623', padding: '12px 24px', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, border: 'none', borderRadius: '2px', cursor: 'pointer' }}>Subscribe to unlock</button>
+            <Link href="/dashboard">
+              <button style={{ background: '#D4AF37', color: '#0B1623', padding: '12px 24px', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, border: 'none', borderRadius: '2px', cursor: 'pointer' }}>Go to Dashboard</button>
             </Link>
             </Card>
           </div>
