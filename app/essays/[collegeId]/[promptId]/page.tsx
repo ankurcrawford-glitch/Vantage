@@ -83,6 +83,7 @@ export default function EssayWritingPage() {
   const [loadingThinkingPartner, setLoadingThinkingPartner] = useState(false);
 
   const [hasSubscription, setHasSubscription] = useState(false);
+  const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -479,7 +480,8 @@ export default function EssayWritingPage() {
       if (versionError) throw versionError;
 
       if (currentEssayId) await loadVersions(currentEssayId);
-      alert('Essay saved as version ' + nextVersion);
+      setSaveSuccessMessage('Saved as version ' + nextVersion);
+      setTimeout(() => setSaveSuccessMessage(null), 3000);
     } catch (error: any) {
       console.error('Error saving version:', error);
       const msg = error?.message || error?.error_description || 'Unknown error';
@@ -730,7 +732,7 @@ export default function EssayWritingPage() {
                   }}
                 />
                 {canEdit && (
-                  <div style={{ marginTop: '16px', display: 'flex', gap: '12px' }}>
+                  <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                     <button
                       onClick={saveNewVersion}
                       disabled={saving}
@@ -751,6 +753,11 @@ export default function EssayWritingPage() {
                     >
                       {saving ? 'Saving...' : 'Save New Version'}
                     </button>
+                    {saveSuccessMessage && (
+                      <span className="font-body text-sm" style={{ color: '#4ADE80' }}>
+                        {saveSuccessMessage}
+                      </span>
+                    )}
                   </div>
                 )}
               </Card>
