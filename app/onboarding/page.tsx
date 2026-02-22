@@ -3,12 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 
 type Step = 'welcome' | 'discovery' | 'stats' | 'complete';
-
-// ... existing DISCOVERY_QUESTIONS array stays the same ...
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -470,3 +469,6 @@ export default function OnboardingPage() {
       </div>
     );
   }
+
+  return null;
+}
