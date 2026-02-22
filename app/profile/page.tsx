@@ -1186,21 +1186,6 @@ export default function ProfilePage() {
             )}
           </Card>
         </div>
-
-        {/* Insight Questions – behind paywall */}
-        <div style={{ marginTop: '32px' }}>
-          <Card>
-            <h2 className="font-heading text-2xl mb-4" style={{ color: '#D4AF37' }}>Insight Questions</h2>
-            <p className="font-body text-sm mb-6" style={{ color: 'rgba(255,255,255,0.7)' }}>
-              12 reflective questions that help us understand your story, values, and what makes you unique. Your answers power Strategic Intelligence for your essays. Available after you subscribe.
-            </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-              <Link href="/discovery" style={{ color: '#D4AF37', textDecoration: 'none', fontSize: '14px' }}>
-                Go to Insight Questions →
-              </Link>
-            </div>
-          </Card>
-        </div>
       </div>
     </div>
   );
