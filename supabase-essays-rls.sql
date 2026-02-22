@@ -51,3 +51,13 @@ create policy "Users can update versions of own essays"
       where e.id = essay_versions.essay_id and e.user_id = auth.uid()
     )
   );
+
+drop policy if exists "Users can delete versions of own essays" on public.essay_versions;
+create policy "Users can delete versions of own essays"
+  on public.essay_versions for delete
+  using (
+    exists (
+      select 1 from public.essays e
+      where e.id = essay_versions.essay_id and e.user_id = auth.uid()
+    )
+  );

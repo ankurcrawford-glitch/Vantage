@@ -84,6 +84,7 @@ export default function EssayWritingPage() {
 
   const [hasSubscription, setHasSubscription] = useState(false);
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
+  const [deletingVersionId, setDeletingVersionId] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -168,6 +169,7 @@ export default function EssayWritingPage() {
         router.push('/login');
         return;
       }
+      setCurrentUser(user);
 
       // Subscription required for essay writing
       let subscribed = false;
@@ -183,7 +185,7 @@ export default function EssayWritingPage() {
       } catch {
         setHasSubscription(false);
       }
-      // Bypass payment for now – let everyone in
+      // TODO: remove bypass when subscription/payments are live
       subscribed = true;
       setHasSubscription(true);
 
@@ -268,20 +270,7 @@ export default function EssayWritingPage() {
     try {
       const { data: commentsData, error } = await supabase
         .from('counselor_comments')
-        .select(`
-          id,
-          counselor_id,
-          comment_text,
-          section_start,
-          section_end,
-          comment_type,
-          created_at,
-          counselors:counselor_id (
-            id,
-            email,
-            user_metadata
-          )
-        `)
+        .select('id, counselor_id, comment_text, section_start, section_end, comment_type, created_at')
         .eq('essay_version_id', versionId)
         .order('created_at', { ascending: false });
 
@@ -289,12 +278,7 @@ export default function EssayWritingPage() {
 
       if (commentsData) {
         const formattedComments: Comment[] = commentsData.map((comment: any) => {
-          const user = comment.counselors;
-          const name = user?.user_metadata?.full_name || 
-                      user?.user_metadata?.name || 
-                      user?.email?.split('@')[0] || 
-                      'Commenter';
-          
+          const name = 'Commenter';
           return {
             id: comment.id,
             counselor_id: comment.counselor_id,
@@ -308,8 +292,10 @@ export default function EssayWritingPage() {
         });
         setComments(formattedComments);
       }
-    } catch (error) {
-      console.error('Error loading comments:', error);
+    } catch (error: unknown) {
+      setComments([]);
+      const msg = error && typeof error === 'object' && 'message' in error ? (error as Error).message : String(error);
+      console.error('Error loading comments:', msg);
     }
   };
 
@@ -497,6 +483,35 @@ export default function EssayWritingPage() {
   const switchVersion = (version: EssayVersion) => {
     setCurrentVersion(version);
     setContent(version.content);
+  };
+
+  const deleteVersion = async (e: React.MouseEvent, version: EssayVersion) => {
+    e.stopPropagation();
+    if (!essayId || !isOwner || deletingVersionId) return;
+    if (!confirm(`Delete Version ${version.version_number}? This cannot be undone.`)) return;
+    setDeletingVersionId(version.id);
+    try {
+      const { error } = await supabase.from('essay_versions').delete().eq('id', version.id);
+      if (error) throw error;
+      const remaining = versions.filter((v) => v.id !== version.id);
+      if (version.is_current && remaining.length > 0) {
+        await supabase.from('essay_versions').update({ is_current: true }).eq('id', remaining[0].id);
+      }
+      await loadVersions(essayId);
+      if (version.is_current && remaining.length > 0) {
+        setCurrentVersion(remaining[0]);
+        setContent(remaining[0].content);
+      } else if (version.is_current && remaining.length === 0) {
+        setCurrentVersion(null);
+        setContent('');
+        setVersions([]);
+      }
+    } catch (err: any) {
+      console.error('Error deleting version:', err);
+      alert('Could not delete version: ' + (err?.message || 'Unknown error'));
+    } finally {
+      setDeletingVersionId(null);
+    }
   };
 
   const handleAddComment = async () => {
@@ -982,36 +997,65 @@ export default function EssayWritingPage() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {versions.map((version) => (
-                    <button
+                    <div
                       key={version.id}
-                      onClick={() => switchVersion(version)}
                       style={{
-                        textAlign: 'left',
                         padding: '12px',
                         background: version.is_current ? 'rgba(212,175,55,0.2)' : 'transparent',
                         border: version.is_current ? '1px solid rgba(212,175,55,0.5)' : '1px solid rgba(255,255,255,0.1)',
                         borderRadius: '4px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        gap: '8px',
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                        <span className="font-body text-sm font-semibold" style={{ color: 'white' }}>
+                      <button
+                        type="button"
+                        onClick={() => switchVersion(version)}
+                        style={{
+                          textAlign: 'left',
+                          background: 'transparent',
+                          border: 'none',
+                          padding: 0,
+                          cursor: 'pointer',
+                          flex: 1,
+                          color: 'inherit',
+                          fontFamily: 'var(--font-body)',
+                        }}
+                      >
+                        <span style={{ display: 'block', color: 'white', fontSize: '14px', fontWeight: 600 }}>
                           Version {version.version_number}
                         </span>
+                        <span style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '12px', marginTop: '4px' }}>
+                          {version.word_count} words · {new Date(version.created_at).toLocaleDateString()}
+                        </span>
+                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                         {version.is_current && (
                           <span className="font-body text-xs" style={{ color: '#D4AF37' }}>Current</span>
                         )}
+                        {(isOwner || (essayId && essayOwnerId === currentUser?.id)) && (
+                          <button
+                            type="button"
+                            onClick={(e) => deleteVersion(e, version)}
+                            disabled={!!deletingVersionId}
+                            style={{
+                              background: 'transparent',
+                              border: '1px solid rgba(255,255,255,0.25)',
+                              color: 'rgba(255,255,255,0.8)',
+                              cursor: deletingVersionId ? 'not-allowed' : 'pointer',
+                              fontSize: '12px',
+                              fontFamily: 'var(--font-body)',
+                              padding: '4px 8px',
+                              borderRadius: '2px',
+                            }}
+                          >
+                            {deletingVersionId === version.id ? '…' : 'Delete'}
+                          </button>
+                        )}
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                          {version.word_count} words
-                        </span>
-                        <span className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                          {new Date(version.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </button>
+                    </div>
                   ))}
                 </div>
               )}

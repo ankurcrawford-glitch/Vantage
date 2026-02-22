@@ -42,7 +42,7 @@ export default function DiscoveryPage() {
       } catch {
         setHasSubscription(false);
       }
-      // Bypass payment for now – let everyone in
+      // TODO: remove bypass when subscription/payments are live
       subscribed = true;
       setHasSubscription(true);
 

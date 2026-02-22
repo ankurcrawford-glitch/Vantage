@@ -12,6 +12,9 @@ interface College {
   id: string;
   name: string;
   location: string;
+  acceptance_rate?: number | null;
+  sat_range_low?: number | null;
+  sat_range_high?: number | null;
 }
 
 interface Prompt {
@@ -115,6 +118,18 @@ export default function CollegeDetailPage() {
           <Link href="/colleges" style={{ color: '#D4AF37', textDecoration: 'none', fontSize: '14px', display: 'inline-block', marginBottom: '16px' }}>← Back to Portfolio</Link>
           <h1 className="font-heading text-5xl mb-4" style={{ color: 'white' }}>{college.name}</h1>
           <p className="font-body text-lg" style={{ color: '#F3E5AB' }}>{college.location}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
+            {college.acceptance_rate != null && college.acceptance_rate !== undefined && (
+              <p className="font-body text-base" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                Acceptance Rate: {(college.acceptance_rate * 100).toFixed(1)}%
+              </p>
+            )}
+            {college.sat_range_low != null && college.sat_range_high != null && (
+              <p className="font-body text-base" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                SAT Range: {college.sat_range_low} – {college.sat_range_high}
+              </p>
+            )}
+          </div>
         </div>
 
         <div>

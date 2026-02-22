@@ -11,10 +11,10 @@ interface College {
   id: string;
   name: string;
   location: string;
-  acceptance_rate: number;
-  sat_range_low: number | null;
-  sat_range_high: number | null;
-  deadline_rd: string | null;
+  acceptance_rate?: number | null;
+  sat_range_low?: number | null;
+  sat_range_high?: number | null;
+  deadline_rd?: string | null;
 }
 
 export default function CollegesPage() {
@@ -24,6 +24,14 @@ export default function CollegesPage() {
   const [userColleges, setUserColleges] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAddCollege, setShowAddCollege] = useState(false);
+  const [addCollegeName, setAddCollegeName] = useState('');
+  const [addCollegeLocation, setAddCollegeLocation] = useState('');
+  const [addCollegeAcceptanceRate, setAddCollegeAcceptanceRate] = useState('');
+  const [addCollegeSatLow, setAddCollegeSatLow] = useState('');
+  const [addCollegeSatHigh, setAddCollegeSatHigh] = useState('');
+  const [addingCollege, setAddingCollege] = useState(false);
+  const [addCollegeError, setAddCollegeError] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -54,7 +62,8 @@ export default function CollegesPage() {
       }
 
       if (collegesData) {
-        setColleges(collegesData);
+        // Exclude Common App — it's only for essay FK, not a real portfolio college
+        setColleges(collegesData.filter((c: College) => c.id !== 'common-app'));
       }
 
       // Load user's colleges
@@ -115,6 +124,93 @@ export default function CollegesPage() {
       setUserColleges(userColleges.filter(id => id !== collegeId));
     } catch (error) {
       console.error('Error removing college:', error);
+    }
+  };
+
+  const slugify = (name: string) =>
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 40) || 'college';
+
+  const handleAddCustomCollege = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddCollegeError(null);
+    const name = addCollegeName.trim();
+    const location = addCollegeLocation.trim();
+    if (!name) {
+      setAddCollegeError('Please enter a college name.');
+      return;
+    }
+    if (!location) {
+      setAddCollegeError('Please enter a location (e.g. city, state or country).');
+      return;
+    }
+    setAddingCollege(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setAddCollegeError('You must be signed in to add a college.');
+        setAddingCollege(false);
+        return;
+      }
+      const id = `${slugify(name)}-${Math.random().toString(36).slice(2, 8)}`;
+      const acceptanceRate = addCollegeAcceptanceRate.trim() ? parseFloat(addCollegeAcceptanceRate) / 100 : null;
+      const satLow = addCollegeSatLow.trim() ? parseInt(addCollegeSatLow, 10) : null;
+      const satHigh = addCollegeSatHigh.trim() ? parseInt(addCollegeSatHigh, 10) : null;
+      if (Number.isNaN(acceptanceRate) || (acceptanceRate != null && (acceptanceRate < 0 || acceptanceRate > 1))) {
+        setAddCollegeError('Acceptance rate must be a number between 0 and 100.');
+        setAddingCollege(false);
+        return;
+      }
+      if ((satLow != null && Number.isNaN(satLow)) || (satHigh != null && Number.isNaN(satHigh))) {
+        setAddCollegeError('SAT range must be numbers (e.g. 1200–1600).');
+        setAddingCollege(false);
+        return;
+      }
+
+      const { error: insertError } = await supabase.from('colleges').insert({
+        id,
+        name,
+        location,
+        acceptance_rate: acceptanceRate ?? undefined,
+        sat_range_low: satLow ?? undefined,
+        sat_range_high: satHigh ?? undefined,
+      });
+
+      if (insertError) {
+        setAddCollegeError(insertError.message || 'Could not add college. It may already exist—try a slightly different name.');
+        setAddingCollege(false);
+        return;
+      }
+
+      const { error: linkError } = await supabase.from('user_colleges').insert({
+        user_id: user.id,
+        college_id: id,
+      });
+
+      if (linkError) {
+        setAddCollegeError(linkError.message || 'College was created but could not be added to your portfolio.');
+        setAddingCollege(false);
+        return;
+      }
+
+      setColleges((prev) => {
+        const next = [...prev, { id, name, location, acceptance_rate: acceptanceRate ?? 0, sat_range_low: satLow, sat_range_high: satHigh, deadline_rd: null }];
+        return next.sort((a, b) => a.name.localeCompare(b.name));
+      });
+      setUserColleges((prev) => [...prev, id].sort());
+      setAddCollegeName('');
+      setAddCollegeLocation('');
+      setAddCollegeAcceptanceRate('');
+      setAddCollegeSatLow('');
+      setAddCollegeSatHigh('');
+      setShowAddCollege(false);
+    } catch (err: unknown) {
+      setAddCollegeError(err instanceof Error ? err.message : 'Something went wrong.');
+    } finally {
+      setAddingCollege(false);
     }
   };
 
@@ -205,14 +301,14 @@ export default function CollegesPage() {
                     </button>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {college.acceptance_rate && (
+                    {college.acceptance_rate != null && Number(college.acceptance_rate) === college.acceptance_rate && (
                       <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                        Acceptance Rate: {(college.acceptance_rate * 100).toFixed(1)}%
+                        Acceptance Rate: {(Number(college.acceptance_rate) * 100).toFixed(1)}%
                       </p>
                     )}
-                    {college.sat_range_low && college.sat_range_high && (
+                    {college.sat_range_low != null && college.sat_range_high != null && (
                       <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                        SAT Range: {college.sat_range_low} - {college.sat_range_high}
+                        SAT Range: {college.sat_range_low} – {college.sat_range_high}
                       </p>
                     )}
                   </div>
@@ -229,14 +325,15 @@ export default function CollegesPage() {
           <h2 className="font-heading text-3xl mb-6" style={{ color: 'white' }}>
             {searchTerm ? 'Search Results' : 'Browse Colleges'}
           </h2>
-          {availableColleges.length === 0 ? (
+          {availableColleges.length === 0 && !showAddCollege ? (
             <Card>
               <p className="font-body text-center" style={{ color: 'rgba(255,255,255,0.7)', padding: '32px' }}>
                 {searchTerm ? 'No colleges found matching your search.' : 'No colleges available.'}
               </p>
             </Card>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '24px' }}>
+          ) : null}
+          {availableColleges.length > 0 ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '24px', marginBottom: '24px' }}>
               {availableColleges.map((college) => (
                 <Card key={college.id}>
                   <div style={{ marginBottom: '16px' }}>
@@ -244,14 +341,14 @@ export default function CollegesPage() {
                     <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>{college.location}</p>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-                    {college.acceptance_rate && (
+                    {college.acceptance_rate != null && Number(college.acceptance_rate) === college.acceptance_rate && (
                       <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                        Acceptance Rate: {(college.acceptance_rate * 100).toFixed(1)}%
+                        Acceptance Rate: {(Number(college.acceptance_rate) * 100).toFixed(1)}%
                       </p>
                     )}
-                    {college.sat_range_low && college.sat_range_high && (
+                    {college.sat_range_low != null && college.sat_range_high != null && (
                       <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                        SAT Range: {college.sat_range_low} - {college.sat_range_high}
+                        SAT Range: {college.sat_range_low} – {college.sat_range_high}
                       </p>
                     )}
                   </div>
@@ -265,7 +362,163 @@ export default function CollegesPage() {
                 </Card>
               ))}
             </div>
-          )}
+          ) : null}
+
+          <Card>
+            {!showAddCollege ? (
+              <button
+                type="button"
+                onClick={() => setShowAddCollege(true)}
+                style={{
+                  width: '100%',
+                  padding: '24px',
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#D4AF37',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '16px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                }}
+              >
+                Don’t see your college? Add a college
+              </button>
+            ) : (
+              <form onSubmit={handleAddCustomCollege} style={{ padding: '8px 0' }}>
+                <h3 className="font-heading text-lg mb-4" style={{ color: '#D4AF37' }}>Add a college</h3>
+                {addCollegeError && (
+                  <p className="font-body text-sm mb-4" style={{ color: '#e57373' }}>{addCollegeError}</p>
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
+                  <div>
+                    <label className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.8)', display: 'block', marginBottom: '6px' }}>College name *</label>
+                    <input
+                      type="text"
+                      value={addCollegeName}
+                      onChange={(e) => setAddCollegeName(e.target.value)}
+                      placeholder="e.g. State University"
+                      required
+                      style={{
+                        width: '100%',
+                        background: 'rgba(0,0,0,0.2)',
+                        border: '1px solid rgba(212,175,55,0.3)',
+                        color: 'white',
+                        padding: '10px 14px',
+                        fontFamily: 'var(--font-body)',
+                        fontSize: '14px',
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.8)', display: 'block', marginBottom: '6px' }}>Location *</label>
+                    <input
+                      type="text"
+                      value={addCollegeLocation}
+                      onChange={(e) => setAddCollegeLocation(e.target.value)}
+                      placeholder="e.g. Boston, MA"
+                      required
+                      style={{
+                        width: '100%',
+                        background: 'rgba(0,0,0,0.2)',
+                        border: '1px solid rgba(212,175,55,0.3)',
+                        color: 'white',
+                        padding: '10px 14px',
+                        fontFamily: 'var(--font-body)',
+                        fontSize: '14px',
+                      }}
+                    />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.8)', display: 'block', marginBottom: '6px' }}>Acceptance rate %</label>
+                      <input
+                        type="text"
+                        value={addCollegeAcceptanceRate}
+                        onChange={(e) => setAddCollegeAcceptanceRate(e.target.value)}
+                        placeholder="e.g. 25"
+                        inputMode="decimal"
+                        style={{
+                          width: '100%',
+                          background: 'rgba(0,0,0,0.2)',
+                          border: '1px solid rgba(212,175,55,0.3)',
+                          color: 'white',
+                          padding: '10px 14px',
+                          fontFamily: 'var(--font-body)',
+                          fontSize: '14px',
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.8)', display: 'block', marginBottom: '6px' }}>SAT low</label>
+                      <input
+                        type="text"
+                        value={addCollegeSatLow}
+                        onChange={(e) => setAddCollegeSatLow(e.target.value)}
+                        placeholder="e.g. 1200"
+                        inputMode="numeric"
+                        style={{
+                          width: '100%',
+                          background: 'rgba(0,0,0,0.2)',
+                          border: '1px solid rgba(212,175,55,0.3)',
+                          color: 'white',
+                          padding: '10px 14px',
+                          fontFamily: 'var(--font-body)',
+                          fontSize: '14px',
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.8)', display: 'block', marginBottom: '6px' }}>SAT high</label>
+                      <input
+                        type="text"
+                        value={addCollegeSatHigh}
+                        onChange={(e) => setAddCollegeSatHigh(e.target.value)}
+                        placeholder="e.g. 1450"
+                        inputMode="numeric"
+                        style={{
+                          width: '100%',
+                          background: 'rgba(0,0,0,0.2)',
+                          border: '1px solid rgba(212,175,55,0.3)',
+                          color: 'white',
+                          padding: '10px 14px',
+                          fontFamily: 'var(--font-body)',
+                          fontSize: '14px',
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  <Button type="submit" disabled={addingCollege}>
+                    {addingCollege ? 'Adding…' : 'Add and add to portfolio'}
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddCollege(false);
+                      setAddCollegeError(null);
+                      setAddCollegeName('');
+                      setAddCollegeLocation('');
+                      setAddCollegeAcceptanceRate('');
+                      setAddCollegeSatLow('');
+                      setAddCollegeSatHigh('');
+                    }}
+                    style={{
+                      background: 'transparent',
+                      color: 'rgba(255,255,255,0.7)',
+                      border: '1px solid rgba(255,255,255,0.3)',
+                      padding: '12px 20px',
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+          </Card>
         </div>
       </div>
     </div>

@@ -470,5 +470,10 @@ export default function OnboardingPage() {
     );
   }
 
-  return null;
+  // Fallback if step is ever not one of the four (should not happen with Step type)
+  return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1623' }}>
+      <div style={{ color: '#D4AF37' }}>Loading...</div>
+    </div>
+  );
 }
