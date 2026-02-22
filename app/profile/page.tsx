@@ -1,74 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Card from '@/components/Card';
-
-// Discovery Questions (same as onboarding)
-const DISCOVERY_QUESTIONS = [
-  { 
-    id: 'story1', 
-    question: 'Tell us about a moment that fundamentally changed how you see yourself or the world. What happened, and why did it matter?', 
-    category: 'transformative_moment',
-  },
-  { 
-    id: 'story2', 
-    question: 'Describe a time you failed or made a significant mistake. What did you learn, and how did it shape who you are today?', 
-    category: 'resilience',
-  },
-  { 
-    id: 'story3', 
-    question: 'What is something you care deeply about that others might not understand? Why does it matter to you?', 
-    category: 'authentic_passions',
-  },
-  { 
-    id: 'story4', 
-    question: 'Describe a relationship (with a person, place, community, or idea) that has profoundly influenced you. How?', 
-    category: 'influences',
-  },
-  { 
-    id: 'story5', 
-    question: 'What is a problem or injustice you\'ve observed in your community or the world? What have you done about it, or what would you like to do?', 
-    category: 'impact',
-  },
-  { 
-    id: 'story6', 
-    question: 'Tell us about a time you had to step outside your comfort zone. What pushed you, and what did you discover about yourself?', 
-    category: 'growth',
-  },
-  { 
-    id: 'story7', 
-    question: 'What is something you\'ve created, built, or accomplished that you\'re genuinely proud of? Why does it matter to you beyond just achievement?', 
-    category: 'meaningful_achievements',
-  },
-  { 
-    id: 'story8', 
-    question: 'Describe your background, family, or community. How has it shaped your perspective, values, or goals?', 
-    category: 'background',
-  },
-  { 
-    id: 'story9', 
-    question: 'What is a question, topic, or idea you find yourself constantly thinking about? What draws you to it?', 
-    category: 'intellectual_curiosity',
-  },
-  { 
-    id: 'story10', 
-    question: 'If you could change one thing about your school, community, or the world, what would it be and why? What would you do to make that change?', 
-    category: 'vision',
-  },
-  { 
-    id: 'story11', 
-    question: 'What is something you do that brings you joy or fulfillment that might surprise people? Why does it matter to you?', 
-    category: 'authentic_self',
-  },
-  { 
-    id: 'story12', 
-    question: 'Describe a time you had to navigate a conflict or disagreement. How did you handle it, and what did you learn?', 
-    category: 'maturity',
-  },
-];
 
 interface UserStats {
   gpa_weighted: number | null;
@@ -99,6 +35,7 @@ interface Award {
 
 export default function ProfilePage() {
   const router = useRouter();
+  const pathname = usePathname();
   const [stats, setStats] = useState<UserStats>({
     gpa_weighted: null,
     gpa_unweighted: null,
@@ -108,9 +45,6 @@ export default function ProfilePage() {
   const [apClasses, setApClasses] = useState<APClass[]>([]);
   const [extracurriculars, setExtracurriculars] = useState<Extracurricular[]>([]);
   const [awards, setAwards] = useState<Award[]>([]);
-  const [discoveryAnswers, setDiscoveryAnswers] = useState<Record<string, string>>({});
-  const [editingAnswer, setEditingAnswer] = useState<string | null>(null);
-  const [editAnswerText, setEditAnswerText] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [addingAPClass, setAddingAPClass] = useState(false);
@@ -199,21 +133,6 @@ export default function ProfilePage() {
         setAwards(awardsData);
       }
 
-      // Load discovery answers
-      const { data: discoveryData, error: discoveryError } = await supabase
-        .from('discovery_answers')
-        .select('question_id, answer')
-        .eq('user_id', user.id);
-
-      if (discoveryError) {
-        console.error('Error loading discovery answers:', discoveryError);
-      } else if (discoveryData) {
-        const answersMap: Record<string, string> = {};
-        discoveryData.forEach((item: any) => {
-          answersMap[item.question_id] = item.answer;
-        });
-        setDiscoveryAnswers(answersMap);
-      }
     } catch (error) {
       console.error('Error loading profile:', error);
       alert('Error loading profile data. Please refresh the page.');
@@ -259,7 +178,7 @@ export default function ProfilePage() {
       return;
     }
 
-    if (addingAPClass) return; // Prevent double submission
+    if (addingAPClass) return;
 
     setAddingAPClass(true);
     try {
@@ -269,8 +188,6 @@ export default function ProfilePage() {
         return;
       }
 
-      console.log('Adding AP class:', { class_name: newApClass.class_name, score: newApClass.score });
-
       const { data, error } = await supabase.from('user_ap_classes').insert({
         user_id: user.id,
         class_name: newApClass.class_name.trim(),
@@ -279,11 +196,10 @@ export default function ProfilePage() {
 
       if (error) {
         console.error('Error adding AP class:', error);
-        alert('Error adding AP class: ' + error.message + '\n\nMake sure you have run the SQL script to create the tables in Supabase.');
+        alert('Error adding AP class: ' + error.message);
         return;
       }
 
-      console.log('AP class added successfully:', data);
       await loadProfile();
       setNewApClass({ class_name: '', score: '' });
       alert('AP class added successfully!');
@@ -319,7 +235,7 @@ export default function ProfilePage() {
       return;
     }
 
-    if (addingExtracurricular) return; // Prevent double submission
+    if (addingExtracurricular) return;
 
     setAddingExtracurricular(true);
     try {
@@ -328,8 +244,6 @@ export default function ProfilePage() {
         alert('You must be logged in to add extracurriculars.');
         return;
       }
-
-      console.log('Adding extracurricular:', newExtracurricular);
 
       const { data, error } = await supabase.from('user_extracurriculars').insert({
         user_id: user.id,
@@ -340,11 +254,10 @@ export default function ProfilePage() {
 
       if (error) {
         console.error('Error adding extracurricular:', error);
-        alert('Error adding extracurricular: ' + error.message + '\n\nMake sure you have run the SQL script to create the tables in Supabase.');
+        alert('Error adding extracurricular: ' + error.message);
         return;
       }
 
-      console.log('Extracurricular added successfully:', data);
       await loadProfile();
       setNewExtracurricular({ activity_name: '', role: '', description: '' });
       alert('Extracurricular added successfully!');
@@ -426,7 +339,7 @@ export default function ProfilePage() {
       return;
     }
 
-    if (addingAward) return; // Prevent double submission
+    if (addingAward) return;
 
     setAddingAward(true);
     try {
@@ -435,8 +348,6 @@ export default function ProfilePage() {
         alert('You must be logged in to add awards.');
         return;
       }
-
-      console.log('Adding award:', newAward);
 
       const { data, error } = await supabase.from('user_awards').insert({
         user_id: user.id,
@@ -447,11 +358,10 @@ export default function ProfilePage() {
 
       if (error) {
         console.error('Error adding award:', error);
-        alert('Error adding award: ' + error.message + '\n\nMake sure you have run the SQL script to create the tables in Supabase.');
+        alert('Error adding award: ' + error.message);
         return;
       }
 
-      console.log('Award added successfully:', data);
       await loadProfile();
       setNewAward({ award_name: '', organization: '', year: '' });
       alert('Award added successfully!');
@@ -481,51 +391,9 @@ export default function ProfilePage() {
     }
   };
 
-  const handleEditAnswer = (questionId: string) => {
-    setEditingAnswer(questionId);
-    setEditAnswerText(discoveryAnswers[questionId] || '');
-  };
-
-  const handleCancelEditAnswer = () => {
-    setEditingAnswer(null);
-    setEditAnswerText('');
-  };
-
-  const handleSaveAnswer = async (questionId: string) => {
-    if (!editAnswerText.trim()) {
-      alert('Please enter an answer.');
-      return;
-    }
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        alert('You must be logged in to save answers.');
-        return;
-      }
-
-      const { error } = await supabase
-        .from('discovery_answers')
-        .upsert({
-          user_id: user.id,
-          question_id: questionId,
-          answer: editAnswerText.trim(),
-        });
-
-      if (error) {
-        console.error('Error saving answer:', error);
-        alert('Error saving answer: ' + error.message);
-        return;
-      }
-
-      await loadProfile();
-      setEditingAnswer(null);
-      setEditAnswerText('');
-      alert('Answer saved successfully!');
-    } catch (error: any) {
-      console.error('Error saving answer:', error);
-      alert('Error saving answer: ' + (error.message || 'Unknown error'));
-    }
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
   };
   
   if (loading) {
@@ -545,10 +413,12 @@ export default function ProfilePage() {
             <span className="text-2xl" style={{ color: '#D4AF37' }}>.</span>
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <Link href="/dashboard" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px' }}>Dashboard</Link>
-            <Link href="/colleges" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px' }}>Portfolio</Link>
-            <Link href="/personal-statement" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px' }}>Essays</Link>
-            <Link href="/profile" style={{ color: '#D4AF37', textDecoration: 'none', fontSize: '14px', fontWeight: 600 }}>Profile</Link>
+            <Link href="/dashboard" style={{ color: pathname === '/dashboard' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/dashboard' ? 600 : 400 }}>Dashboard</Link>
+            <Link href="/personal-statement" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays') || pathname.startsWith('/common-app')) ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays') || pathname.startsWith('/common-app')) ? 600 : 400 }}>Essays</Link>
+            <Link href="/colleges" style={{ color: pathname.startsWith('/colleges') ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname.startsWith('/colleges') ? 600 : 400 }}>Portfolio</Link>
+            <Link href="/profile" style={{ color: pathname === '/profile' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/profile' ? 600 : 400 }}>Profile</Link>
+            <Link href="/discovery" style={{ color: pathname === '/discovery' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/discovery' ? 600 : 400 }}>Insight Questions</Link>
+            <button onClick={handleLogout} style={{ background: 'transparent', color: 'rgba(255,255,255,0.7)', border: 'none', fontFamily: 'var(--font-body)', fontSize: '14px', cursor: 'pointer', padding: 0 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#F3E5AB'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}>Logout</button>
           </div>
         </div>
       </nav>
@@ -557,7 +427,7 @@ export default function ProfilePage() {
         <div style={{ marginBottom: '48px' }}>
           <h1 className="font-heading text-5xl mb-4" style={{ color: 'white' }}>Academic Profile</h1>
           <p className="font-body text-lg" style={{ color: '#F3E5AB' }}>
-            Manage your academic statistics, AP classes, extracurriculars, awards, and discovery answers
+            Manage your academic statistics, AP classes, extracurriculars, and awards
           </p>
         </div>
 
@@ -992,7 +862,6 @@ export default function ProfilePage() {
                     {extracurriculars.map((ec) => (
                       <tr key={ec.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                         {editingExtracurricular === ec.id ? (
-                          // Edit mode
                           <>
                             <td style={{ padding: '12px 16px' }}>
                               <input
@@ -1092,7 +961,6 @@ export default function ProfilePage() {
                             </td>
                           </>
                         ) : (
-                          // View mode
                           <>
                             <td style={{ padding: '12px 16px', fontFamily: 'var(--font-body)', color: 'white', fontWeight: 500, wordBreak: 'break-word' }}>
                               {ec.activity_name}
@@ -1319,175 +1187,33 @@ export default function ProfilePage() {
           </Card>
         </div>
 
-        {/* Discovery Answers */}
+        {/* Insight Questions – behind paywall */}
         <div style={{ marginTop: '32px' }}>
           <Card>
-            <h2 className="font-heading text-2xl mb-6" style={{ color: '#D4AF37' }}>Discovery Answers</h2>
+            <h2 className="font-heading text-2xl mb-4" style={{ color: '#D4AF37' }}>Insight Questions</h2>
             <p className="font-body text-sm mb-6" style={{ color: 'rgba(255,255,255,0.7)' }}>
-              Your responses to the 12 thoughtful onboarding questions. These help us understand your story, values, and what makes you unique. You can view and edit your answers at any time. These answers are also used by Strategic Intelligence to provide personalized essay guidance.
+              12 reflective questions that help us understand your story, values, and what makes you unique. Your answers power Strategic Intelligence for your essays. Available after you subscribe.
             </p>
-            
-            {DISCOVERY_QUESTIONS.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                {DISCOVERY_QUESTIONS.map((question, index) => {
-                  const answer = discoveryAnswers[question.id];
-                  const isEditing = editingAnswer === question.id;
-                  
-                  return (
-                    <div key={question.id} style={{ 
-                      padding: '20px', 
-                      background: 'rgba(0,0,0,0.2)', 
-                      borderRadius: '4px',
-                      borderLeft: '3px solid #D4AF37'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '12px' }}>
-                        <span className="font-heading text-lg" style={{ color: '#D4AF37', minWidth: '32px' }}>
-                          {index + 1}.
-                        </span>
-                        <h3 className="font-heading text-lg" style={{ color: 'white', flex: 1 }}>
-                          {question.question}
-                        </h3>
-                      </div>
-                      <div style={{ marginLeft: '44px' }}>
-                        {isEditing ? (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            <textarea
-                              value={editAnswerText}
-                              onChange={(e) => setEditAnswerText(e.target.value)}
-                              style={{
-                                width: '100%',
-                                minHeight: '150px',
-                                background: 'rgba(0,0,0,0.3)',
-                                border: '1px solid rgba(212,175,55,0.5)',
-                                color: 'white',
-                                padding: '12px',
-                                fontFamily: 'var(--font-body)',
-                                fontSize: '14px',
-                                outline: 'none',
-                                borderRadius: '2px',
-                                resize: 'vertical',
-                              }}
-                            />
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                              <button
-                                onClick={() => handleSaveAnswer(question.id)}
-                                style={{
-                                  background: '#D4AF37',
-                                  color: '#0B1623',
-                                  padding: '8px 16px',
-                                  fontFamily: 'var(--font-body)',
-                                  fontSize: '14px',
-                                  fontWeight: 600,
-                                  border: 'none',
-                                  borderRadius: '2px',
-                                  cursor: 'pointer',
-                                }}
-                              >
-                                Save
-                              </button>
-                              <button
-                                onClick={handleCancelEditAnswer}
-                                style={{
-                                  background: 'transparent',
-                                  color: 'rgba(255,255,255,0.7)',
-                                  border: '1px solid rgba(255,255,255,0.3)',
-                                  padding: '8px 16px',
-                                  fontFamily: 'var(--font-body)',
-                                  fontSize: '14px',
-                                  fontWeight: 600,
-                                  borderRadius: '2px',
-                                  cursor: 'pointer',
-                                }}
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div>
-                            {answer ? (
-                              <div>
-                                <p className="font-body text-sm" style={{ 
-                                  color: 'rgba(255,255,255,0.9)', 
-                                  lineHeight: '1.8',
-                                  whiteSpace: 'pre-wrap',
-                                  marginBottom: '12px'
-                                }}>
-                                  {answer}
-                                </p>
-                                <button
-                                  onClick={() => handleEditAnswer(question.id)}
-                                  style={{
-                                    background: 'transparent',
-                                    color: '#D4AF37',
-                                    border: '1px solid rgba(212,175,55,0.5)',
-                                    padding: '6px 12px',
-                                    fontFamily: 'var(--font-body)',
-                                    fontSize: '12px',
-                                    fontWeight: 600,
-                                    borderRadius: '2px',
-                                    cursor: 'pointer',
-                                  }}
-                                >
-                                  Edit Answer
-                                </button>
-                              </div>
-                            ) : (
-                              <div>
-                                <p className="font-body text-sm" style={{ 
-                                  color: 'rgba(255,255,255,0.5)', 
-                                  fontStyle: 'italic',
-                                  marginBottom: '12px'
-                                }}>
-                                  Not answered yet
-                                </p>
-                                <button
-                                  onClick={() => handleEditAnswer(question.id)}
-                                  style={{
-                                    background: '#D4AF37',
-                                    color: '#0B1623',
-                                    padding: '6px 12px',
-                                    fontFamily: 'var(--font-body)',
-                                    fontSize: '12px',
-                                    fontWeight: 600,
-                                    border: 'none',
-                                    borderRadius: '2px',
-                                    cursor: 'pointer',
-                                  }}
-                                >
-                                  Add Answer
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div style={{ padding: '40px', textAlign: 'center' }}>
-                <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)', marginBottom: '16px' }}>
-                  You haven't completed the onboarding questions yet.
-                </p>
-                <Link href="/onboarding">
-                  <button style={{
-                    background: '#D4AF37',
-                    color: '#0B1623',
-                    padding: '10px 20px',
-                    fontFamily: 'var(--font-body)',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    border: 'none',
-                    borderRadius: '2px',
-                    cursor: 'pointer',
-                  }}>
-                    Complete Onboarding Questions
-                  </button>
-                </Link>
-              </div>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+              <Link href="/pricing">
+                <button style={{
+                  background: '#D4AF37',
+                  color: '#0B1623',
+                  padding: '10px 20px',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  border: 'none',
+                  borderRadius: '2px',
+                  cursor: 'pointer',
+                }}>
+                  Subscribe to unlock
+                </button>
+              </Link>
+              <Link href="/discovery" style={{ color: '#D4AF37', textDecoration: 'none', fontSize: '14px' }}>
+                Go to Insight Questions →
+              </Link>
+            </div>
           </Card>
         </div>
       </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Button from '@/components/Button';
@@ -16,6 +16,7 @@ interface UserStats {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [collegeCount, setCollegeCount] = useState(0);
@@ -97,21 +98,12 @@ export default function DashboardPage() {
             <span className="text-gold-leaf text-2xl">.</span>
           </Link>
           <div className="flex items-center gap-6">
-            <Link href="/colleges" className="font-body text-sm text-white/70 hover:text-gold-leaf transition-colors">
-              Portfolio
-            </Link>
-            <Link href="/personal-statement" className="font-body text-sm text-white/70 hover:text-gold-leaf transition-colors">
-              Essays
-            </Link>
-            <Link href="/profile" className="font-body text-sm text-white/70 hover:text-gold-leaf transition-colors">
-              Profile
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="font-body text-sm text-white/70 hover:text-gold-leaf transition-colors"
-            >
-              Logout
-            </button>
+            <Link href="/dashboard" className="font-body text-sm transition-colors" style={{ color: pathname === '/dashboard' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', fontWeight: pathname === '/dashboard' ? 600 : 400, textDecoration: 'none' }}>Dashboard</Link>
+            <Link href="/personal-statement" className="font-body text-sm transition-colors" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays') || pathname.startsWith('/common-app')) ? '#F3E5AB' : 'rgba(255,255,255,0.7)', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays') || pathname.startsWith('/common-app')) ? 600 : 400, textDecoration: 'none' }}>Essays</Link>
+            <Link href="/colleges" className="font-body text-sm transition-colors" style={{ color: pathname.startsWith('/colleges') ? '#F3E5AB' : 'rgba(255,255,255,0.7)', fontWeight: pathname.startsWith('/colleges') ? 600 : 400, textDecoration: 'none' }}>Portfolio</Link>
+            <Link href="/profile" className="font-body text-sm transition-colors" style={{ color: pathname === '/profile' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', fontWeight: pathname === '/profile' ? 600 : 400, textDecoration: 'none' }}>Profile</Link>
+            <Link href="/discovery" className="font-body text-sm transition-colors" style={{ color: pathname === '/discovery' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', fontWeight: pathname === '/discovery' ? 600 : 400, textDecoration: 'none' }}>Insight Questions</Link>
+            <button onClick={handleLogout} className="font-body text-sm transition-colors" style={{ color: 'rgba(255,255,255,0.7)', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#F3E5AB'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}>Logout</button>
           </div>
         </div>
       </nav>

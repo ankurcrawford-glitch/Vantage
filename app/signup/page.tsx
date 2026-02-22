@@ -56,8 +56,8 @@ export default function SignupPage() {
       }
 
       if (data.user) {
-        // Immediately redirect to onboarding - no email confirmation needed
-        router.push('/onboarding');
+        // Immediately redirect to profile page - no email confirmation needed
+        router.push('/profile');
         router.refresh();
       }
     } catch (error: any) {
