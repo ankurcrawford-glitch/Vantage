@@ -549,8 +549,8 @@ export default function CommonAppEssayPage() {
       // Reload versions
       await loadVersions(currentEssayId);
 
-      setSaveSuccessMessage('Saved as version ' + nextVersion);
-      setTimeout(() => setSaveSuccessMessage(null), 3000);
+      setSaveSuccessMessage('Saved');
+      setTimeout(() => setSaveSuccessMessage(null), 2500);
     } catch (error: any) {
       console.error('Error saving version:', error);
       const msg = error?.message || error?.error_description || 'Unknown error';
