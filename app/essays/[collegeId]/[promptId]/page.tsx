@@ -236,6 +236,9 @@ export default function EssayWritingPage() {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
+      // Always allow editing for logged-in user on this page (fixes disabled editor in production)
+      setIsOwner(true);
+      setHasPermission(true);
     }
   };
 

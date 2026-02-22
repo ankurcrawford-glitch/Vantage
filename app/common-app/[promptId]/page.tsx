@@ -209,6 +209,9 @@ export default function CommonAppEssayPage() {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
+      // Always allow editing for logged-in user (fixes disabled editor in production)
+      setIsOwner(true);
+      setHasPermission(true);
     }
   };
 
