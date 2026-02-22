@@ -176,7 +176,7 @@ export default function CommonAppEssayPage() {
       subscribed = true;
       setHasSubscription(true);
 
-      // Find the prompt
+      // Find the prompt (slug like common-app-1)
       const selectedPrompt = COMMON_APP_PROMPTS.find(p => p.id === promptId);
       if (selectedPrompt) {
         setPrompt(selectedPrompt);
@@ -187,13 +187,27 @@ export default function CommonAppEssayPage() {
         return;
       }
 
-      // Check if essay exists (no row is normal; maybeSingle returns null instead of throwing)
-      const { data: essayData } = await supabase
-        .from('essays')
-        .select('id, user_id')
-        .eq('user_id', user.id)
-        .eq('college_prompt_id', promptId)
+      // college_prompt_id in DB is UUID; get prompt row for Common App by sort_order
+      const promptNum = selectedPrompt?.number ?? parseInt(promptId.replace('common-app-', ''), 10) || 1;
+      const { data: promptRow } = await supabase
+        .from('college_prompts')
+        .select('id')
+        .eq('college_id', 'common-app')
+        .eq('sort_order', promptNum)
         .maybeSingle();
+      const collegePromptUuid = promptRow?.id ?? null;
+
+      // Check if essay exists (college_prompt_id must be UUID)
+      let essayData: { id: string; user_id: string } | null = null;
+      if (collegePromptUuid) {
+        const res = await supabase
+          .from('essays')
+          .select('id, user_id')
+          .eq('user_id', user.id)
+          .eq('college_prompt_id', collegePromptUuid)
+          .maybeSingle();
+        essayData = res.data;
+      }
 
       if (essayData) {
         setEssayId(essayData.id);
@@ -303,10 +317,14 @@ export default function CommonAppEssayPage() {
   };
 
   const handleSendInvitation = async () => {
-    if (!newInvitation.email.trim() || !essayId) {
-      alert('Please enter an email address.');
-      return;
-    }
+      if (!essayId) {
+        alert('Save your essay first (click "Save New Version" above), then you can invite commenters.');
+        return;
+      }
+      if (!newInvitation.email.trim()) {
+        alert('Please enter an email address.');
+        return;
+      }
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || !isOwner) {
@@ -448,37 +466,41 @@ export default function CommonAppEssayPage() {
 
       // Create essay if it doesn't exist
       if (!currentEssayId) {
-        // First, ensure the prompt exists in college_prompts
+        // college_prompts.id is UUID; look up by college_id + sort_order for Common App
+        const promptNumber = prompt?.number ?? parseInt(promptId.replace('common-app-', ''), 10) || 1;
         const { data: promptData } = await supabase
           .from('college_prompts')
           .select('id')
-          .eq('id', promptId)
+          .eq('college_id', 'common-app')
+          .eq('sort_order', promptNumber)
           .maybeSingle();
 
-        let promptDbId = promptData?.id;
+        let promptDbId: string | null = promptData?.id ?? null;
 
         if (!promptDbId) {
-          // Create the prompt in the database
           const { data: newPrompt, error: promptError } = await supabase
             .from('college_prompts')
             .insert({
-              id: promptId,
               college_id: 'common-app',
               prompt_text: prompt?.prompt || '',
-              word_limit: prompt?.word_limit || 650,
+              word_limit: prompt?.word_limit ?? 650,
               year: 2025,
-              sort_order: prompt?.number || 1,
+              sort_order: promptNumber,
             })
-            .select()
+            .select('id')
             .single();
 
           if (promptError && !promptError.message.includes('duplicate')) {
             throw promptError;
           }
-          promptDbId = newPrompt?.id || promptId;
+          promptDbId = newPrompt?.id ?? null;
         }
 
-        // Create essay
+        if (!promptDbId) {
+          throw new Error('Could not find or create Common App prompt. Check college_prompts table.');
+        }
+
+        // Create essay (college_prompt_id must be UUID)
         const { data: newEssay, error: essayError } = await supabase
           .from('essays')
           .insert({
@@ -529,7 +551,11 @@ export default function CommonAppEssayPage() {
       alert('Essay saved as version ' + nextVersion);
     } catch (error: any) {
       console.error('Error saving version:', error);
-      alert('Error saving essay: ' + (error.message || 'Unknown error'));
+      const msg = error?.message || error?.error_description || 'Unknown error';
+      const hint = msg.toLowerCase().includes('policy') || msg.toLowerCase().includes('rls') || msg.toLowerCase().includes('row-level security')
+        ? '\n\nCheck Supabase: Table Editor → essays & essay_versions → enable RLS and add INSERT policy for auth.uid() = user_id.'
+        : '';
+      alert('Error saving essay: ' + msg + hint);
     } finally {
       setSaving(false);
     }

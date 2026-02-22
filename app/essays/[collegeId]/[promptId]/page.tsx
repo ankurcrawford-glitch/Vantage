@@ -332,7 +332,11 @@ export default function EssayWritingPage() {
   };
 
   const handleSendInvitation = async () => {
-    if (!newInvitation.email.trim() || !essayId) {
+    if (!essayId) {
+      alert('Save your essay first (click "Save New Version" above), then you can invite commenters.');
+      return;
+    }
+    if (!newInvitation.email.trim()) {
       alert('Please enter an email address.');
       return;
     }
@@ -478,7 +482,11 @@ export default function EssayWritingPage() {
       alert('Essay saved as version ' + nextVersion);
     } catch (error: any) {
       console.error('Error saving version:', error);
-      alert('Error saving essay: ' + (error.message || 'Unknown error'));
+      const msg = error?.message || error?.error_description || 'Unknown error';
+      const hint = msg.toLowerCase().includes('policy') || msg.toLowerCase().includes('rls') || msg.toLowerCase().includes('row-level security')
+        ? '\n\nCheck Supabase: Table Editor → essays & essay_versions → enable RLS and add INSERT policy for auth.uid() = user_id.'
+        : '';
+      alert('Error saving essay: ' + msg + hint);
     } finally {
       setSaving(false);
     }
