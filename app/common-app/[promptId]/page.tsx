@@ -113,6 +113,10 @@ export default function CommonAppEssayPage() {
   const [hasSubscription, setHasSubscription] = useState(false);
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
   const [deletingVersionId, setDeletingVersionId] = useState<string | null>(null);
+  const [generatedLink, setGeneratedLink] = useState<string | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [sendingInvitation, setSendingInvitation] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -307,6 +311,23 @@ export default function CommonAppEssayPage() {
     }
   };
 
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 3000);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 3000);
+    }
+  };
+
   const handleSendInvitation = async () => {
       if (!essayId) {
         alert('Save your essay first (click "Save New Version" above), then you can invite commenters.');
@@ -316,6 +337,9 @@ export default function CommonAppEssayPage() {
         alert('Please enter an email address.');
         return;
       }
+    setSendingInvitation(true);
+    setEmailSent(false);
+    setGeneratedLink(null);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || !isOwner) {
@@ -337,17 +361,38 @@ export default function CommonAppEssayPage() {
 
       if (error) throw error;
 
-      const invitationLink = (data as any).token
-        ? `${window.location.origin}/invitations/${(data as any).token}`
-        : `${window.location.origin}/essays/common-app/${promptId}`;
-      alert(`Invitation sent! Share this link with ${newInvitation.email}: ${invitationLink}`);
+      const invitationLink = `${window.location.origin}/invitations/${(data as any).token}`;
+      setGeneratedLink(invitationLink);
+
+      // Send email
+      try {
+        const emailRes = await fetch('/api/send-invitation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            invitationId: data.id,
+            inviteeEmail: newInvitation.email.trim(),
+            inviteeName: newInvitation.name.trim() || null,
+            role: newInvitation.role,
+            essayInfo: { collegeName: 'Common Application' },
+            invitationToken: (data as any).token,
+            studentName: user.email?.split('@')[0] || 'A student',
+          }),
+        });
+        if (emailRes.ok) {
+          setEmailSent(true);
+        }
+      } catch (emailErr) {
+        console.error('Email send failed (link still works):', emailErr);
+      }
 
       setNewInvitation({ email: '', name: '', role: 'parent' });
-      setShowInviteForm(false);
       loadInvitations();
     } catch (error: any) {
       console.error('Error sending invitation:', error);
       alert('Error sending invitation: ' + (error.message || 'Unknown error'));
+    } finally {
+      setSendingInvitation(false);
     }
   };
 
@@ -1136,8 +1181,9 @@ export default function CommonAppEssayPage() {
                       </select>
                       <button
                         onClick={handleSendInvitation}
+                        disabled={sendingInvitation}
                         style={{
-                          background: '#D4AF37',
+                          background: sendingInvitation ? 'rgba(212,175,55,0.5)' : '#D4AF37',
                           color: '#0B1623',
                           padding: '8px 16px',
                           fontFamily: 'var(--font-body)',
@@ -1145,11 +1191,61 @@ export default function CommonAppEssayPage() {
                           fontWeight: 600,
                           border: 'none',
                           borderRadius: '2px',
-                          cursor: 'pointer',
+                          cursor: sendingInvitation ? 'not-allowed' : 'pointer',
                         }}
                       >
-                        Send Invitation
+                        {sendingInvitation ? 'Sending...' : 'Send Invitation'}
                       </button>
+
+                      {generatedLink && (
+                        <div style={{ marginTop: '12px', padding: '12px', background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: '4px' }}>
+                          {emailSent && (
+                            <p className="font-body text-xs" style={{ color: '#10B981', marginBottom: '8px', fontWeight: 600 }}>
+                              Email sent successfully
+                            </p>
+                          )}
+                          <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '8px' }}>
+                            {emailSent ? 'You can also share this link directly:' : 'Share this link with your reviewer:'}
+                          </p>
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <input
+                              type="text"
+                              value={generatedLink}
+                              readOnly
+                              onClick={(e) => (e.target as HTMLInputElement).select()}
+                              style={{
+                                flex: 1,
+                                height: '32px',
+                                background: 'rgba(0,0,0,0.3)',
+                                border: '1px solid rgba(212,175,55,0.2)',
+                                color: 'white',
+                                padding: '0 10px',
+                                fontFamily: 'var(--font-body)',
+                                fontSize: '11px',
+                                outline: 'none',
+                                borderRadius: '2px',
+                              }}
+                            />
+                            <button
+                              onClick={() => copyToClipboard(generatedLink)}
+                              style={{
+                                background: linkCopied ? '#10B981' : '#D4AF37',
+                                color: linkCopied ? 'white' : '#0B1623',
+                                padding: '6px 12px',
+                                fontFamily: 'var(--font-body)',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                border: 'none',
+                                borderRadius: '2px',
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {linkCopied ? 'Copied!' : 'Copy'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
