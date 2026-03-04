@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Card from '@/components/Card';
@@ -71,11 +71,22 @@ interface Comment {
   created_at: string;
 }
 
+interface Invitation {
+  id: string;
+  invitee_email: string;
+  invitee_name: string | null;
+  role: string;
+  status: string;
+  created_at: string;
+}
+
+// Fixed UUID for the "Common Application" row in the colleges table
+const COMMON_APP_COLLEGE_ID = 'a0000000-0000-0000-0000-000000000000';
+
 export default function CommonAppEssayPage() {
   const params = useParams();
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const promptId = params.promptId as string;
 
   const [prompt, setPrompt] = useState<any>(null);
@@ -92,6 +103,9 @@ export default function CommonAppEssayPage() {
   const [savingComment, setSavingComment] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [hasPermission, setHasPermission] = useState(false);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [showInviteForm, setShowInviteForm] = useState(false);
+  const [newInvitation, setNewInvitation] = useState({ email: '', name: '', role: 'parent' });
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [showThinkingPartner, setShowThinkingPartner] = useState(false);
   const [thinkingPartnerResponse, setThinkingPartnerResponse] = useState<string | null>(null);
@@ -110,6 +124,12 @@ export default function CommonAppEssayPage() {
       loadComments(currentVersion.id);
     }
   }, [currentVersion]);
+
+  useEffect(() => {
+    if (essayId && currentUser && isOwner) {
+      loadInvitations();
+    }
+  }, [essayId, currentUser, isOwner]);
 
   useEffect(() => {
     setWordCount(countWords(content));
@@ -174,11 +194,11 @@ export default function CommonAppEssayPage() {
       }
 
       // college_prompt_id in DB is UUID; get prompt row for Common App by sort_order
-      const promptNum = ((selectedPrompt?.number ?? parseInt(promptId.replace('common-app-', ''), 10)) || 1);
+      const promptNum = (selectedPrompt?.number ?? parseInt(promptId.replace('common-app-', ''), 10)) || 1;
       const { data: promptRow } = await supabase
         .from('college_prompts')
         .select('id')
-        .eq('college_id', 'common-app')
+        .eq('college_id', COMMON_APP_COLLEGE_ID)
         .eq('sort_order', promptNum)
         .maybeSingle();
       const collegePromptUuid = promptRow?.id ?? null;
@@ -201,41 +221,17 @@ export default function CommonAppEssayPage() {
         setHasPermission(true);
         loadVersions(essayData.id);
       } else {
-        const essayIdFromUrl = searchParams.get('e');
-        let foundAsCommenter = false;
-        if (essayIdFromUrl && collegePromptUuid && user.email) {
-          const { data: sharedEssay } = await supabase
-            .from('essays')
-            .select('id, user_id')
-            .eq('id', essayIdFromUrl)
-            .eq('college_prompt_id', collegePromptUuid)
-            .maybeSingle();
-          if (sharedEssay) {
-            const { data: commenterRow } = await supabase
-              .from('student_commenters')
-              .select('id')
-              .eq('student_id', sharedEssay.user_id)
-              .eq('commenter_email', user.email)
-              .maybeSingle();
-            if (commenterRow) {
-              await supabase.from('essay_permissions').insert({ essay_id: sharedEssay.id, user_id: user.id }).then(() => {});
-              setEssayId(sharedEssay.id);
-              setIsOwner(false);
-              setHasPermission(true);
-              loadVersions(sharedEssay.id);
-              foundAsCommenter = true;
-            }
-          }
-        }
-        if (!foundAsCommenter) {
-          setIsOwner(true);
-          setHasPermission(true);
-        }
+        // No essay yet – current user can create one
+        setIsOwner(true);
+        setHasPermission(true);
       }
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
+      // Always allow editing for logged-in user (fixes disabled editor in production)
+      setIsOwner(true);
+      setHasPermission(true);
     }
   };
 
@@ -293,10 +289,66 @@ export default function CommonAppEssayPage() {
     }
   };
 
-  const copyEssayLink = () => {
+  const loadInvitations = async () => {
     if (!essayId) return;
-    const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/common-app/${promptId}?e=${essayId}`;
-    navigator.clipboard.writeText(url).then(() => alert('Link copied. Share it with your commenters so they can open this essay when logged in.')).catch(() => alert('Could not copy.'));
+    try {
+      const { data: invitationsData, error } = await supabase
+        .from('essay_invitations')
+        .select('*')
+        .eq('essay_id', essayId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      if (invitationsData) {
+        setInvitations(invitationsData);
+      }
+    } catch (error) {
+      console.error('Error loading invitations:', error);
+    }
+  };
+
+  const handleSendInvitation = async () => {
+      if (!essayId) {
+        alert('Save your essay first (click "Save New Version" above), then you can invite commenters.');
+        return;
+      }
+      if (!newInvitation.email.trim()) {
+        alert('Please enter an email address.');
+        return;
+      }
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !isOwner) {
+        alert('Only the essay owner can send invitations.');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('essay_invitations')
+        .insert({
+          essay_id: essayId,
+          student_id: user.id,
+          invitee_email: newInvitation.email.trim(),
+          invitee_name: newInvitation.name.trim() || null,
+          role: newInvitation.role,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const invitationLink = (data as any).token
+        ? `${window.location.origin}/invitations/${(data as any).token}`
+        : `${window.location.origin}/essays/common-app/${promptId}`;
+      alert(`Invitation sent! Share this link with ${newInvitation.email}: ${invitationLink}`);
+
+      setNewInvitation({ email: '', name: '', role: 'parent' });
+      setShowInviteForm(false);
+      loadInvitations();
+    } catch (error: any) {
+      console.error('Error sending invitation:', error);
+      alert('Error sending invitation: ' + (error.message || 'Unknown error'));
+    }
   };
 
   const loadThinkingPartner = async () => {
@@ -315,7 +367,7 @@ export default function CommonAppEssayPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           promptId,
-          collegeId: 'common-app',
+          collegeId: COMMON_APP_COLLEGE_ID,
           userId: currentUser.id,
           essayContent: content.trim() || null,
         }),
@@ -406,11 +458,11 @@ export default function CommonAppEssayPage() {
       // Create essay if it doesn't exist
       if (!currentEssayId) {
         // college_prompts.id is UUID; look up by college_id + sort_order for Common App
-        const promptNumber = ((prompt?.number ?? parseInt(promptId.replace('common-app-', ''), 10)) || 1);
+        const promptNumber = (prompt?.number ?? parseInt(promptId.replace('common-app-', ''), 10)) || 1;
         const { data: promptData } = await supabase
           .from('college_prompts')
           .select('id')
-          .eq('college_id', 'common-app')
+          .eq('college_id', COMMON_APP_COLLEGE_ID)
           .eq('sort_order', promptNumber)
           .maybeSingle();
 
@@ -421,14 +473,14 @@ export default function CommonAppEssayPage() {
           await supabase
             .from('colleges')
             .upsert(
-              { id: 'common-app', name: 'Common App' },
+              { id: COMMON_APP_COLLEGE_ID, name: 'Common Application' },
               { onConflict: 'id' }
             );
 
           const { data: newPrompt, error: promptError } = await supabase
             .from('college_prompts')
             .insert({
-              college_id: 'common-app',
+              college_id: COMMON_APP_COLLEGE_ID,
               prompt_text: prompt?.prompt || '',
               word_limit: prompt?.word_limit ?? 650,
               year: 2025,
@@ -1006,7 +1058,119 @@ export default function CommonAppEssayPage() {
 
             {isOwner && (
               <div style={{ marginTop: '24px' }}>
-                <button type="button" onClick={copyEssayLink} style={{ background: 'transparent', color: '#D4AF37', border: '1px solid rgba(212,175,55,0.5)', padding: '8px 14px', fontFamily: 'var(--font-body)', fontSize: '13px', borderRadius: '2px', cursor: 'pointer' }}>Copy this link and send to someone</button>
+                <Card>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <h3 className="font-heading text-lg" style={{ color: '#D4AF37' }}>Invite Commenters</h3>
+                    <button
+                      onClick={() => setShowInviteForm(!showInviteForm)}
+                      style={{
+                        background: 'transparent',
+                        color: '#D4AF37',
+                        border: '1px solid rgba(212,175,55,0.5)',
+                        padding: '6px 12px',
+                        fontFamily: 'var(--font-body)',
+                        fontSize: '12px',
+                        borderRadius: '2px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {showInviteForm ? 'Cancel' : '+ Invite'}
+                    </button>
+                  </div>
+
+                  {showInviteForm && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+                      <input
+                        type="email"
+                        value={newInvitation.email}
+                        onChange={(e) => setNewInvitation({ ...newInvitation, email: e.target.value })}
+                        placeholder="Email address"
+                        style={{
+                          height: '36px',
+                          background: 'rgba(0,0,0,0.2)',
+                          border: '1px solid rgba(212,175,55,0.2)',
+                          color: 'white',
+                          padding: '0 12px',
+                          fontFamily: 'var(--font-body)',
+                          fontSize: '14px',
+                          outline: 'none',
+                          borderRadius: '2px',
+                        }}
+                      />
+                      <input
+                        type="text"
+                        value={newInvitation.name}
+                        onChange={(e) => setNewInvitation({ ...newInvitation, name: e.target.value })}
+                        placeholder="Name (optional)"
+                        style={{
+                          height: '36px',
+                          background: 'rgba(0,0,0,0.2)',
+                          border: '1px solid rgba(212,175,55,0.2)',
+                          color: 'white',
+                          padding: '0 12px',
+                          fontFamily: 'var(--font-body)',
+                          fontSize: '14px',
+                          outline: 'none',
+                          borderRadius: '2px',
+                        }}
+                      />
+                      <select
+                        value={newInvitation.role}
+                        onChange={(e) => setNewInvitation({ ...newInvitation, role: e.target.value })}
+                        style={{
+                          height: '36px',
+                          background: 'rgba(0,0,0,0.2)',
+                          border: '1px solid rgba(212,175,55,0.2)',
+                          color: 'white',
+                          padding: '0 12px',
+                          fontFamily: 'var(--font-body)',
+                          fontSize: '14px',
+                          outline: 'none',
+                          borderRadius: '2px',
+                        }}
+                      >
+                        <option value="parent">Parent</option>
+                        <option value="counselor">Counselor</option>
+                        <option value="mentor">Mentor</option>
+                        <option value="other">Other</option>
+                      </select>
+                      <button
+                        onClick={handleSendInvitation}
+                        style={{
+                          background: '#D4AF37',
+                          color: '#0B1623',
+                          padding: '8px 16px',
+                          fontFamily: 'var(--font-body)',
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          border: 'none',
+                          borderRadius: '2px',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Send Invitation
+                      </button>
+                    </div>
+                  )}
+
+                  {invitations.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
+                      <p className="font-body text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '8px' }}>
+                        Sent Invitations:
+                      </p>
+                      {invitations.map((inv) => (
+                        <div key={inv.id} style={{ padding: '8px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px' }}>
+                          <p className="font-body text-xs" style={{ color: 'white' }}>
+                            {inv.invitee_name || inv.invitee_email}
+                          </p>
+                          <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                            {inv.role} • {inv.status}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
               </div>
             )}
           </div>
