@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// ============================================
-// TODO: REMINDER - Consider switching to better AI providers for essay coaching:
-// - Anthropic Claude (claude-3-5-sonnet) - Better for nuanced writing feedback
-// - Google Gemini - More cost-effective, good for educational contexts
-// Current: OpenAI (gpt-4-turbo) - Good but may be more expensive
-// ============================================
-
-const AI_PROVIDER = 'openai';
-const AI_MODEL = 'gpt-4o'; // Updated to gpt-4o (more current and reliable)
+const AI_MODEL = 'gemini-2.0-flash'; // Cost-effective, great for essay coaching
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,11 +23,11 @@ export async function POST(request: NextRequest) {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get OpenAI API key
-    const openaiApiKey = process.env.OPENAI_API_KEY;
-    if (!openaiApiKey) {
+    // Get Gemini API key
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    if (!geminiApiKey) {
       return NextResponse.json({ 
-        error: 'OpenAI API key not configured. Add OPENAI_API_KEY to .env.local' 
+        error: 'Gemini API key not configured. Add GEMINI_API_KEY to environment variables.' 
       }, { status: 500 });
     }
 
@@ -230,27 +222,24 @@ YOUR TASK - Provide strategic guidance on HOW to approach this prompt:
 IMPORTANT: Do NOT write the essay. Do NOT provide sample paragraphs. Only provide strategic guidance, frameworks, questions, and approaches.`;
     }
 
-    // Call OpenAI
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Call Google Gemini
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${geminiApiKey}`;
+    const response = await fetch(geminiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${openaiApiKey}`,
       },
       body: JSON.stringify({
-        model: AI_MODEL,
-        messages: [
-          {
-            role: 'system',
-            content: systemMessage
-          },
-          {
-            role: 'user',
-            content: aiPrompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000,
+        systemInstruction: {
+          parts: [{ text: systemMessage }]
+        },
+        contents: [{
+          parts: [{ text: aiPrompt }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 2000,
+        },
       }),
     });
 
@@ -263,18 +252,17 @@ IMPORTANT: Do NOT write the essay. Do NOT provide sample paragraphs. Only provid
         errorDetails = { message: errorText };
       }
       
-      console.error('OpenAI API error:', errorDetails);
+      console.error('Gemini API error:', errorDetails);
       
-      // Return more helpful error message
-      const errorMessage = errorDetails.error?.message || errorDetails.message || 'Unknown OpenAI API error';
+      const errorMessage = errorDetails.error?.message || errorDetails.message || 'Unknown Gemini API error';
       return NextResponse.json({ 
-        error: `OpenAI API Error: ${errorMessage}`,
+        error: `Gemini API Error: ${errorMessage}`,
         details: errorDetails 
       }, { status: 500 });
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0]?.message?.content || 'No response generated';
+    const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated';
 
     if (!aiResponse || aiResponse === 'No response generated') {
       return NextResponse.json({ 
