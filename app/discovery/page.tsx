@@ -16,6 +16,8 @@ export default function DiscoveryPage() {
   const [editingAnswer, setEditingAnswer] = useState<string | null>(null);
   const [editAnswerText, setEditAnswerText] = useState('');
   const [saving, setSaving] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuthAndSubscription();
@@ -29,6 +31,7 @@ export default function DiscoveryPage() {
         return;
       }
 
+      setUserId(user.id);
       let subscribed = false;
       try {
         const { data: sub } = await supabase
@@ -42,10 +45,6 @@ export default function DiscoveryPage() {
       } catch {
         setHasSubscription(false);
       }
-      // TODO: remove bypass when subscription/payments are live
-      subscribed = true;
-      setHasSubscription(true);
-
       if (subscribed) {
         const { data: discoveryData } = await supabase
           .from('discovery_answers')
@@ -75,6 +74,28 @@ export default function DiscoveryPage() {
   const handleCancelEditAnswer = () => {
     setEditingAnswer(null);
     setEditAnswerText('');
+  };
+
+  const handleCheckout = async () => {
+    if (!userId) return;
+    setCheckoutLoading(true);
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || 'Unable to start checkout. Please try again.');
+      }
+    } catch {
+      alert('Unable to start checkout. Please try again.');
+    } finally {
+      setCheckoutLoading(false);
+    }
   };
 
   const handleSaveAnswer = async (questionId: string) => {
@@ -142,8 +163,10 @@ export default function DiscoveryPage() {
             <p className="font-body text-lg mb-6" style={{ color: 'rgba(255,255,255,0.9)' }}>
               The 12 reflective questions are available after you subscribe. They help us understand your story, values, and what makes you unique—and power Strategic Intelligence for your essays.
             </p>
-            <Link href="/dashboard">
-              <button style={{
+            <button
+              onClick={handleCheckout}
+              disabled={checkoutLoading}
+              style={{
                 background: '#D4AF37',
                 color: '#0B1623',
                 padding: '12px 24px',
@@ -152,11 +175,15 @@ export default function DiscoveryPage() {
                 fontWeight: 600,
                 border: 'none',
                 borderRadius: '2px',
-                cursor: 'pointer',
-              }}>
-                Go to Dashboard
-              </button>
-            </Link>
+                cursor: checkoutLoading ? 'not-allowed' : 'pointer',
+                opacity: checkoutLoading ? 0.7 : 1,
+              }}
+            >
+              {checkoutLoading ? 'Redirecting...' : 'Unlock for $100'}
+            </button>
+            <p className="font-body text-sm mt-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              One-time payment. Full access to Insight Questions and Strategic Intelligence.
+            </p>
           </Card>
         ) : (
           <>

@@ -185,10 +185,6 @@ export default function EssayWritingPage() {
       } catch {
         setHasSubscription(false);
       }
-      // TODO: remove bypass when subscription/payments are live
-      subscribed = true;
-      setHasSubscription(true);
-
       // Load college
       const { data: collegeData } = await supabase
         .from('colleges')

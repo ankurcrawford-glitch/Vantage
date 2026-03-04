@@ -57,8 +57,8 @@ Ensure these exist and have the right structure. You can run SQL in **Supabase D
 | `college_prompts` | Essay prompts per college + Common App. |
 | `essays` | One row per essay (links user, college/prompt, content). |
 | `essay_versions` | Version history for essays. |
-| `essay_permissions` | Who can view/edit (e.g. counselors). |
-| `essay_invitations` | Invite links for counselors. |
+| `essay_permissions` | Who can view/comment (granted when a commenter opens a shared essay link). |
+| `student_commenters` | Up to 5 commenter emails per student (Profile); they get access via shared links. |
 | `counselor_comments` | Comments on essays. |
 | `user_ap_classes` | AP classes (profile). |
 | `user_extracurriculars` | Extracurriculars (profile). |
