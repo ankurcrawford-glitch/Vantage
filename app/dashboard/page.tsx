@@ -1,41 +1,74 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import Button from '@/components/Button';
 import Card from '@/components/Card';
-import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
 
-export default function DiscoveryPage() {
+interface UserStats {
+  gpa_weighted: number | null;
+  gpa_unweighted: number | null;
+  sat_score: number | null;
+  act_score: number | null;
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-midnight flex items-center justify-center">
+        <div className="text-gold-leaf font-body">Loading...</div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
+function DashboardContent() {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [user, setUser] = useState<any>(null);
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [collegeCount, setCollegeCount] = useState(0);
+  const [essayCount, setEssayCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [hasSubscription, setHasSubscription] = useState(false);
-  const [discoveryAnswers, setDiscoveryAnswers] = useState<Record<string, string>>({});
-  const [editingAnswer, setEditingAnswer] = useState<string | null>(null);
-  const [editAnswerText, setEditAnswerText] = useState('');
-  const [saving, setSaving] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [accessCode, setAccessCode] = useState('');
   const [codeLoading, setCodeLoading] = useState(false);
   const [codeError, setCodeError] = useState('');
 
   useEffect(() => {
-    checkAuthAndSubscription();
+    checkAuth();
+    loadDashboardData();
   }, []);
 
-  const checkAuthAndSubscription = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-        return;
-      }
+  // Handle post-checkout success
+  useEffect(() => {
+    const sessionId = searchParams.get('session_id');
+    if (sessionId) {
+      setShowPaymentSuccess(true);
+      // Clean the URL
+      router.replace('/dashboard', { scroll: false });
+      // Re-check subscription after short delay (webhook may take a moment)
+      const timer = setTimeout(() => {
+        checkSubscription();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
 
-      setUserId(user.id);
-      let subscribed = false;
+  const checkAuth = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      router.push('/login');
+    } else {
+      setUser(user);
+      // Check subscription
       try {
         const { data: sub } = await supabase
           .from('user_subscriptions')
@@ -43,50 +76,37 @@ export default function DiscoveryPage() {
           .eq('user_id', user.id)
           .eq('status', 'active')
           .maybeSingle();
-        subscribed = !!sub;
         setHasSubscription(!!sub);
       } catch {
         setHasSubscription(false);
       }
-      if (subscribed) {
-        const { data: discoveryData } = await supabase
-          .from('discovery_answers')
-          .select('question_id, answer')
-          .eq('user_id', user.id);
-
-        if (discoveryData) {
-          const answersMap: Record<string, string> = {};
-          discoveryData.forEach((item: { question_id: string; answer: string }) => {
-            answersMap[item.question_id] = item.answer;
-          });
-          setDiscoveryAnswers(answersMap);
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleEditAnswer = (questionId: string) => {
-    setEditingAnswer(questionId);
-    setEditAnswerText(discoveryAnswers[questionId] || '');
-  };
-
-  const handleCancelEditAnswer = () => {
-    setEditingAnswer(null);
-    setEditAnswerText('');
+  const checkSubscription = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    try {
+      const { data: sub } = await supabase
+        .from('user_subscriptions')
+        .select('status')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+      setHasSubscription(!!sub);
+    } catch {
+      // ignore
+    }
   };
 
   const handleCheckout = async () => {
-    if (!userId) return;
+    if (!user) return;
     setCheckoutLoading(true);
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ userId: user.id }),
       });
       const data = await res.json();
       if (data.url) {
@@ -102,20 +122,19 @@ export default function DiscoveryPage() {
   };
 
   const handleRedeemCode = async () => {
-    if (!userId || !accessCode.trim()) return;
+    if (!user || !accessCode.trim()) return;
     setCodeLoading(true);
     setCodeError('');
     try {
       const res = await fetch('/api/redeem-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: accessCode, userId }),
+        body: JSON.stringify({ code: accessCode, userId: user.id }),
       });
       const data = await res.json();
       if (data.success) {
         setHasSubscription(true);
-        // Reload to fetch discovery answers
-        window.location.reload();
+        setAccessCode('');
       } else {
         setCodeError(data.error || 'Invalid code');
       }
@@ -126,268 +145,295 @@ export default function DiscoveryPage() {
     }
   };
 
-  const handleSaveAnswer = async (questionId: string) => {
-    if (!editAnswerText.trim()) {
-      alert('Please enter an answer.');
-      return;
-    }
-    setSaving(true);
+  const loadDashboardData = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase
-        .from('discovery_answers')
-        .upsert({
-          user_id: user.id,
-          question_id: questionId,
-          answer: editAnswerText.trim(),
-        });
+      // Load stats
+      const { data: statsData } = await supabase
+        .from('user_stats')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
 
-      if (error) throw error;
+      if (statsData) {
+        setStats(statsData);
+      }
 
-      setDiscoveryAnswers((prev) => ({ ...prev, [questionId]: editAnswerText.trim() }));
-      setEditingAnswer(null);
-      setEditAnswerText('');
-      alert('Answer saved.');
-    } catch {
-      alert('Error saving answer. Please try again.');
+      // Load college count
+      const { count: collegeCountData } = await supabase
+        .from('user_colleges')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      setCollegeCount(collegeCountData || 0);
+
+      // Load essay count
+      const { count: essayCountData } = await supabase
+        .from('essays')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      setEssayCount(essayCountData || 0);
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1623' }}>
-        <div style={{ color: '#D4AF37' }}>Loading...</div>
+      <div className="min-h-screen bg-midnight flex items-center justify-center">
+        <div className="text-gold-leaf font-body">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#0B1623' }}>
-      <nav style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '24px 32px' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-            <span className="font-heading text-2xl font-semibold" style={{ color: 'white' }}>VANTAGE</span>
-            <span className="text-2xl" style={{ color: '#D4AF37' }}>.</span>
+    <div className="min-h-screen bg-midnight">
+      {/* Navigation */}
+      <nav className="border-b border-white/10 px-8 py-6">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <span className="font-heading text-2xl font-semibold text-white">VANTAGE</span>
+            <span className="text-gold-leaf text-2xl">.</span>
           </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <Link href="/dashboard" style={{ color: pathname === '/dashboard' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/dashboard' ? 600 : 400 }}>Dashboard</Link>
-            <Link href="/personal-statement" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays') || pathname.startsWith('/common-app')) ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays') || pathname.startsWith('/common-app')) ? 600 : 400 }}>Essays</Link>
-            <Link href="/colleges" style={{ color: pathname.startsWith('/colleges') ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname.startsWith('/colleges') ? 600 : 400 }}>Portfolio</Link>
-            <Link href="/profile" style={{ color: pathname === '/profile' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/profile' ? 600 : 400 }}>Profile</Link>
-            <Link href="/discovery" style={{ color: pathname === '/discovery' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/discovery' ? 600 : 400 }}>Insight Questions</Link>
-            <button onClick={async () => { await supabase.auth.signOut(); router.push('/'); }} style={{ background: 'transparent', color: 'rgba(255,255,255,0.7)', border: 'none', fontFamily: 'var(--font-body)', fontSize: '14px', cursor: 'pointer', padding: 0 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#F3E5AB'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}>Logout</button>
+          <div className="flex items-center gap-6">
+            <Link href="/dashboard" className="font-body text-sm transition-colors" style={{ color: pathname === '/dashboard' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', fontWeight: pathname === '/dashboard' ? 600 : 400, textDecoration: 'none' }}>Dashboard</Link>
+            <Link href="/personal-statement" className="font-body text-sm transition-colors" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays') || pathname.startsWith('/common-app')) ? '#F3E5AB' : 'rgba(255,255,255,0.7)', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays') || pathname.startsWith('/common-app')) ? 600 : 400, textDecoration: 'none' }}>Essays</Link>
+            <Link href="/colleges" className="font-body text-sm transition-colors" style={{ color: pathname.startsWith('/colleges') ? '#F3E5AB' : 'rgba(255,255,255,0.7)', fontWeight: pathname.startsWith('/colleges') ? 600 : 400, textDecoration: 'none' }}>Portfolio</Link>
+            <Link href="/profile" className="font-body text-sm transition-colors" style={{ color: pathname === '/profile' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', fontWeight: pathname === '/profile' ? 600 : 400, textDecoration: 'none' }}>Profile</Link>
+            <Link href="/discovery" className="font-body text-sm transition-colors" style={{ color: pathname === '/discovery' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', fontWeight: pathname === '/discovery' ? 600 : 400, textDecoration: 'none' }}>Insight Questions</Link>
+            <button onClick={handleLogout} className="font-body text-sm transition-colors" style={{ color: 'rgba(255,255,255,0.7)', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#F3E5AB'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}>Logout</button>
           </div>
         </div>
       </nav>
 
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '64px 32px' }}>
-        {!hasSubscription ? (
-          <Card>
-            <h1 className="font-heading text-3xl mb-4" style={{ color: 'white' }}>Insight Questions</h1>
-            <p className="font-body text-lg mb-6" style={{ color: 'rgba(255,255,255,0.9)' }}>
-              The 12 reflective questions are available after you subscribe. They help us understand your story, values, and what makes you unique—and power Strategic Intelligence for your essays.
-            </p>
-            <button
-              onClick={handleCheckout}
-              disabled={checkoutLoading}
-              style={{
-                background: '#D4AF37',
-                color: '#0B1623',
-                padding: '12px 24px',
-                fontFamily: 'var(--font-body)',
-                fontSize: '14px',
-                fontWeight: 600,
-                border: 'none',
-                borderRadius: '2px',
-                cursor: checkoutLoading ? 'not-allowed' : 'pointer',
-                opacity: checkoutLoading ? 0.7 : 1,
-              }}
-            >
-              {checkoutLoading ? 'Redirecting...' : 'Unlock for $100'}
-            </button>
-            <p className="font-body text-sm mt-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
-              One-time payment. Full access to Insight Questions and Strategic Intelligence.
-            </p>
+      <div className="max-w-7xl mx-auto px-8 py-16">
+        {/* Payment Success Banner */}
+        {showPaymentSuccess && (
+          <div className="mb-8 p-4 rounded" style={{ background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)' }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-heading text-lg text-gold-leaf">Payment Successful</p>
+                <p className="font-body text-sm text-white/70">Thank you! You now have full access to Insight Questions and Strategic Intelligence.</p>
+              </div>
+              <button
+                onClick={() => setShowPaymentSuccess(false)}
+                style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '18px' }}
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
 
-            <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-              <p className="font-body text-sm mb-3" style={{ color: 'rgba(255,255,255,0.7)' }}>Have an access code?</p>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input
-                  type="text"
-                  value={accessCode}
-                  onChange={(e) => { setAccessCode(e.target.value); setCodeError(''); }}
-                  placeholder="Enter code"
-                  style={{
-                    background: 'rgba(0,0,0,0.3)',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    color: 'white',
-                    padding: '10px 14px',
-                    fontFamily: 'var(--font-body)',
-                    fontSize: '14px',
-                    borderRadius: '2px',
-                    outline: 'none',
-                    flex: 1,
-                  }}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleRedeemCode(); }}
-                />
+        {/* Welcome Section */}
+        <div className="mb-12">
+          <h1 className="font-heading text-5xl text-white mb-4">
+            Welcome back{user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : ''}
+          </h1>
+          <p className="font-body text-gold-light text-lg">
+            Your admissions command center
+          </p>
+        </div>
+
+        {/* Stats Overview */}
+        <div className="grid md:grid-cols-3 gap-8 mb-12">
+          <Card>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-heading text-xl text-gold-leaf">Colleges</h3>
+              <span className="text-3xl">◆</span>
+            </div>
+            <p className="font-heading text-4xl text-white mb-2">{collegeCount}</p>
+            <p className="font-body text-sm text-white/70">In your portfolio</p>
+          </Card>
+
+          <Card>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-heading text-xl text-gold-leaf">Essays</h3>
+              <span className="text-3xl">▲</span>
+            </div>
+            <p className="font-heading text-4xl text-white mb-2">{essayCount}</p>
+            <p className="font-body text-sm text-white/70">In progress</p>
+          </Card>
+
+          <Card>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-heading text-xl text-gold-leaf">Progress</h3>
+              <span className="text-3xl">■</span>
+            </div>
+            <p className="font-heading text-4xl text-white mb-2">
+              {collegeCount > 0 ? Math.round((essayCount / (collegeCount * 2)) * 100) : 0}%
+            </p>
+            <p className="font-body text-sm text-white/70">Complete</p>
+          </Card>
+        </div>
+
+        {/* Academic Stats */}
+        {stats && (
+          <div className="mb-12">
+            <h2 className="font-heading text-3xl text-white mb-6">Academic Profile</h2>
+            <Card>
+              <div className="grid md:grid-cols-4 gap-6">
+                {stats.gpa_weighted && (
+                  <div>
+                    <p className="font-body text-sm text-white/70 mb-1">Weighted GPA</p>
+                    <p className="font-heading text-2xl text-gold-leaf">{stats.gpa_weighted}</p>
+                  </div>
+                )}
+                {stats.gpa_unweighted && (
+                  <div>
+                    <p className="font-body text-sm text-white/70 mb-1">Unweighted GPA</p>
+                    <p className="font-heading text-2xl text-gold-leaf">{stats.gpa_unweighted}</p>
+                  </div>
+                )}
+                {stats.sat_score && (
+                  <div>
+                    <p className="font-body text-sm text-white/70 mb-1">SAT Score</p>
+                    <p className="font-heading text-2xl text-gold-leaf">{stats.sat_score}</p>
+                  </div>
+                )}
+                {stats.act_score && (
+                  <div>
+                    <p className="font-body text-sm text-white/70 mb-1">ACT Score</p>
+                    <p className="font-heading text-2xl text-gold-leaf">{stats.act_score}</p>
+                  </div>
+                )}
+              </div>
+              <Link href="/profile" className="inline-block mt-6">
+                <Button variant="secondary">Edit Profile</Button>
+              </Link>
+            </Card>
+          </div>
+        )}
+
+        {/* Quick Actions */}
+        <div>
+          <h2 className="font-heading text-3xl text-white mb-6">Quick Actions</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            <Link href="/colleges">
+              <Card className="cursor-pointer hover:bg-royal-blue/80 transition-colors">
+                <h3 className="font-heading text-xl text-gold-leaf mb-3">Add Colleges</h3>
+                <p className="font-body text-white/70 text-sm">
+                  Build your portfolio of target schools
+                </p>
+              </Card>
+            </Link>
+
+            <Link href="/common-app">
+              <Card className="cursor-pointer hover:bg-royal-blue/80 transition-colors">
+                <h3 className="font-heading text-xl text-gold-leaf mb-3">Start Common App Essay</h3>
+                <p className="font-body text-white/70 text-sm">
+                  Choose a prompt and begin writing 
+                </p>
+              </Card>
+            </Link>
+
+            <Link href="/profile">
+              <Card className="cursor-pointer hover:bg-royal-blue/80 transition-colors">
+                <h3 className="font-heading text-xl text-gold-leaf mb-3">Update Profile</h3>
+                <p className="font-body text-white/70 text-sm">
+                  Edit your stats and activities
+                </p>
+              </Card>
+            </Link>
+          </div>
+        </div>
+
+        {/* Upgrade CTA - shown only if not subscribed */}
+        {!hasSubscription && (
+          <div className="mt-12">
+            <Card>
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div>
+                  <h2 className="font-heading text-2xl text-gold-leaf mb-2">Unlock Full Access</h2>
+                  <p className="font-body text-white/70 text-sm" style={{ maxWidth: '600px' }}>
+                    Get access to 12 Insight Questions and Strategic Intelligence, our AI-powered essay coaching that learns your unique story and provides personalized guidance.
+                  </p>
+                  <p className="font-heading text-3xl text-white mt-3">$100 <span className="font-body text-sm text-white/50">one-time</span></p>
+                </div>
                 <button
-                  onClick={handleRedeemCode}
-                  disabled={codeLoading || !accessCode.trim()}
+                  onClick={handleCheckout}
+                  disabled={checkoutLoading}
+                  className="font-body font-bold text-xs uppercase tracking-wider"
                   style={{
-                    background: 'transparent',
-                    color: '#D4AF37',
-                    border: '1px solid rgba(212,175,55,0.5)',
-                    padding: '10px 20px',
-                    fontFamily: 'var(--font-body)',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    borderRadius: '2px',
-                    cursor: codeLoading || !accessCode.trim() ? 'not-allowed' : 'pointer',
-                    opacity: codeLoading || !accessCode.trim() ? 0.5 : 1,
+                    background: '#D4AF37',
+                    color: '#0B1623',
+                    padding: '14px 32px',
+                    border: 'none',
+                    cursor: checkoutLoading ? 'not-allowed' : 'pointer',
+                    opacity: checkoutLoading ? 0.7 : 1,
+                    whiteSpace: 'nowrap',
                   }}
                 >
-                  {codeLoading ? 'Verifying...' : 'Redeem'}
+                  {checkoutLoading ? 'Redirecting...' : 'Upgrade Now'}
                 </button>
               </div>
-              {codeError && (
-                <p className="font-body text-sm mt-2" style={{ color: '#ff6b6b' }}>{codeError}</p>
-              )}
-            </div>
-          </Card>
-        ) : (
-          <>
-            <div style={{ marginBottom: '32px' }}>
-              <h1 className="font-heading text-4xl mb-2" style={{ color: 'white' }}>Insight Questions</h1>
-              <p className="font-body text-lg" style={{ color: '#F3E5AB' }}>
-                12 reflective questions that help us understand your story and power Strategic Intelligence for your essays.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              {DISCOVERY_QUESTIONS.map((question, index) => {
-                const answer = discoveryAnswers[question.id];
-                const isEditing = editingAnswer === question.id;
-
-                return (
-                  <Card key={question.id}>
-                    <div style={{ padding: '20px', borderLeft: '3px solid #D4AF37' }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '12px' }}>
-                        <span className="font-heading text-lg" style={{ color: '#D4AF37', minWidth: '32px' }}>{index + 1}.</span>
-                        <h3 className="font-heading text-lg" style={{ color: 'white', flex: 1 }}>{question.question}</h3>
-                      </div>
-                      <div style={{ marginLeft: '44px' }}>
-                        {isEditing ? (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            <textarea
-                              value={editAnswerText}
-                              onChange={(e) => setEditAnswerText(e.target.value)}
-                              style={{
-                                width: '100%',
-                                minHeight: '150px',
-                                background: 'rgba(0,0,0,0.3)',
-                                border: '1px solid rgba(212,175,55,0.5)',
-                                color: 'white',
-                                padding: '12px',
-                                fontFamily: 'var(--font-body)',
-                                fontSize: '14px',
-                                outline: 'none',
-                                borderRadius: '2px',
-                                resize: 'vertical',
-                              }}
-                            />
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                              <button
-                                onClick={() => handleSaveAnswer(question.id)}
-                                disabled={saving}
-                                style={{
-                                  background: '#D4AF37',
-                                  color: '#0B1623',
-                                  padding: '8px 16px',
-                                  fontFamily: 'var(--font-body)',
-                                  fontSize: '14px',
-                                  fontWeight: 600,
-                                  border: 'none',
-                                  borderRadius: '2px',
-                                  cursor: saving ? 'not-allowed' : 'pointer',
-                                }}
-                              >
-                                Save
-                              </button>
-                              <button
-                                onClick={handleCancelEditAnswer}
-                                style={{
-                                  background: 'transparent',
-                                  color: 'rgba(255,255,255,0.7)',
-                                  border: '1px solid rgba(255,255,255,0.3)',
-                                  padding: '8px 16px',
-                                  fontFamily: 'var(--font-body)',
-                                  fontSize: '14px',
-                                  fontWeight: 600,
-                                  borderRadius: '2px',
-                                  cursor: 'pointer',
-                                }}
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div>
-                            {answer ? (
-                              <>
-                                <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.9)', lineHeight: '1.8', whiteSpace: 'pre-wrap', marginBottom: '12px' }}>{answer}</p>
-                                <button
-                                  onClick={() => handleEditAnswer(question.id)}
-                                  style={{
-                                    background: 'transparent',
-                                    color: '#D4AF37',
-                                    border: '1px solid rgba(212,175,55,0.5)',
-                                    padding: '6px 12px',
-                                    fontFamily: 'var(--font-body)',
-                                    fontSize: '12px',
-                                    fontWeight: 600,
-                                    borderRadius: '2px',
-                                    cursor: 'pointer',
-                                  }}
-                                >
-                                  Edit Answer
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)', fontStyle: 'italic', marginBottom: '12px' }}>Not answered yet</p>
-                                <button
-                                  onClick={() => handleEditAnswer(question.id)}
-                                  style={{
-                                    background: '#D4AF37',
-                                    color: '#0B1623',
-                                    padding: '6px 12px',
-                                    fontFamily: 'var(--font-body)',
-                                    fontSize: '12px',
-                                    fontWeight: 600,
-                                    border: 'none',
-                                    borderRadius: '2px',
-                                    cursor: 'pointer',
-                                  }}
-                                >
-                                  Add Answer
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          </>
+              <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                <p className="font-body text-sm mb-3" style={{ color: 'rgba(255,255,255,0.7)' }}>Have an access code?</p>
+                <div style={{ display: 'flex', gap: '8px', maxWidth: '400px' }}>
+                  <input
+                    type="text"
+                    value={accessCode}
+                    onChange={(e) => { setAccessCode(e.target.value); setCodeError(''); }}
+                    placeholder="Enter code"
+                    style={{
+                      background: 'rgba(0,0,0,0.3)',
+                      border: '1px solid rgba(255,255,255,0.2)',
+                      color: 'white',
+                      padding: '10px 14px',
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '14px',
+                      borderRadius: '2px',
+                      outline: 'none',
+                      flex: 1,
+                    }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleRedeemCode(); }}
+                  />
+                  <button
+                    onClick={handleRedeemCode}
+                    disabled={codeLoading || !accessCode.trim()}
+                    style={{
+                      background: 'transparent',
+                      color: '#D4AF37',
+                      border: '1px solid rgba(212,175,55,0.5)',
+                      padding: '10px 20px',
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      borderRadius: '2px',
+                      cursor: codeLoading || !accessCode.trim() ? 'not-allowed' : 'pointer',
+                      opacity: codeLoading || !accessCode.trim() ? 0.5 : 1,
+                    }}
+                  >
+                    {codeLoading ? 'Verifying...' : 'Redeem'}
+                  </button>
+                </div>
+                {codeError && (
+                  <p className="font-body text-sm mt-2" style={{ color: '#ff6b6b' }}>{codeError}</p>
+                )}
+              </div>
+            </Card>
+          </div>
         )}
+
+        {/* Upcoming Deadlines (placeholder) */}
+        <div className="mt-12">
+          <h2 className="font-heading text-3xl text-white mb-6">Upcoming Deadlines</h2>
+          <Card>
+            <p className="font-body text-white/70 text-center py-8">
+              No upcoming deadlines. Add colleges to see deadlines.
+            </p>
+          </Card>
+        </div>
       </div>
     </div>
   );
