@@ -1,6 +1,4 @@
-
-
-  'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -526,9 +524,3 @@ export default function CollegesPage() {
     </div>
   );
 }
-            <Link href="/personal-statement" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays') || pathname.startsWith('/common-app')) ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays') || pathname.startsWith('/common-app')) ? 600 : 400 }}>Essays</Link>
-            <Link href="/colleges" style={{ color: pathname.startsWith('/colleges') ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: pathname.startsWith('/colleges') ? 600 : 400 }}>Portfolio</Link>
-            <Link href="/profile" style={{ color: pathname === '/profile' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: pathname === '/profile' ? 600 : 400 }}>Profile</Link>
-            <Link href="/discovery" style={{ color: pathname === '/discovery' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: pathname === '/discovery' ? 600 : 400 }}>Insight Questions</Link>
-            <button onClick={handleLogout} style={{ background: 'transparent', color: 'rgba(255,255,255,0.7)', border: 'none', fontFamily: 'var(--font-body)', fontSize: '14px', cursor: 'pointer', padding: 0 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#F3E5AB'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}>Logout</button>
-          </div>
