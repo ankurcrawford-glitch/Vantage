@@ -396,6 +396,7 @@ export default function CommonAppEssayPage() {
           invitee_email: newInvitation.email.trim(),
           invitee_name: newInvitation.name.trim() || null,
           role: newInvitation.role,
+          student_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student',
         })
         .select()
         .single();
@@ -417,7 +418,7 @@ export default function CommonAppEssayPage() {
             role: newInvitation.role,
             essayInfo: { collegeName: 'Common Application' },
             invitationToken: (data as any).token,
-            studentName: user.email?.split('@')[0] || 'A student',
+            studentName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'A student',
           }),
         });
         if (emailRes.ok) {

@@ -70,7 +70,7 @@ export default function ReviewEssayPage() {
       const { data: inv, error: invError } = await supabase
         .from('essay_invitations')
         .select(`
-          id, essay_id, student_id, invitee_email, invitee_name, role, status,
+          id, essay_id, student_id, invitee_email, invitee_name, role, status, student_name,
           essays:essay_id (
             id, user_id, college_prompt_id,
             college_prompts:college_prompt_id (
@@ -101,7 +101,7 @@ export default function ReviewEssayPage() {
       setEssayId(essay?.id);
       setReviewerRole(inv.role);
       setReviewerName(inv.invitee_name || user.user_metadata?.full_name || '');
-      setStudentName(inv.student_id ? '' : ''); // We'll show generic if no name
+      setStudentName((inv as any).student_name || 'the student');
 
       const isCommonApp = prompt?.college_id === 'a0000000-0000-0000-0000-000000000000';
       setCollegeName(isCommonApp ? 'Common Application Essay' : (college?.name || 'College Essay'));
@@ -321,8 +321,11 @@ export default function ReviewEssayPage() {
         {/* Header */}
         <div style={{ marginBottom: '32px' }}>
           <h1 className="font-heading text-3xl mb-2" style={{ color: 'white' }}>{collegeName}</h1>
+          <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)', marginBottom: '4px' }}>
+            Essay for {studentName}
+          </p>
           {reviewerName && (
-            <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+            <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
               Reviewing as {reviewerName} ({roleLabel})
             </p>
           )}
@@ -411,7 +414,7 @@ export default function ReviewEssayPage() {
           <Card>
             <h2 className="font-heading text-xl mb-2" style={{ color: '#D4AF37' }}>Leave Your Feedback</h2>
             <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.5)', marginBottom: '20px' }}>
-              Share your thoughts, suggestions, and encouragement. The student will see your name and feedback type.
+              Share your thoughts, suggestions, and encouragement. {studentName !== 'the student' ? studentName : 'The student'} will see your name and feedback type.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
