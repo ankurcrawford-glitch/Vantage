@@ -308,13 +308,9 @@ export default function CommonAppEssayPage() {
         const { data: { user: me } } = await supabase.auth.getUser();
 
         const formattedComments: Comment[] = commentsData.map((comment: any) => {
-          let name: string;
-          if (me && comment.counselor_id === me.id) {
-            // Show the student's own name for their own comments
-            name = me.user_metadata?.full_name || nameMap[me.id] || 'You';
-          } else {
-            name = nameMap[comment.counselor_id] || 'Reviewer';
-          }
+          // Always show the actual commenter's name from permissions/invitations
+          const name = nameMap[comment.counselor_id]
+            || (me && comment.counselor_id === me.id ? (me.user_metadata?.full_name || 'You') : 'Reviewer');
           return {
             id: comment.id,
             counselor_id: comment.counselor_id,
@@ -1323,4 +1319,3 @@ export default function CommonAppEssayPage() {
     </div>
   );
 }
-
