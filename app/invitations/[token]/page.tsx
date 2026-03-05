@@ -14,6 +14,7 @@ interface InvitationData {
   invitee_name: string | null;
   role: string;
   status: string;
+  token: string;
   essays: {
     id: string;
     user_id: string;
@@ -63,7 +64,7 @@ export default function AcceptInvitationPage() {
       const { data: invData, error: invError } = await supabase
         .from('essay_invitations')
         .select(`
-          id, essay_id, student_id, invitee_email, invitee_name, role, status,
+          id, essay_id, student_id, invitee_email, invitee_name, role, status, token,
           essays:essay_id (
             id, user_id, college_prompt_id,
             college_prompts:college_prompt_id (
@@ -92,9 +93,9 @@ export default function AcceptInvitationPage() {
         setAuthName(inv.invitee_name);
       }
 
-      // If already accepted and user is logged in, redirect to essay
+      // If already accepted and user is logged in, go to review page
       if (inv.status === 'accepted' && user) {
-        redirectToEssay(inv);
+        router.push(`/review/${token}`);
       }
     } catch (err) {
       console.error('Error loading invitation:', err);
@@ -102,25 +103,6 @@ export default function AcceptInvitationPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const redirectToEssay = (inv: InvitationData) => {
-    const essay = inv.essays;
-    if (essay) {
-      const prompt = essay.college_prompts;
-      if (prompt) {
-        const collegeId = prompt.college_id;
-        const promptId = prompt.id;
-        if (collegeId === 'a0000000-0000-0000-0000-000000000000') {
-          const sortOrder = prompt.sort_order || 1;
-          router.push(`/common-app/common-app-${sortOrder}`);
-        } else {
-          router.push(`/essays/${collegeId}/${promptId}`);
-        }
-        return;
-      }
-    }
-    router.push('/dashboard');
   };
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -225,8 +207,8 @@ export default function AcceptInvitationPage() {
         // Non-fatal
       }
 
-      // Redirect to the essay
-      redirectToEssay(invitation);
+      // Redirect to the dedicated review page (NOT the student editor)
+      router.push(`/review/${token}`);
     } catch (err: any) {
       console.error('Error accepting invitation:', err);
       setError('Could not accept the invitation: ' + (err.message || 'Unknown error'));
