@@ -205,6 +205,8 @@ export default function AcceptInvitationPage() {
         .upsert({
           essay_id: invitation.essay_id,
           user_id: user.id,
+          role: invitation.role || 'reviewer',
+          commenter_name: invitation.invitee_name || user.user_metadata?.full_name || invitation.invitee_email || 'Reviewer',
         }, { onConflict: 'essay_id,user_id' });
 
       if (permError) {

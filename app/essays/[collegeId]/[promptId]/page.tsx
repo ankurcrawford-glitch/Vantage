@@ -91,6 +91,7 @@ export default function EssayWritingPage() {
   const [linkCopied, setLinkCopied] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [sendingInvitation, setSendingInvitation] = useState(false);
+  const [showAllInvitations, setShowAllInvitations] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -279,8 +280,25 @@ export default function EssayWritingPage() {
       if (error) throw error;
 
       if (commentsData) {
+        // Look up commenter names from essay_permissions
+        const commenterIds = [...new Set(commentsData.map((c: any) => c.counselor_id))];
+        const nameMap: Record<string, string> = {};
+        if (essayId && commenterIds.length > 0) {
+          const { data: perms } = await supabase
+            .from('essay_permissions')
+            .select('user_id, commenter_name, role')
+            .eq('essay_id', essayId);
+          if (perms) {
+            for (const perm of perms) {
+              const label = perm.commenter_name
+                || (perm.role ? perm.role.charAt(0).toUpperCase() + perm.role.slice(1) : 'Reviewer');
+              nameMap[perm.user_id] = label;
+            }
+          }
+        }
+
         const formattedComments: Comment[] = commentsData.map((comment: any) => {
-          const name = 'Commenter';
+          const name = nameMap[comment.counselor_id] || 'Reviewer';
           return {
             id: comment.id,
             counselor_id: comment.counselor_id,
@@ -1257,9 +1275,9 @@ export default function EssayWritingPage() {
                   {invitations.length > 0 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
                       <p className="font-body text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '8px' }}>
-                        Sent Invitations:
+                        Sent Invitations ({invitations.length}):
                       </p>
-                      {invitations.map((inv) => (
+                      {(showAllInvitations ? invitations : invitations.slice(0, 3)).map((inv) => (
                         <div key={inv.id} style={{ padding: '8px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px' }}>
                           <p className="font-body text-xs" style={{ color: 'white' }}>
                             {inv.invitee_name || inv.invitee_email}
@@ -1269,6 +1287,23 @@ export default function EssayWritingPage() {
                           </p>
                         </div>
                       ))}
+                      {invitations.length > 3 && (
+                        <button
+                          onClick={() => setShowAllInvitations(!showAllInvitations)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#D4AF37',
+                            cursor: 'pointer',
+                            fontFamily: 'var(--font-body)',
+                            fontSize: '12px',
+                            padding: '4px 0',
+                            textAlign: 'left',
+                          }}
+                        >
+                          {showAllInvitations ? 'Show less' : `Show all ${invitations.length}`}
+                        </button>
+                      )}
                     </div>
                   )}
                 </Card>
