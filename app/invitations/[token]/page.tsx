@@ -22,6 +22,7 @@ interface InvitationData {
       id: string;
       college_id: string;
       prompt_text: string;
+      sort_order: number;
       colleges: {
         id: string;
         name: string;
@@ -41,6 +42,14 @@ export default function AcceptInvitationPage() {
   const [accepting, setAccepting] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
 
+  // Auth form states
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup');
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authName, setAuthName] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
+
   useEffect(() => {
     loadInvitation();
   }, [token]);
@@ -58,7 +67,7 @@ export default function AcceptInvitationPage() {
           essays:essay_id (
             id, user_id, college_prompt_id,
             college_prompts:college_prompt_id (
-              id, college_id, prompt_text,
+              id, college_id, prompt_text, sort_order,
               colleges:college_id ( id, name )
             )
           )
@@ -72,26 +81,20 @@ export default function AcceptInvitationPage() {
         return;
       }
 
-      setInvitation(invData as unknown as InvitationData);
+      const inv = invData as unknown as InvitationData;
+      setInvitation(inv);
+
+      // Pre-fill email from invitation
+      if (inv.invitee_email) {
+        setAuthEmail(inv.invitee_email);
+      }
+      if (inv.invitee_name) {
+        setAuthName(inv.invitee_name);
+      }
 
       // If already accepted and user is logged in, redirect to essay
-      if (invData.status === 'accepted' && user) {
-        const essay = (invData as any).essays;
-        if (essay) {
-          const prompt = essay.college_prompts;
-          if (prompt) {
-            const collegeId = prompt.college_id;
-            const promptId = prompt.id;
-            if (collegeId === 'a0000000-0000-0000-0000-000000000000') {
-              // Common App essay
-              const sortOrder = prompt.sort_order || 1;
-              router.push(`/common-app/common-app-${sortOrder}`);
-            } else {
-              router.push(`/essays/${collegeId}/${promptId}`);
-            }
-            return;
-          }
-        }
+      if (inv.status === 'accepted' && user) {
+        redirectToEssay(inv);
       }
     } catch (err) {
       console.error('Error loading invitation:', err);
@@ -101,14 +104,97 @@ export default function AcceptInvitationPage() {
     }
   };
 
-  const handleAccept = async () => {
-    if (!currentUser) {
-      // Redirect to signup/login, then back here
-      const returnUrl = `/invitations/${token}`;
-      router.push(`/login?redirect=${encodeURIComponent(returnUrl)}`);
-      return;
+  const redirectToEssay = (inv: InvitationData) => {
+    const essay = inv.essays;
+    if (essay) {
+      const prompt = essay.college_prompts;
+      if (prompt) {
+        const collegeId = prompt.college_id;
+        const promptId = prompt.id;
+        if (collegeId === 'a0000000-0000-0000-0000-000000000000') {
+          const sortOrder = prompt.sort_order || 1;
+          router.push(`/common-app/common-app-${sortOrder}`);
+        } else {
+          router.push(`/essays/${collegeId}/${promptId}`);
+        }
+        return;
+      }
     }
+    router.push('/dashboard');
+  };
 
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    setAuthLoading(true);
+
+    try {
+      if (authMode === 'signup') {
+        if (authPassword.length < 6) {
+          setAuthError('Password must be at least 6 characters.');
+          setAuthLoading(false);
+          return;
+        }
+
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email: authEmail.trim(),
+          password: authPassword,
+          options: {
+            data: {
+              full_name: authName.trim() || invitation?.invitee_name || '',
+              role: 'commenter',
+            },
+          },
+        });
+
+        if (signUpError) {
+          if (signUpError.message.includes('already registered') || signUpError.message.includes('already been registered')) {
+            setAuthError('This email is already registered. Switch to "Sign In" below.');
+          } else {
+            setAuthError(signUpError.message);
+          }
+          setAuthLoading(false);
+          return;
+        }
+
+        if (data.user) {
+          setCurrentUser(data.user);
+          // Auto-accept after signup
+          await acceptInvitation(data.user);
+        }
+      } else {
+        // Sign in
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({
+          email: authEmail.trim(),
+          password: authPassword,
+        });
+
+        if (signInError) {
+          if (signInError.message.toLowerCase().includes('invalid login')) {
+            setAuthError('Invalid email or password.');
+          } else if (signInError.message.toLowerCase().includes('rate limit')) {
+            setAuthError('Too many attempts. Please wait a few minutes.');
+          } else {
+            setAuthError(signInError.message);
+          }
+          setAuthLoading(false);
+          return;
+        }
+
+        if (data.user) {
+          setCurrentUser(data.user);
+          // Auto-accept after signin
+          await acceptInvitation(data.user);
+        }
+      }
+    } catch (err: any) {
+      setAuthError(err.message || 'Something went wrong.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const acceptInvitation = async (user: any) => {
     if (!invitation) return;
 
     setAccepting(true);
@@ -118,7 +204,7 @@ export default function AcceptInvitationPage() {
         .from('essay_permissions')
         .upsert({
           essay_id: invitation.essay_id,
-          user_id: currentUser.id,
+          user_id: user.id,
         }, { onConflict: 'essay_id,user_id' });
 
       if (permError) {
@@ -134,34 +220,22 @@ export default function AcceptInvitationPage() {
 
       if (updateError) {
         console.error('Update error:', updateError);
-        // Non-fatal — permission was granted, just status didn't update
+        // Non-fatal
       }
 
       // Redirect to the essay
-      const essay = invitation.essays;
-      if (essay) {
-        const prompt = essay.college_prompts;
-        if (prompt) {
-          const collegeId = prompt.college_id;
-          const promptId = prompt.id;
-          if (collegeId === 'a0000000-0000-0000-0000-000000000000') {
-            const sortOrder = (prompt as any).sort_order || 1;
-            router.push(`/common-app/common-app-${sortOrder}`);
-          } else {
-            router.push(`/essays/${collegeId}/${promptId}`);
-          }
-          return;
-        }
-      }
-
-      // Fallback
-      router.push('/dashboard');
+      redirectToEssay(invitation);
     } catch (err: any) {
       console.error('Error accepting invitation:', err);
       setError('Could not accept the invitation: ' + (err.message || 'Unknown error'));
     } finally {
       setAccepting(false);
     }
+  };
+
+  const handleAccept = async () => {
+    if (!currentUser) return;
+    await acceptInvitation(currentUser);
   };
 
   if (loading) {
@@ -179,7 +253,7 @@ export default function AcceptInvitationPage() {
           <Card>
             <h1 className="font-heading text-2xl mb-4" style={{ color: '#D4AF37' }}>Invitation Error</h1>
             <p className="font-body" style={{ color: 'rgba(255,255,255,0.9)', marginBottom: '24px' }}>{error}</p>
-            <Link href="/dashboard">
+            <Link href="/">
               <button style={{
                 background: '#D4AF37',
                 color: '#0B1623',
@@ -191,7 +265,7 @@ export default function AcceptInvitationPage() {
                 borderRadius: '2px',
                 cursor: 'pointer',
               }}>
-                Go to Dashboard
+                Go Home
               </button>
             </Link>
           </Card>
@@ -208,6 +282,7 @@ export default function AcceptInvitationPage() {
     ? essay.college_prompts.prompt_text.slice(0, 120) + (essay.college_prompts.prompt_text.length > 120 ? '...' : '')
     : '';
   const isCommonApp = essay?.college_prompts?.college_id === 'a0000000-0000-0000-0000-000000000000';
+  const roleLabel = invitation.role === 'parent' ? 'Parent' : invitation.role === 'counselor' ? 'Counselor' : invitation.role === 'mentor' ? 'Mentor' : 'Reviewer';
 
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1623' }}>
@@ -226,8 +301,8 @@ export default function AcceptInvitationPage() {
             </h1>
             <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
               {invitation.invitee_name
-                ? `${invitation.invitee_name}, you've been invited as a ${invitation.role}`
-                : `You've been invited as a ${invitation.role}`}
+                ? `${invitation.invitee_name}, you've been invited as a ${roleLabel}`
+                : `You've been invited as a ${roleLabel}`}
             </p>
           </div>
 
@@ -249,14 +324,15 @@ export default function AcceptInvitationPage() {
           </div>
 
           <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '24px', lineHeight: '1.6' }}>
-            As a {invitation.role}, you&apos;ll be able to read the essay and leave comments with feedback, suggestions, and encouragement.
+            As a {roleLabel}, you&apos;ll be able to read the essay and leave comments with feedback, suggestions, and encouragement.
           </p>
 
           {invitation.status === 'revoked' ? (
             <p className="font-body text-sm" style={{ color: '#F87171', textAlign: 'center' }}>
               This invitation has been revoked.
             </p>
-          ) : (
+          ) : currentUser ? (
+            /* User is already logged in — just accept */
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <button
                 onClick={handleAccept}
@@ -276,20 +352,138 @@ export default function AcceptInvitationPage() {
                   cursor: accepting ? 'not-allowed' : 'pointer',
                 }}
               >
-                {!currentUser
-                  ? 'Sign In to Accept'
-                  : accepting
+                {accepting
                   ? 'Accepting...'
                   : invitation.status === 'accepted'
                   ? 'View Essay'
                   : 'Accept Invitation'}
               </button>
-
-              {!currentUser && (
-                <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>
-                  You&apos;ll need to create an account or sign in first
+            </div>
+          ) : (
+            /* User is NOT logged in — show auth form */
+            <div>
+              <div style={{
+                borderTop: '1px solid rgba(255,255,255,0.1)',
+                paddingTop: '24px',
+              }}>
+                <h3 className="font-heading text-lg" style={{ color: 'white', textAlign: 'center', marginBottom: '4px' }}>
+                  {authMode === 'signup' ? 'Create Your Reviewer Account' : 'Sign In'}
+                </h3>
+                <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: '20px' }}>
+                  {authMode === 'signup'
+                    ? 'Quick sign-up to start reviewing — no student account needed'
+                    : 'Already have an account? Sign in below'}
                 </p>
-              )}
+
+                <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {authMode === 'signup' && (
+                    <input
+                      type="text"
+                      value={authName}
+                      onChange={(e) => setAuthName(e.target.value)}
+                      placeholder="Your name"
+                      style={{
+                        height: '44px',
+                        background: 'rgba(0,0,0,0.2)',
+                        border: '1px solid rgba(212,175,55,0.2)',
+                        color: 'white',
+                        padding: '0 14px',
+                        fontFamily: 'var(--font-body)',
+                        fontSize: '14px',
+                        outline: 'none',
+                        borderRadius: '2px',
+                      }}
+                    />
+                  )}
+                  <input
+                    type="email"
+                    value={authEmail}
+                    onChange={(e) => setAuthEmail(e.target.value)}
+                    placeholder="Email address"
+                    required
+                    style={{
+                      height: '44px',
+                      background: 'rgba(0,0,0,0.2)',
+                      border: '1px solid rgba(212,175,55,0.2)',
+                      color: 'white',
+                      padding: '0 14px',
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '14px',
+                      outline: 'none',
+                      borderRadius: '2px',
+                    }}
+                  />
+                  <input
+                    type="password"
+                    value={authPassword}
+                    onChange={(e) => setAuthPassword(e.target.value)}
+                    placeholder="Password"
+                    required
+                    style={{
+                      height: '44px',
+                      background: 'rgba(0,0,0,0.2)',
+                      border: '1px solid rgba(212,175,55,0.2)',
+                      color: 'white',
+                      padding: '0 14px',
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '14px',
+                      outline: 'none',
+                      borderRadius: '2px',
+                    }}
+                  />
+
+                  {authError && (
+                    <p className="font-body text-xs" style={{ color: '#F87171' }}>{authError}</p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={authLoading || accepting}
+                    style={{
+                      width: '100%',
+                      background: (authLoading || accepting) ? 'rgba(212,175,55,0.5)' : '#D4AF37',
+                      color: '#0B1623',
+                      padding: '14px 24px',
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '16px',
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      border: 'none',
+                      borderRadius: '2px',
+                      cursor: (authLoading || accepting) ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {authLoading || accepting
+                      ? 'Please wait...'
+                      : authMode === 'signup'
+                      ? 'Create Account & Review Essay'
+                      : 'Sign In & Review Essay'}
+                  </button>
+                </form>
+
+                <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: '16px' }}>
+                  {authMode === 'signup' ? (
+                    <>Already have an account?{' '}
+                      <button
+                        onClick={() => { setAuthMode('signin'); setAuthError(''); }}
+                        style={{ background: 'none', border: 'none', color: '#D4AF37', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '12px', padding: 0 }}
+                      >
+                        Sign in
+                      </button>
+                    </>
+                  ) : (
+                    <>Need an account?{' '}
+                      <button
+                        onClick={() => { setAuthMode('signup'); setAuthError(''); }}
+                        style={{ background: 'none', border: 'none', color: '#D4AF37', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '12px', padding: 0 }}
+                      >
+                        Create one
+                      </button>
+                    </>
+                  )}
+                </p>
+              </div>
             </div>
           )}
         </Card>
