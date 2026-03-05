@@ -1272,40 +1272,28 @@ export default function EssayWritingPage() {
                     </div>
                   )}
 
-                  {invitations.length > 0 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
-                      <p className="font-body text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '8px' }}>
-                        Sent Invitations ({invitations.length}):
-                      </p>
-                      {(showAllInvitations ? invitations : invitations.slice(0, 3)).map((inv) => (
-                        <div key={inv.id} style={{ padding: '8px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px' }}>
-                          <p className="font-body text-xs" style={{ color: 'white' }}>
-                            {inv.invitee_name || inv.invitee_email}
-                          </p>
-                          <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                            {inv.role} • {inv.status}
-                          </p>
-                        </div>
-                      ))}
-                      {invitations.length > 3 && (
-                        <button
-                          onClick={() => setShowAllInvitations(!showAllInvitations)}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            color: '#D4AF37',
-                            cursor: 'pointer',
-                            fontFamily: 'var(--font-body)',
-                            fontSize: '12px',
-                            padding: '4px 0',
-                            textAlign: 'left',
-                          }}
-                        >
-                          {showAllInvitations ? 'Show less' : `Show all ${invitations.length}`}
-                        </button>
-                      )}
-                    </div>
-                  )}
+                  {invitations.length > 0 && (() => {
+                    const unique = invitations.filter((inv, idx, arr) =>
+                      arr.findIndex(i => i.invitee_email === inv.invitee_email) === idx
+                    );
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '16px' }}>
+                        <p className="font-body text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '4px' }}>
+                          Invited Reviewers:
+                        </p>
+                        {unique.map((inv) => (
+                          <div key={inv.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px' }}>
+                            <p className="font-body text-xs" style={{ color: 'white', margin: 0 }}>
+                              {inv.invitee_name || inv.invitee_email}
+                            </p>
+                            <span className="font-body text-xs" style={{ color: inv.status === 'accepted' ? '#10B981' : 'rgba(255,255,255,0.4)' }}>
+                              {inv.status === 'accepted' ? 'Accepted' : inv.role}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </Card>
               </div>
             )}
