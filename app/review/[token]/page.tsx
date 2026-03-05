@@ -207,7 +207,7 @@ export default function ReviewEssayPage() {
         const formatted: Comment[] = commentsData.map((c: any) => ({
           id: c.id,
           counselor_id: c.counselor_id,
-          counselor_name: me && c.counselor_id === me.id ? 'You' : (nameMap[c.counselor_id] || 'Student'),
+          counselor_name: nameMap[c.counselor_id] || 'Reviewer',
           comment_text: c.comment_text,
           comment_type: c.comment_type,
           created_at: c.created_at,
