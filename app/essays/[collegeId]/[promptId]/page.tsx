@@ -317,8 +317,9 @@ export default function EssayWritingPage() {
 
         const formattedComments: Comment[] = commentsData.map((comment: any) => {
           let name: string;
-          if (me && comment.counselor_id === me.id && isOwner) {
-            name = 'You';
+          if (me && comment.counselor_id === me.id) {
+            // Show the student's own name for their own comments
+            name = me.user_metadata?.full_name || nameMap[me.id] || 'You';
           } else {
             name = nameMap[comment.counselor_id] || 'Reviewer';
           }
@@ -1327,3 +1328,4 @@ export default function EssayWritingPage() {
     </div>
   );
 }
+
