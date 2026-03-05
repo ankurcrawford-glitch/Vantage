@@ -130,7 +130,7 @@ export default function ReviewEssayPage() {
       const { data: allInvitations } = await supabase
         .from('essay_invitations')
         .select(`
-          id, token, role, status, invitee_name,
+          id, token, role, status, invitee_name, essay_id,
           essays:essay_id (
             id,
             college_prompts:college_prompt_id (
@@ -143,8 +143,54 @@ export default function ReviewEssayPage() {
         .eq('status', 'accepted');
 
       if (allInvitations && allInvitations.length > 1) {
-        const others = allInvitations
-          .filter((i: any) => i.token !== token)
+        // Dedupe by essay_id — keep only first invitation per essay
+        const seenEssays = new Set<string>();
+        seenEssays.add(inv.essay_id); // current essay is already shown
+
+        const othersRaw = allInvitations
+          .filter((i: any) => {
+            if (i.token === token) return false;
+            const eid = i.essay_id;
+            if (seenEssays.has(eid)) return false;
+            seenEssays.add(eid);
+            return true;
+          });
+
+        // Check which essays the reviewer has already commented on
+        const otherEssayIds = othersRaw.map((i: any) => i.essay_id);
+        const reviewedEssayIds = new Set<string>();
+
+        if (otherEssayIds.length > 0) {
+          // Get current versions for these essays
+          const { data: otherVersions } = await supabase
+            .from('essay_versions')
+            .select('id, essay_id')
+            .in('essay_id', otherEssayIds)
+            .eq('is_current', true);
+
+          if (otherVersions && otherVersions.length > 0) {
+            const versionIds = otherVersions.map(v => v.id);
+            // Check if this reviewer has comments on any of these versions
+            const { data: existingComments } = await supabase
+              .from('counselor_comments')
+              .select('essay_version_id')
+              .in('essay_version_id', versionIds)
+              .eq('counselor_id', user.id);
+
+            if (existingComments) {
+              const commentedVersionIds = new Set(existingComments.map(c => c.essay_version_id));
+              for (const v of otherVersions) {
+                if (commentedVersionIds.has(v.id)) {
+                  reviewedEssayIds.add(v.essay_id);
+                }
+              }
+            }
+          }
+        }
+
+        // Only show essays that haven't been reviewed yet
+        const others = othersRaw
+          .filter((i: any) => !reviewedEssayIds.has(i.essay_id))
           .map((i: any) => {
             const e = i.essays;
             const p = e?.college_prompts;
@@ -335,7 +381,7 @@ export default function ReviewEssayPage() {
         {otherReviews.length > 0 && (
           <div style={{ marginBottom: '24px', padding: '12px 16px', background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.15)', borderRadius: '4px' }}>
             <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.6)', marginBottom: '8px' }}>
-              You also have other essays to review:
+              You have other essays waiting for your review:
             </p>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {otherReviews.map((r) => (
