@@ -280,10 +280,10 @@ export default function EssayWritingPage() {
       if (error) throw error;
 
       if (commentsData) {
-        // Look up commenter names from essay_permissions
-        const commenterIds = [...new Set(commentsData.map((c: any) => c.counselor_id))];
+        // Look up commenter names from essay_permissions and invitations
         const nameMap: Record<string, string> = {};
-        if (essayId && commenterIds.length > 0) {
+        if (essayId) {
+          // Get reviewer names from permissions
           const { data: perms } = await supabase
             .from('essay_permissions')
             .select('user_id, commenter_name, role')
@@ -295,10 +295,33 @@ export default function EssayWritingPage() {
               nameMap[perm.user_id] = label;
             }
           }
+          // Also get names from invitations (for accepted invites where permissions might not have name)
+          const { data: invs } = await supabase
+            .from('essay_invitations')
+            .select('invitee_email, invitee_name, role, status')
+            .eq('essay_id', essayId)
+            .eq('status', 'accepted');
+          if (invs && perms) {
+            for (const perm of perms) {
+              if (!nameMap[perm.user_id] || nameMap[perm.user_id] === 'Reviewer') {
+                const matchInv = invs.find(i => i.role === perm.role && i.invitee_name);
+                if (matchInv) {
+                  nameMap[perm.user_id] = matchInv.invitee_name!;
+                }
+              }
+            }
+          }
         }
 
+        const { data: { user: me } } = await supabase.auth.getUser();
+
         const formattedComments: Comment[] = commentsData.map((comment: any) => {
-          const name = nameMap[comment.counselor_id] || 'Reviewer';
+          let name: string;
+          if (me && comment.counselor_id === me.id && isOwner) {
+            name = 'You';
+          } else {
+            name = nameMap[comment.counselor_id] || 'Reviewer';
+          }
           return {
             id: comment.id,
             counselor_id: comment.counselor_id,
