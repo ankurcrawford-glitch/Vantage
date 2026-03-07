@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     
     if (!supabaseUrl || !supabaseServiceKey) {
       return NextResponse.json({ 
-        error: 'Supabase configuration missing' 
+        error: `Supabase configuration missing. URL: ${supabaseUrl ? 'SET' : 'MISSING'}, Service Key: ${supabaseServiceKey ? 'SET' : 'MISSING'}` 
       }, { status: 500 });
     }
 
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const geminiApiKey = process.env.GEMINI_API_KEY;
     if (!geminiApiKey) {
       return NextResponse.json({ 
-        error: 'Gemini API key not configured. Add GEMINI_API_KEY to environment variables.' 
+        error: 'GEMINI_API_KEY env var is not set. Please add it in Vercel Environment Variables and redeploy.' 
       }, { status: 500 });
     }
 
@@ -230,5 +230,59 @@ IMPORTANT: Do NOT write the essay. Do NOT provide sample paragraphs. Only provid
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: systemMessage }]
+        },
+        contents: [{
+          parts: [{ text: aiPrompt }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 2000,
+        },
+      }),
+    });
 
-        
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorDetails;
+      try {
+        errorDetails = JSON.parse(errorText);
+      } catch {
+        errorDetails = { message: errorText };
+      }
+      
+      console.error('Gemini API error:', errorDetails);
+      
+      const errorMessage = errorDetails.error?.message || errorDetails.message || 'Unknown Gemini API error';
+      return NextResponse.json({ 
+        error: `Gemini API Error: ${errorMessage}`,
+        details: errorDetails 
+      }, { status: 500 });
+    }
+
+    const data = await response.json();
+    const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated';
+
+    if (!aiResponse || aiResponse === 'No response generated') {
+      return NextResponse.json({ 
+        error: 'No response generated from AI. Please try again.' 
+      }, { status: 500 });
+    }
+
+    return NextResponse.json({ 
+      response: aiResponse,
+      mode: hasEssayContent ? 'feedback' : 'strategic_guidance',
+      context: {
+        totalEssays: context.existingEssays.length,
+        totalPrompts: allPrompts?.length || 0
+      }
+    });
+  } catch (error: any) {
+    console.error('Error in thinking partner API:', error);
+    return NextResponse.json({ 
+      error: error.message || 'Internal server error',
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    }, { status: 500 });
+  }
+}
