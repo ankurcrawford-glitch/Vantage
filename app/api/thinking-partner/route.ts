@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const AI_MODEL = 'gemini-2.0-flash'; // Cost-effective, great for essay coaching
+const AI_MODEL = 'gemini-2.5-flash-lite'; // Cost-effective, great for essay coaching
 
 export async function POST(request: NextRequest) {
   try {
