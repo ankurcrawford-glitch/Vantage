@@ -77,10 +77,20 @@ export default function EssayWritingPage() {
   const [newInvitation, setNewInvitation] = useState({ email: '', name: '', role: 'parent' });
   const [currentUser, setCurrentUser] = useState<any>(null);
 
-  // Thinking Partner / Strategic Intelligence states
-  const [showThinkingPartner, setShowThinkingPartner] = useState(false);
+  // Strategic Intelligence states
   const [thinkingPartnerResponse, setThinkingPartnerResponse] = useState<string | null>(null);
   const [loadingThinkingPartner, setLoadingThinkingPartner] = useState(false);
+  const [insightGateMessage, setInsightGateMessage] = useState<string | null>(null);
+  const [guidanceMode, setGuidanceMode] = useState<string | null>(null);
+  const [guidanceHistory, setGuidanceHistory] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+
+  // Round Table states
+  const [roundTableResponse, setRoundTableResponse] = useState<string | null>(null);
+  const [loadingRoundTable, setLoadingRoundTable] = useState(false);
+  const [roundTableGateMessage, setRoundTableGateMessage] = useState<string | null>(null);
+  const [roundTableHistory, setRoundTableHistory] = useState<any[]>([]);
+  const [showRoundTableHistory, setShowRoundTableHistory] = useState(false);
 
   const [hasSubscription, setHasSubscription] = useState(false);
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
@@ -112,6 +122,14 @@ export default function EssayWritingPage() {
       }
     }
   }, [essayId, currentUser, isOwner]);
+
+  // Load guidance history when user is ready
+  useEffect(() => {
+    if (currentUser && promptId) {
+      loadGuidanceHistory();
+      loadRoundTableHistory();
+    }
+  }, [currentUser, promptId]);
 
   // Accurate word count function
   const countWords = (text: string): number => {
@@ -445,10 +463,61 @@ export default function EssayWritingPage() {
     }
   };
 
+  // Helper: render text with **bold** markdown
+  const renderBoldText = (text: string) => {
+    const parts = text.split(/(\*\*[^*]+\*\*)/);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={i}>{part.slice(2, -2)}</strong>;
+      }
+      return <span key={i}>{part}</span>;
+    });
+  };
+
+  // Format mode label for display
+  const modeLabel = (mode: string) => {
+    switch (mode) {
+      case 'pre_writing': return 'Pre-Writing';
+      case 'early_draft': return 'Early Draft';
+      case 'revision': return 'Revision';
+      case 'round_table': return 'Round Table';
+      default: return mode;
+    }
+  };
+
+  // Load guidance history for this prompt
+  const loadGuidanceHistory = async () => {
+    if (!currentUser || !promptId) return;
+    try {
+      const res = await fetch(`/api/thinking-partner?userId=${currentUser.id}&promptId=${promptId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setGuidanceHistory(data.history || []);
+      }
+    } catch (e) {
+      console.error('Error loading guidance history:', e);
+    }
+  };
+
+  // Load round table history for this college
+  const loadRoundTableHistory = async () => {
+    if (!currentUser || !collegeId || collegeId === 'a0000000-0000-0000-0000-000000000000') return;
+    try {
+      const res = await fetch(`/api/round-table?userId=${currentUser.id}&collegeId=${collegeId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setRoundTableHistory(data.history || []);
+      }
+    } catch (e) {
+      console.error('Error loading round table history:', e);
+    }
+  };
+
   const loadThinkingPartner = async () => {
     if (!currentUser || !promptId) return;
     
     setLoadingThinkingPartner(true);
+    setInsightGateMessage(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -458,14 +527,12 @@ export default function EssayWritingPage() {
 
       const response = await fetch('/api/thinking-partner', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           promptId,
           collegeId,
           userId: currentUser.id,
-          essayContent: content.trim() || null, // Send content if exists, null if empty
+          essayContent: content.trim() || null,
         }),
       });
 
@@ -475,13 +542,61 @@ export default function EssayWritingPage() {
       }
 
       const data = await response.json();
+      
+      if (data.gated) {
+        setInsightGateMessage(data.message);
+        setThinkingPartnerResponse(null);
+        return;
+      }
+
       setThinkingPartnerResponse(data.response);
-      setShowThinkingPartner(true);
+      setGuidanceMode(data.mode);
+      // Refresh history since a new entry was auto-saved
+      loadGuidanceHistory();
     } catch (error: any) {
       console.error('Error loading thinking partner:', error);
       alert('Error loading strategic guidance: ' + (error.message || 'Unknown error'));
     } finally {
       setLoadingThinkingPartner(false);
+    }
+  };
+
+  const loadRoundTable = async () => {
+    if (!currentUser || !collegeId) return;
+    
+    setLoadingRoundTable(true);
+    setRoundTableGateMessage(null);
+    try {
+      const response = await fetch('/api/round-table', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          collegeId,
+          userId: currentUser.id,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to load Round Table review');
+      }
+
+      const data = await response.json();
+      
+      if (data.gated) {
+        setRoundTableGateMessage(data.message);
+        setRoundTableResponse(null);
+        return;
+      }
+
+      setRoundTableResponse(data.response);
+      // Refresh history since a new entry was auto-saved
+      loadRoundTableHistory();
+    } catch (error: any) {
+      console.error('Error loading round table:', error);
+      alert('Error loading Round Table: ' + (error.message || 'Unknown error'));
+    } finally {
+      setLoadingRoundTable(false);
     }
   };
 
@@ -986,14 +1101,14 @@ export default function EssayWritingPage() {
               </div>
             )}
 
-            {/* Strategic Intelligence / Thinking Partner */}
+            {/* Strategic Intelligence */}
             <div style={{ marginTop: '32px' }}>
               <Card>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                   <div>
                     <h3 className="font-heading text-lg" style={{ color: '#D4AF37' }}>Strategic Intelligence</h3>
                     <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>
-                      {content.trim() ? 'Get strategic guidance + feedback on your essay' : 'Get strategic guidance on how to approach this prompt'}
+                      AI-powered guidance that evolves with your essay
                     </p>
                   </div>
                   <button
@@ -1012,60 +1127,143 @@ export default function EssayWritingPage() {
                       opacity: loadingThinkingPartner ? 0.7 : 1,
                     }}
                   >
-                    {loadingThinkingPartner ? 'Analyzing...' : content.trim() ? 'Get Feedback' : 'Get Strategic Guidance'}
+                    {loadingThinkingPartner ? 'Analyzing...' : 'Get Guidance'}
                   </button>
                 </div>
 
+                {/* Insight gate message */}
+                {insightGateMessage && (
+                  <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(212,175,55,0.08)', borderRadius: '4px', borderLeft: '3px solid rgba(212,175,55,0.5)' }}>
+                    <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.85)', lineHeight: '1.7' }}>
+                      {insightGateMessage}
+                    </p>
+                    <a href="/discovery" style={{ display: 'inline-block', marginTop: '16px', background: 'transparent', color: '#D4AF37', padding: '8px 16px', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, border: '1px solid #D4AF37', borderRadius: '2px', textDecoration: 'none' }}>
+                      Complete Insight Questions
+                    </a>
+                  </div>
+                )}
+
+                {/* Current guidance response */}
                 {thinkingPartnerResponse && (
-                  <div style={{ 
-                    marginTop: '16px', 
-                    padding: '20px', 
-                    background: 'rgba(0,0,0,0.3)', 
-                    borderRadius: '4px',
-                    borderLeft: '3px solid #D4AF37'
-                  }}>
+                  <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', borderLeft: '3px solid #D4AF37' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                      <h4 className="font-heading text-md" style={{ color: '#D4AF37' }}>
-                        {content.trim() ? 'Strategic Guidance & Feedback' : 'Strategic Guidance'}
-                      </h4>
-                      <button
-                        onClick={() => {
-                          setShowThinkingPartner(false);
-                          setThinkingPartnerResponse(null);
-                        }}
-                        style={{
-                          background: 'transparent',
-                          color: 'rgba(255,255,255,0.5)',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: '18px',
-                          padding: '0',
-                          lineHeight: '1',
-                        }}
-                      >
+                      <div>
+                        <h4 className="font-heading text-md" style={{ color: '#D4AF37' }}>Latest Guidance</h4>
+                        {guidanceMode && (
+                          <span className="font-body" style={{ fontSize: '11px', color: 'rgba(212,175,55,0.6)', marginTop: '2px', display: 'block' }}>
+                            {modeLabel(guidanceMode)} mode
+                          </span>
+                        )}
+                      </div>
+                      <button onClick={() => { setThinkingPartnerResponse(null); setInsightGateMessage(null); }} style={{ background: 'transparent', color: 'rgba(255,255,255,0.5)', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '0', lineHeight: '1' }}>
                         ×
                       </button>
                     </div>
-                    <div 
-                      className="font-body text-sm" 
-                      style={{ 
-                        color: 'rgba(255,255,255,0.9)', 
-                        lineHeight: '1.8',
-                        whiteSpace: 'pre-wrap'
-                      }}
-                    >
-                      {thinkingPartnerResponse}
+                    <div className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.9)', lineHeight: '1.8', whiteSpace: 'pre-wrap' }}>
+                      {renderBoldText(thinkingPartnerResponse)}
                     </div>
                   </div>
                 )}
 
-                {showThinkingPartner && !thinkingPartnerResponse && !loadingThinkingPartner && (
-                  <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)', marginTop: '16px' }}>
-                    Click the button above to get strategic guidance tailored to your entire application.
-                  </p>
+                {/* Guidance History Accordion */}
+                {guidanceHistory.length > 0 && (
+                  <div style={{ marginTop: '16px' }}>
+                    <button
+                      onClick={() => setShowHistory(!showHistory)}
+                      style={{ background: 'transparent', border: 'none', color: 'rgba(212,175,55,0.7)', fontFamily: 'var(--font-body)', fontSize: '13px', cursor: 'pointer', padding: '4px 0', display: 'flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <span style={{ transform: showHistory ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'inline-block' }}>▶</span>
+                      Past Guidance ({guidanceHistory.length})
+                    </button>
+                    {showHistory && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                        {guidanceHistory.map((entry: any) => (
+                          <details key={entry.id} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                            <summary style={{ padding: '10px 14px', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-body)', fontSize: '12px', display: 'flex', justifyContent: 'space-between', listStyle: 'none' }}>
+                              <span>{modeLabel(entry.mode)} — {entry.essay_word_count || 0} words</span>
+                              <span style={{ color: 'rgba(255,255,255,0.4)' }}>{new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
+                            </summary>
+                            <div className="font-body text-sm" style={{ padding: '12px 14px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.7', whiteSpace: 'pre-wrap', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                              {renderBoldText(entry.guidance_text)}
+                            </div>
+                          </details>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </Card>
             </div>
+
+            {/* The Round Table — Holistic Application Review (school-specific only) */}
+            {collegeId && collegeId !== 'a0000000-0000-0000-0000-000000000000' && (
+              <div style={{ marginTop: '24px' }}>
+                <Card>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <div>
+                      <h3 className="font-heading text-lg" style={{ color: '#D4AF37' }}>The Round Table</h3>
+                      <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>
+                        Holistic review of your full {college?.name} application + Common App essay
+                      </p>
+                    </div>
+                    <button
+                      onClick={loadRoundTable}
+                      disabled={loadingRoundTable}
+                      style={{ background: 'transparent', color: loadingRoundTable ? 'rgba(212,175,55,0.5)' : '#D4AF37', padding: '10px 20px', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, border: `1px solid ${loadingRoundTable ? 'rgba(212,175,55,0.3)' : '#D4AF37'}`, borderRadius: '2px', cursor: loadingRoundTable ? 'not-allowed' : 'pointer', opacity: loadingRoundTable ? 0.7 : 1 }}
+                    >
+                      {loadingRoundTable ? 'Reviewing...' : 'Get Holistic Review'}
+                    </button>
+                  </div>
+
+                  {/* Round Table gate */}
+                  {roundTableGateMessage && (
+                    <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(212,175,55,0.08)', borderRadius: '4px', borderLeft: '3px solid rgba(212,175,55,0.5)' }}>
+                      <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.85)', lineHeight: '1.7' }}>{roundTableGateMessage}</p>
+                    </div>
+                  )}
+
+                  {/* Round Table response */}
+                  {roundTableResponse && (
+                    <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', borderLeft: '3px solid #D4AF37' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                        <h4 className="font-heading text-md" style={{ color: '#D4AF37' }}>Holistic Application Review — {college?.name}</h4>
+                        <button onClick={() => { setRoundTableResponse(null); setRoundTableGateMessage(null); }} style={{ background: 'transparent', color: 'rgba(255,255,255,0.5)', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '0', lineHeight: '1' }}>×</button>
+                      </div>
+                      <div className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.9)', lineHeight: '1.8', whiteSpace: 'pre-wrap' }}>
+                        {renderBoldText(roundTableResponse)}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Round Table History */}
+                  {roundTableHistory.length > 0 && (
+                    <div style={{ marginTop: '16px' }}>
+                      <button
+                        onClick={() => setShowRoundTableHistory(!showRoundTableHistory)}
+                        style={{ background: 'transparent', border: 'none', color: 'rgba(212,175,55,0.7)', fontFamily: 'var(--font-body)', fontSize: '13px', cursor: 'pointer', padding: '4px 0', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      >
+                        <span style={{ transform: showRoundTableHistory ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'inline-block' }}>▶</span>
+                        Past Reviews ({roundTableHistory.length})
+                      </button>
+                      {showRoundTableHistory && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                          {roundTableHistory.map((entry: any) => (
+                            <details key={entry.id} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                              <summary style={{ padding: '10px 14px', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-body)', fontSize: '12px', listStyle: 'none' }}>
+                                <span>Round Table Review — {new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
+                              </summary>
+                              <div className="font-body text-sm" style={{ padding: '12px 14px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.7', whiteSpace: 'pre-wrap', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                                {renderBoldText(entry.guidance_text)}
+                              </div>
+                            </details>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </Card>
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -1324,4 +1522,3 @@ export default function EssayWritingPage() {
     </div>
   );
 }
-

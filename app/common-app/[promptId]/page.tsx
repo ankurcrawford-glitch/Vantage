@@ -107,9 +107,12 @@ export default function CommonAppEssayPage() {
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [newInvitation, setNewInvitation] = useState({ email: '', name: '', role: 'parent' });
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [showThinkingPartner, setShowThinkingPartner] = useState(false);
   const [thinkingPartnerResponse, setThinkingPartnerResponse] = useState<string | null>(null);
   const [loadingThinkingPartner, setLoadingThinkingPartner] = useState(false);
+  const [insightGateMessage, setInsightGateMessage] = useState<string | null>(null);
+  const [guidanceMode, setGuidanceMode] = useState<string | null>(null);
+  const [guidanceHistory, setGuidanceHistory] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
   const [hasSubscription, setHasSubscription] = useState(false);
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
   const [deletingVersionId, setDeletingVersionId] = useState<string | null>(null);
@@ -139,6 +142,13 @@ export default function CommonAppEssayPage() {
   useEffect(() => {
     setWordCount(countWords(content));
   }, [content]);
+
+  // Load guidance history when user is ready
+  useEffect(() => {
+    if (currentUser && promptId) {
+      loadGuidanceHistory();
+    }
+  }, [currentUser, promptId]);
 
   // Accurate word count function
   const countWords = (text: string): number => {
@@ -435,10 +445,45 @@ export default function CommonAppEssayPage() {
     }
   };
 
+  // Helper: render text with **bold** markdown
+  const renderBoldText = (text: string) => {
+    const parts = text.split(/(\*\*[^*]+\*\*)/);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={i}>{part.slice(2, -2)}</strong>;
+      }
+      return <span key={i}>{part}</span>;
+    });
+  };
+
+  const modeLabel = (mode: string) => {
+    switch (mode) {
+      case 'pre_writing': return 'Pre-Writing';
+      case 'early_draft': return 'Early Draft';
+      case 'revision': return 'Revision';
+      default: return mode;
+    }
+  };
+
+  // Load guidance history for this prompt
+  const loadGuidanceHistory = async () => {
+    if (!currentUser || !promptId) return;
+    try {
+      const res = await fetch(`/api/thinking-partner?userId=${currentUser.id}&promptId=${promptId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setGuidanceHistory(data.history || []);
+      }
+    } catch (e) {
+      console.error('Error loading guidance history:', e);
+    }
+  };
+
   const loadThinkingPartner = async () => {
     if (!currentUser || !promptId) return;
 
     setLoadingThinkingPartner(true);
+    setInsightGateMessage(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -463,8 +508,18 @@ export default function CommonAppEssayPage() {
       }
 
       const data = await response.json();
+      
+      // Check if gated (not enough insight answers)
+      if (data.gated) {
+        setInsightGateMessage(data.message);
+        setThinkingPartnerResponse(null);
+        return;
+      }
+
       setThinkingPartnerResponse(data.response);
-      setShowThinkingPartner(true);
+      setGuidanceMode(data.mode);
+      // Refresh history since a new entry was auto-saved
+      loadGuidanceHistory();
     } catch (error: any) {
       console.error('Error loading thinking partner:', error);
       alert('Error loading strategic guidance: ' + (error.message || 'Unknown error'));
@@ -1000,7 +1055,7 @@ export default function CommonAppEssayPage() {
                   <div>
                     <h3 className="font-heading text-lg" style={{ color: '#D4AF37' }}>Strategic Intelligence</h3>
                     <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>
-                      {content.trim() ? 'Get strategic guidance + feedback on your essay' : 'Get strategic guidance on how to approach this prompt'}
+                      AI-powered guidance that evolves with your essay
                     </p>
                   </div>
                   <button
@@ -1019,47 +1074,70 @@ export default function CommonAppEssayPage() {
                       opacity: loadingThinkingPartner ? 0.7 : 1,
                     }}
                   >
-                    {loadingThinkingPartner ? 'Analyzing...' : content.trim() ? 'Get Feedback' : 'Get Strategic Guidance'}
+                    {loadingThinkingPartner ? 'Analyzing...' : 'Get Guidance'}
                   </button>
                 </div>
 
+                {/* Insight gate message */}
+                {insightGateMessage && (
+                  <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(212,175,55,0.08)', borderRadius: '4px', borderLeft: '3px solid rgba(212,175,55,0.5)' }}>
+                    <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.85)', lineHeight: '1.7' }}>
+                      {insightGateMessage}
+                    </p>
+                    <a href="/discovery" style={{ display: 'inline-block', marginTop: '16px', background: 'transparent', color: '#D4AF37', padding: '8px 16px', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, border: '1px solid #D4AF37', borderRadius: '2px', textDecoration: 'none' }}>
+                      Complete Insight Questions
+                    </a>
+                  </div>
+                )}
+
+                {/* Current guidance response */}
                 {thinkingPartnerResponse && (
-                  <div style={{
-                    marginTop: '16px',
-                    padding: '20px',
-                    background: 'rgba(0,0,0,0.3)',
-                    borderRadius: '4px',
-                    borderLeft: '3px solid #D4AF37',
-                  }}>
+                  <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', borderLeft: '3px solid #D4AF37' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                      <h4 className="font-heading text-md" style={{ color: '#D4AF37' }}>
-                        {content.trim() ? 'Strategic Guidance & Feedback' : 'Strategic Guidance'}
-                      </h4>
-                      <button
-                        onClick={() => { setShowThinkingPartner(false); setThinkingPartnerResponse(null); }}
-                        style={{
-                          background: 'transparent',
-                          color: 'rgba(255,255,255,0.5)',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: '18px',
-                          padding: 0,
-                          lineHeight: 1,
-                        }}
-                      >
+                      <div>
+                        <h4 className="font-heading text-md" style={{ color: '#D4AF37' }}>Latest Guidance</h4>
+                        {guidanceMode && (
+                          <span className="font-body" style={{ fontSize: '11px', color: 'rgba(212,175,55,0.6)', marginTop: '2px', display: 'block' }}>
+                            {modeLabel(guidanceMode)} mode
+                          </span>
+                        )}
+                      </div>
+                      <button onClick={() => { setThinkingPartnerResponse(null); setInsightGateMessage(null); }} style={{ background: 'transparent', color: 'rgba(255,255,255,0.5)', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '0', lineHeight: '1' }}>
                         ×
                       </button>
                     </div>
                     <div className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.9)', lineHeight: '1.8', whiteSpace: 'pre-wrap' }}>
-                      {thinkingPartnerResponse}
+                      {renderBoldText(thinkingPartnerResponse)}
                     </div>
                   </div>
                 )}
 
-                {showThinkingPartner && !thinkingPartnerResponse && !loadingThinkingPartner && (
-                  <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)', marginTop: '16px' }}>
-                    Click the button above to get strategic guidance tailored to your entire application.
-                  </p>
+                {/* Guidance History Accordion */}
+                {guidanceHistory.length > 0 && (
+                  <div style={{ marginTop: '16px' }}>
+                    <button
+                      onClick={() => setShowHistory(!showHistory)}
+                      style={{ background: 'transparent', border: 'none', color: 'rgba(212,175,55,0.7)', fontFamily: 'var(--font-body)', fontSize: '13px', cursor: 'pointer', padding: '4px 0', display: 'flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <span style={{ transform: showHistory ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'inline-block' }}>▶</span>
+                      Past Guidance ({guidanceHistory.length})
+                    </button>
+                    {showHistory && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                        {guidanceHistory.map((entry: any) => (
+                          <details key={entry.id} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                            <summary style={{ padding: '10px 14px', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-body)', fontSize: '12px', display: 'flex', justifyContent: 'space-between', listStyle: 'none' }}>
+                              <span>{modeLabel(entry.mode)} — {entry.essay_word_count || 0} words</span>
+                              <span style={{ color: 'rgba(255,255,255,0.4)' }}>{new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
+                            </summary>
+                            <div className="font-body text-sm" style={{ padding: '12px 14px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.7', whiteSpace: 'pre-wrap', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                              {renderBoldText(entry.guidance_text)}
+                            </div>
+                          </details>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </Card>
             </div>
