@@ -161,84 +161,65 @@ export async function POST(request: NextRequest) {
     let systemMessage = '';
 
     if (hasEssayContent) {
-      // Mode: Strategic guidance + feedback on written content
-      systemMessage = `You are an expert college admissions strategist and writing coach. You help students think strategically about their essays AND provide feedback on their writing. You analyze their entire application holistically to provide personalized guidance. Be encouraging, specific, and constructive.`;
+      // Mode: Focused feedback on written content for THIS specific prompt
+      systemMessage = `You are an expert college admissions essay coach. Your job is to give focused, actionable feedback on the student's draft for ONE specific essay prompt. Stay laser-focused on THIS prompt — do not give general admissions advice or address other essays unless directly relevant. Be encouraging but specific and honest.`;
 
-      aiPrompt = `You are helping a student with their college application essay. Provide BOTH strategic guidance AND feedback on their current draft.
+      aiPrompt = `FOCUS: Give feedback ONLY on this specific essay draft for this specific prompt. Do not address other prompts or give general admissions advice.
 
-CURRENT PROMPT:
-${currentPrompt?.prompt_text || 'No prompt found'}
-${currentPrompt?.word_limit ? `Word Limit: ${currentPrompt.word_limit} words` : 'No word limit specified'}
-${collegeName ? `College: ${collegeName}` : ''}
+THIS ESSAY'S PROMPT:
+"${currentPrompt?.prompt_text || 'No prompt found'}"
+${currentPrompt?.word_limit ? `Word Limit: ${currentPrompt.word_limit} words` : ''}
+${collegeName ? `For: ${collegeName}` : ''}
 
-STUDENT'S CURRENT ESSAY DRAFT:
+STUDENT'S DRAFT:
 ${essayContent}
 
-STUDENT'S COMPREHENSIVE PROFILE:
-Academic Stats: ${userStats ? `GPA: ${userStats.gpa_weighted || 'N/A'} weighted, ${userStats.gpa_unweighted || 'N/A'} unweighted. SAT: ${userStats.sat_score || 'N/A'}. ACT: ${userStats.act_score || 'N/A'}.` : 'Not provided'}
-AP Classes: ${context.profile.apClasses.join(', ') || 'None listed'}
-Extracurriculars: ${context.profile.extracurriculars.map((e: any) => `${e.activity}${e.role ? ` (${e.role})` : ''}`).join(', ') || 'None listed'}
-Awards: ${context.profile.awards.join(', ') || 'None listed'}
+BACKGROUND ON THIS STUDENT (use to personalize your feedback):
+${userStats ? `Academics: GPA ${userStats.gpa_weighted || 'N/A'} weighted, ${userStats.gpa_unweighted || 'N/A'} unweighted. SAT: ${userStats.sat_score || 'N/A'}. ACT: ${userStats.act_score || 'N/A'}.` : ''}
+${context.profile.extracurriculars.length > 0 ? `Activities: ${context.profile.extracurriculars.map((e: any) => `${e.activity}${e.role ? ` (${e.role})` : ''}`).join(', ')}` : ''}
+${context.profile.awards.length > 0 ? `Awards: ${context.profile.awards.join(', ')}` : ''}
 ${discoveryContext}
 
-OTHER ESSAYS THE STUDENT IS WRITING:
-${context.existingEssays.length > 0 ? context.existingEssays.filter((e: any) => e.prompt !== currentPrompt?.prompt_text).map((e: any, i: number) => `${i + 1}. For ${e.college}: "${e.prompt?.substring(0, 100)}..." ${e.hasContent ? '(has content)' : '(not started)'}`).join('\n') : 'No other essays yet'}
+YOUR TASK — Focused feedback on THIS draft for THIS prompt:
 
-YOUR TASK - Provide TWO types of guidance:
+1. PROMPT FIT: How well does this draft answer what "${currentPrompt?.prompt_text?.substring(0, 80) || 'this prompt'}" is really asking? Be specific about what the prompt wants and whether the draft delivers it.
 
-1. STRATEGIC GUIDANCE (How to approach this prompt):
-   - What this prompt is REALLY asking (the deeper question)
-   - How this prompt relates to or differs from their other prompts (avoid repetition)
-   - What aspects of their profile/experiences would be most relevant
-   - Draw specific connections to their Personal Insight Responses above — reference their actual answers, stories, and values when suggesting angles
-   - Strategic angles or themes to consider
-   - Questions they should ask themselves
-   - Common pitfalls to avoid
-   - How to make this essay complement (not repeat) their other essays
+2. STRENGTHS: What's working well in this draft? (be specific — quote lines)
 
-2. FEEDBACK ON CURRENT DRAFT:
-   - Strengths in their current writing
-   - Areas for improvement (structure, clarity, voice, storytelling)
-   - Specific suggestions to strengthen their essay
-   - Questions to help them think deeper about their topic
-   - How well they're addressing the prompt
+3. WHAT TO IMPROVE: What are the 2-3 most impactful changes they could make to better answer THIS prompt? Reference their insight responses or activities to suggest concrete material they could draw from.
 
-IMPORTANT: Do NOT rewrite their essay. Provide guidance, frameworks, questions, and feedback - but let them write in their own voice.`;
+4. QUESTIONS TO CONSIDER: 2-3 targeted questions to help them deepen THIS specific essay.
+
+Keep your response focused and concise. Do NOT rewrite their essay. Do NOT discuss their other essays or other prompts.`;
     } else {
-      // Mode: Strategic guidance only (no content yet)
-      systemMessage = `You are an expert college admissions strategist. You help students think strategically about their essays by providing frameworks, questions, and approaches - never by writing for them. You analyze their entire application holistically to provide personalized guidance.`;
+      // Mode: Strategic guidance for THIS specific prompt (no content yet)
+      systemMessage = `You are an expert college admissions essay coach. Your job is to help a student think through ONE specific essay prompt before they start writing. Stay laser-focused on THIS prompt — do not give general admissions advice or try to address their whole application. Be specific, practical, and personalized.`;
 
-      aiPrompt = `You are helping a student approach their essay prompt BEFORE they start writing. Provide strategic guidance on HOW to think about and approach answering the prompt.
+      aiPrompt = `FOCUS: Help the student approach THIS specific prompt. All your guidance should be about how to answer THIS question, not general essay advice.
 
-CURRENT PROMPT TO ADDRESS:
-${currentPrompt?.prompt_text || 'No prompt found'}
-${currentPrompt?.word_limit ? `Word Limit: ${currentPrompt.word_limit} words` : 'No word limit specified'}
-${collegeName ? `College: ${collegeName}` : ''}
+THIS ESSAY'S PROMPT:
+"${currentPrompt?.prompt_text || 'No prompt found'}"
+${currentPrompt?.word_limit ? `Word Limit: ${currentPrompt.word_limit} words` : ''}
+${collegeName ? `For: ${collegeName}` : ''}
 
-STUDENT'S COMPREHENSIVE PROFILE:
-Academic Stats: ${userStats ? `GPA: ${userStats.gpa_weighted || 'N/A'} weighted, ${userStats.gpa_unweighted || 'N/A'} unweighted. SAT: ${userStats.sat_score || 'N/A'}. ACT: ${userStats.act_score || 'N/A'}.` : 'Not provided'}
-AP Classes: ${context.profile.apClasses.join(', ') || 'None listed'}
-Extracurriculars: ${context.profile.extracurriculars.map((e: any) => `${e.activity}${e.role ? ` (${e.role})` : ''}`).join(', ') || 'None listed'}
-Awards: ${context.profile.awards.join(', ') || 'None listed'}
+BACKGROUND ON THIS STUDENT (use to personalize your suggestions):
+${userStats ? `Academics: GPA ${userStats.gpa_weighted || 'N/A'} weighted, ${userStats.gpa_unweighted || 'N/A'} unweighted. SAT: ${userStats.sat_score || 'N/A'}. ACT: ${userStats.act_score || 'N/A'}.` : ''}
+${context.profile.apClasses.length > 0 ? `AP Classes: ${context.profile.apClasses.join(', ')}` : ''}
+${context.profile.extracurriculars.length > 0 ? `Activities: ${context.profile.extracurriculars.map((e: any) => `${e.activity}${e.role ? ` (${e.role})` : ''}`).join(', ')}` : ''}
+${context.profile.awards.length > 0 ? `Awards: ${context.profile.awards.join(', ')}` : ''}
 ${discoveryContext}
 
-OTHER ESSAYS THE STUDENT IS WRITING:
-${context.existingEssays.length > 0 ? context.existingEssays.map((e: any, i: number) => `${i + 1}. For ${e.college}: "${e.prompt?.substring(0, 100)}..." ${e.hasContent ? '(has content)' : '(not started)'}`).join('\n') : 'No other essays yet'}
+YOUR TASK — Strategic guidance for THIS specific prompt:
 
-ALL PROMPTS ACROSS APPLICATION:
-${allPrompts?.slice(0, 10).map((p: any, i: number) => `${i + 1}. ${p.colleges?.name || 'Unknown'}: "${p.prompt_text.substring(0, 80)}..."`).join('\n') || 'None'}
+1. WHAT THIS PROMPT IS REALLY ASKING: Break down what "${currentPrompt?.prompt_text?.substring(0, 80) || 'this prompt'}" is really getting at. What does the admissions reader want to learn about the student from this specific question?
 
-YOUR TASK - Provide strategic guidance on HOW to approach this prompt:
-1. What this prompt is REALLY asking (the deeper question behind it)
-2. How this prompt relates to or differs from their other prompts (avoid repetition)
-3. What aspects of their profile/experiences would be most relevant to highlight
-4. Draw specific connections to their Personal Insight Responses above — reference their actual answers, stories, and values when suggesting angles
-5. Strategic angles or themes to consider (without writing the essay)
-6. Questions they should ask themselves before writing
-7. Common pitfalls to avoid for this type of prompt
-8. How to make this essay complement (not repeat) their other essays
+2. YOUR BEST MATERIAL FOR THIS PROMPT: Based on the student's insight responses and activities above, identify 2-3 specific experiences, stories, or values from THEIR life that would be strong material for answering THIS particular prompt. Be concrete — reference their actual answers.
 
-IMPORTANT: Do NOT write the essay. Do NOT provide sample paragraphs. Only provide strategic guidance, frameworks, questions, and approaches.`;
+3. APPROACH: Suggest 1-2 specific angles or narrative structures for THIS prompt. Not generic frameworks — tailored to this student and this question.
+
+4. PITFALLS FOR THIS PROMPT: What are 2-3 common mistakes students make when answering THIS specific type of prompt?
+
+Keep your response focused and concise. Do NOT write the essay or provide sample paragraphs. Do NOT discuss their other essays or other prompts unless briefly noting something to avoid repeating.`;
     }
 
     // Call Google Gemini
