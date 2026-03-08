@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
 
 const AI_MODEL = 'gemini-2.5-flash-lite'; // Cost-effective, great for essay coaching
 
@@ -141,6 +142,20 @@ export async function POST(request: NextRequest) {
       }
     };
 
+    // Format discovery/insight answers
+    let discoveryContext = '';
+    if (discoveryAnswers && discoveryAnswers.length > 0) {
+      const answeredQuestions = discoveryAnswers
+        .map((da: any) => {
+          const question = DISCOVERY_QUESTIONS.find(q => q.id === da.question_id);
+          return question ? `Q: ${question.question}\nA: ${da.answer}` : null;
+        })
+        .filter(Boolean);
+      if (answeredQuestions.length > 0) {
+        discoveryContext = `\n\nSTUDENT'S PERSONAL INSIGHT RESPONSES (these reveal their authentic voice, values, and experiences):\n${answeredQuestions.join('\n\n')}`;
+      }
+    }
+
     // Build the AI prompt based on whether content exists
     let aiPrompt = '';
     let systemMessage = '';
@@ -164,6 +179,7 @@ Academic Stats: ${userStats ? `GPA: ${userStats.gpa_weighted || 'N/A'} weighted,
 AP Classes: ${context.profile.apClasses.join(', ') || 'None listed'}
 Extracurriculars: ${context.profile.extracurriculars.map((e: any) => `${e.activity}${e.role ? ` (${e.role})` : ''}`).join(', ') || 'None listed'}
 Awards: ${context.profile.awards.join(', ') || 'None listed'}
+${discoveryContext}
 
 OTHER ESSAYS THE STUDENT IS WRITING:
 ${context.existingEssays.length > 0 ? context.existingEssays.filter((e: any) => e.prompt !== currentPrompt?.prompt_text).map((e: any, i: number) => `${i + 1}. For ${e.college}: "${e.prompt?.substring(0, 100)}..." ${e.hasContent ? '(has content)' : '(not started)'}`).join('\n') : 'No other essays yet'}
@@ -174,6 +190,7 @@ YOUR TASK - Provide TWO types of guidance:
    - What this prompt is REALLY asking (the deeper question)
    - How this prompt relates to or differs from their other prompts (avoid repetition)
    - What aspects of their profile/experiences would be most relevant
+   - Draw specific connections to their Personal Insight Responses above — reference their actual answers, stories, and values when suggesting angles
    - Strategic angles or themes to consider
    - Questions they should ask themselves
    - Common pitfalls to avoid
@@ -203,6 +220,7 @@ Academic Stats: ${userStats ? `GPA: ${userStats.gpa_weighted || 'N/A'} weighted,
 AP Classes: ${context.profile.apClasses.join(', ') || 'None listed'}
 Extracurriculars: ${context.profile.extracurriculars.map((e: any) => `${e.activity}${e.role ? ` (${e.role})` : ''}`).join(', ') || 'None listed'}
 Awards: ${context.profile.awards.join(', ') || 'None listed'}
+${discoveryContext}
 
 OTHER ESSAYS THE STUDENT IS WRITING:
 ${context.existingEssays.length > 0 ? context.existingEssays.map((e: any, i: number) => `${i + 1}. For ${e.college}: "${e.prompt?.substring(0, 100)}..." ${e.hasContent ? '(has content)' : '(not started)'}`).join('\n') : 'No other essays yet'}
@@ -214,10 +232,11 @@ YOUR TASK - Provide strategic guidance on HOW to approach this prompt:
 1. What this prompt is REALLY asking (the deeper question behind it)
 2. How this prompt relates to or differs from their other prompts (avoid repetition)
 3. What aspects of their profile/experiences would be most relevant to highlight
-4. Strategic angles or themes to consider (without writing the essay)
-5. Questions they should ask themselves before writing
-6. Common pitfalls to avoid for this type of prompt
-7. How to make this essay complement (not repeat) their other essays
+4. Draw specific connections to their Personal Insight Responses above — reference their actual answers, stories, and values when suggesting angles
+5. Strategic angles or themes to consider (without writing the essay)
+6. Questions they should ask themselves before writing
+7. Common pitfalls to avoid for this type of prompt
+8. How to make this essay complement (not repeat) their other essays
 
 IMPORTANT: Do NOT write the essay. Do NOT provide sample paragraphs. Only provide strategic guidance, frameworks, questions, and approaches.`;
     }
