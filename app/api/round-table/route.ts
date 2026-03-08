@@ -308,23 +308,28 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
       .replace(/\n{3,}/g, '\n\n')
       .trim();
 
-    // Auto-save to history (round_table mode, prompt_id is null, college_id is set)
+    // Auto-save to history
+    const insertPayload = {
+      user_id: userId,
+      prompt_id: `round-table-${collegeId}`,
+      college_id: collegeId,
+      guidance_text: aiResponse,
+      mode: 'round_table',
+      essay_word_count: 0,
+      essay_version_number: null,
+    };
+    console.log('Round Table save payload:', JSON.stringify({ ...insertPayload, guidance_text: '[truncated]' }));
+
     const { data: savedEntry, error: saveError } = await supabase
       .from('strategic_guidance_history')
-      .insert({
-        user_id: userId,
-        prompt_id: collegePrompts[0]?.id || collegeId, // Use first prompt as reference
-        college_id: collegeId,
-        guidance_text: aiResponse,
-        mode: 'round_table',
-        essay_word_count: 0,
-        essay_version_number: null,
-      })
+      .insert(insertPayload)
       .select('id, created_at')
       .single();
 
     if (saveError) {
-      console.error('Error saving round table history:', saveError);
+      console.error('ROUND TABLE SAVE ERROR:', JSON.stringify(saveError));
+    } else {
+      console.log('Round Table saved successfully:', savedEntry?.id);
     }
 
     return NextResponse.json({ 
@@ -332,6 +337,7 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
       collegeName,
       savedId: savedEntry?.id || null,
       savedAt: savedEntry?.created_at || null,
+      saveError: saveError ? saveError.message : null,
       essayStats: {
         written: writtenCollegeEssays,
         total: totalCollegePrompts,
