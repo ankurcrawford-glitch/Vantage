@@ -122,19 +122,19 @@ export async function POST(request: NextRequest) {
     });
 
     // ============================================
-    // 4. Check if 50%+ of THIS college's essays are written
+    // 4. Check if ALL of THIS college's essays are written
     // ============================================
     const collegePromptIds = collegePrompts.map(p => p.id);
     const writtenCollegeEssays = collegePromptIds.filter(id => essayMap[id]).length;
     const totalCollegePrompts = collegePromptIds.length;
-    const percentWritten = totalCollegePrompts > 0 ? writtenCollegeEssays / totalCollegePrompts : 0;
 
-    if (percentWritten < 0.5) {
+    if (writtenCollegeEssays < totalCollegePrompts) {
+      const remaining = totalCollegePrompts - writtenCollegeEssays;
       return NextResponse.json({
         gated: true,
         writtenCount: writtenCollegeEssays,
         totalCount: totalCollegePrompts,
-        message: `The Round Table reviews your application holistically — but it needs enough material to work with. You've written ${writtenCollegeEssays} of ${totalCollegePrompts} essays for this school. Complete at least half of them, and the Round Table will be ready to give you a comprehensive review.`
+        message: `The Round Table needs to see your complete application before it can give you a meaningful review. You've written ${writtenCollegeEssays} of ${totalCollegePrompts} essays for this school — ${remaining} still to go. Finish all of them, and the Round Table will assess how well your full application comes together as a package.`
       }, { status: 200 });
     }
 
@@ -231,7 +231,7 @@ export async function POST(request: NextRequest) {
     // ============================================
     const systemMessage = `You are a panel of experienced college admissions officers reviewing a student's complete application to ${collegeName}. You are warm, honest, and deeply invested in this student's success. You review applications the way a real admissions committee would — looking at the whole picture, not individual essays in isolation. Your tone is encouraging but candid. You want this student to put their best foot forward.`;
 
-    const aiPrompt = `You are reviewing a student's COMPLETE written application to ${collegeName}. This includes their Common App essay and all of their ${collegeName}-specific supplemental essays. Your job is to look at everything together — as a single, cohesive application — and provide an honest, holistic assessment.
+    const aiPrompt = `You are reviewing a student's COMPLETE written application to ${collegeName}. This includes their Common App essay and all of their ${collegeName}-specific supplemental essays. Your job is to look at everything together — as a single, cohesive package — and determine whether an admissions reader at ${collegeName} would walk away with a full, compelling picture of who this student is.
 
 IMPORTANT: ONLY review the essays listed below. Do NOT reference or discuss essays from any other school. This review is exclusively about the ${collegeName} application.
 
@@ -247,26 +247,25 @@ ${collegeEssaySection}
 
 ===== YOUR HOLISTIC REVIEW =====
 
-Think about this application the way an admissions officer at ${collegeName} would. Consider:
+Your primary job is to answer one critical question: **If an admissions officer at ${collegeName} only had these essays to understand this student, would they get the full picture?**
 
-Start with an overall impression. When you read all of these essays together, what picture emerges of this student? Is it a compelling, multi-dimensional portrait? Does the student come across as someone who would thrive at ${collegeName} specifically?
+Start by looking at the student's insight responses, activities, and experiences. These represent who this student truly is — their values, their passions, the moments that shaped them, the things they care most about. Now look at the essays. Which of those most important and impactful experiences actually made it into the application? Which ones are completely absent?
 
-Then assess what dimensions of this student are well-represented across the application. What strengths, values, experiences, and qualities come through clearly? Reference specific moments from their essays that are working well.
+This is the most important part of your review. Be very specific. Name the experiences, activities, or qualities from their profile and insight responses that are missing from the essays entirely. An admissions reader will never know about these things unless they appear in the writing. If a student's most defining experience or deepest passion isn't captured anywhere in these essays, that is a major gap. Tell the student exactly what's missing and suggest which specific essay would be the best place to weave it in.
 
-Next — and this is the most important part — identify what's missing. Based on their insight responses and profile, are there significant aspects of who they are that none of these essays capture? Are there stories, experiences, or qualities that an admissions reader would never learn about from these essays alone? Be specific about what's absent and which essay might be the best place to weave it in.
+Next, look for redundancy. Are multiple essays telling the same type of story, showcasing the same quality, or drawing on the same experience? Every essay is precious real estate. If two essays both demonstrate leadership, or both focus on academic curiosity, one of them should pivot to reveal a different dimension of who this student is. Be specific about which essays overlap and what each could show instead.
 
-Look for redundancy. Are any essays covering the same ground, telling similar stories, or conveying the same quality? If so, suggest which essay could pivot to show a different side of the student.
+Then assess how the application reads as a whole. When you finish reading all the essays together, what portrait of the student emerges? Is it multi-dimensional — showing intellectual depth, personal values, community impact, and individual voice? Or does it feel one-note? Would an admissions officer at ${collegeName} specifically feel excited about this student?
 
-Finally, give an honest assessment of how strong this application reads as a package for ${collegeName}. What would make the biggest difference in strengthening it?
+End with your honest assessment of the single most impactful change this student could make to strengthen their overall application package.
 
-FORMATTING RULES (follow these exactly):
-- Use plain paragraph text as your default. Write in flowing prose, not bullet lists.
-- When you need to emphasize a key term or phrase, wrap it in double asterisks like **this** for bold.
-- Do NOT use numbered lists (1. 2. 3.) or bullet points (* or -).
-- Do NOT use markdown headers (# or ##).
-- Do NOT use asterisks for italic or decorative purposes — only **bold** for key phrases.
-- Separate major ideas with a blank line between paragraphs.
-- Write in a warm, encouraging, but honest tone — like a trusted admissions advisor who genuinely wants this student to succeed at ${collegeName}.`;
+CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
+1. Write ONLY in flowing prose paragraphs. NO bullet points. NO numbered lists. NO markdown headers (no # or ##). NO dashes as list items.
+2. Use **bold** sparingly for key terms or phrases. That is the ONLY markdown allowed.
+3. Separate paragraphs with a single blank line.
+4. Do NOT use asterisks for emphasis except **double asterisks for bold**.
+5. Tone: warm, encouraging, honest — like a trusted admissions advisor who genuinely wants this student to succeed at ${collegeName}.
+6. Keep it focused and substantial but not overwhelming — 5-8 paragraphs.`;
 
     // Call Gemini
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${geminiApiKey}`;
@@ -301,12 +300,13 @@ FORMATTING RULES (follow these exactly):
 
     // Clean up formatting
     aiResponse = aiResponse
-      .replace(/^#{1,4}\s+/gm, '')
-      .replace(/^\*\s+/gm, '• ')
-      .replace(/^-\s+/gm, '• ')
-      .replace(/^\d+\.\s+/gm, '')
+      .replace(/^#{1,6}\s+(?:\d+\.?\s*)?/gm, '')
+      .replace(/^[\s]*[\*\-]\s+/gm, '')
+      .replace(/^[\s]*\d+\.\s+/gm, '')
       .replace(/\*{3,}/g, '**')
-      .replace(/(?<!\*)\*(?!\*)/g, '');
+      .replace(/(?<!\*)\*(?!\*)/g, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
 
     // Auto-save to history (round_table mode, prompt_id is null, college_id is set)
     const { data: savedEntry, error: saveError } = await supabase
