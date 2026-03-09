@@ -33,12 +33,6 @@ interface Award {
   year: number | null;
 }
 
-interface CommenterRow {
-  id: string;
-  commenter_email: string;
-  created_at: string;
-}
-
 export default function ProfilePage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -63,11 +57,6 @@ export default function ProfilePage() {
   const [newApClass, setNewApClass] = useState({ class_name: '', score: '' });
   const [newExtracurricular, setNewExtracurricular] = useState({ activity_name: '', role: '', description: '' });
   const [newAward, setNewAward] = useState({ award_name: '', organization: '', year: '' });
-
-  // Commenters (up to 5) – shared across all essays
-  const [commenters, setCommenters] = useState<CommenterRow[]>([]);
-  const [showAddCommenter, setShowAddCommenter] = useState(false);
-  const [newCommenterEmail, setNewCommenterEmail] = useState('');
 
   useEffect(() => {
     checkAuth();
@@ -144,60 +133,11 @@ export default function ProfilePage() {
         setAwards(awardsData);
       }
 
-      // Load commenters
-      const { data: commentersData, error: commentersError } = await supabase
-        .from('student_commenters')
-        .select('id, commenter_email, created_at')
-        .eq('student_id', user.id)
-        .order('created_at', { ascending: false });
-      if (!commentersError && commentersData) {
-        setCommenters(commentersData);
-      }
     } catch (error) {
       console.error('Error loading profile:', error);
       alert('Error loading profile data. Please refresh the page.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleAddCommenter = async () => {
-    const email = newCommenterEmail.trim().toLowerCase();
-    if (!email) {
-      alert('Please enter an email address.');
-      return;
-    }
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    if (commenters.length >= 5) {
-      alert('You can add up to 5 commenters.');
-      return;
-    }
-    try {
-      const { error } = await supabase
-        .from('student_commenters')
-        .insert({ student_id: user.id, commenter_email: email });
-      if (error) {
-        if (error.code === '23505') alert('That email is already in your commenters list.');
-        else throw error;
-        return;
-      }
-      setNewCommenterEmail('');
-      setShowAddCommenter(false);
-      const { data } = await supabase.from('student_commenters').select('id, commenter_email, created_at').eq('student_id', user.id).order('created_at', { ascending: false });
-      setCommenters(data || []);
-    } catch (error: any) {
-      alert('Error adding commenter: ' + (error.message || 'Unknown error'));
-    }
-  };
-
-  const handleRemoveCommenter = async (id: string) => {
-    try {
-      const { error } = await supabase.from('student_commenters').delete().eq('id', id);
-      if (error) throw error;
-      setCommenters((prev) => prev.filter((c) => c.id !== id));
-    } catch (error: any) {
-      alert('Error removing commenter: ' + (error.message || 'Unknown error'));
     }
   };
 
@@ -489,57 +429,6 @@ export default function ProfilePage() {
           <p className="font-body text-lg" style={{ color: '#F3E5AB' }}>
             Manage your academic statistics, AP classes, extracurriculars, and awards
           </p>
-        </div>
-
-        {/* Your commenters (up to 5) – at top of profile */}
-        <div style={{ marginBottom: '32px' }}>
-        <Card>
-          <h3 className="font-heading text-lg" style={{ color: '#D4AF37', marginBottom: '8px' }}>Your commenters (up to 5)</h3>
-          <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '12px' }}>
-            These people can view and comment on <strong>all your essays</strong> once they sign in with that email. They’ll see “Essays shared with you” on their Dashboard. On each essay you can copy a link to share that essay directly.
-          </p>
-          {commenters.length < 5 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
-              {showAddCommenter ? (
-                <>
-                  <input
-                    type="email"
-                    value={newCommenterEmail}
-                    onChange={(e) => setNewCommenterEmail(e.target.value)}
-                    placeholder="Commenter email"
-                    style={{
-                      height: '36px',
-                      background: 'rgba(0,0,0,0.2)',
-                      border: '1px solid rgba(212,175,55,0.2)',
-                      color: 'white',
-                      padding: '0 12px',
-                      fontFamily: 'var(--font-body)',
-                      fontSize: '14px',
-                      outline: 'none',
-                      borderRadius: '2px',
-                    }}
-                  />
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={handleAddCommenter} style={{ background: '#D4AF37', color: '#0B1623', padding: '8px 16px', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, border: 'none', borderRadius: '2px', cursor: 'pointer' }}>Add</button>
-                    <button onClick={() => { setShowAddCommenter(false); setNewCommenterEmail(''); }} style={{ background: 'transparent', color: 'rgba(255,255,255,0.8)', border: '1px solid rgba(255,255,255,0.3)', padding: '8px 16px', fontFamily: 'var(--font-body)', fontSize: '14px', borderRadius: '2px', cursor: 'pointer' }}>Cancel</button>
-                  </div>
-                </>
-              ) : (
-                <button onClick={() => setShowAddCommenter(true)} style={{ background: 'transparent', color: '#D4AF37', border: '1px solid rgba(212,175,55,0.5)', padding: '6px 12px', fontFamily: 'var(--font-body)', fontSize: '12px', borderRadius: '2px', cursor: 'pointer', alignSelf: 'flex-start' }}>+ Add commenter</button>
-              )}
-            </div>
-          )}
-          {commenters.length > 0 && (
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {commenters.map((c) => (
-                <li key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                  <span className="font-body text-sm" style={{ color: 'white' }}>{c.commenter_email}</span>
-                  <button type="button" onClick={() => handleRemoveCommenter(c.id)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '12px', fontFamily: 'var(--font-body)' }}>Remove</button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
         </div>
 
         {/* Academic Stats */}
