@@ -22,6 +22,7 @@ export default function CollegesPage() {
   const pathname = usePathname();
   const [colleges, setColleges] = useState<College[]>([]);
   const [userColleges, setUserColleges] = useState<string[]>([]);
+  const [collegesWithPrompts, setCollegesWithPrompts] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -42,6 +43,7 @@ export default function CollegesPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Load all colleges
       const { data: collegesData, error } = await supabase
         .from('colleges')
         .select('*')
@@ -53,9 +55,11 @@ export default function CollegesPage() {
       }
 
       if (collegesData) {
+        // Exclude Common App — it's only for essay FK, not a real portfolio college
         setColleges(collegesData.filter((c: College) => c.id !== 'a0000000-0000-0000-0000-000000000000'));
       }
 
+      // Load user's colleges
       const { data: userCollegesData } = await supabase
         .from('user_colleges')
         .select('college_id')
@@ -63,6 +67,15 @@ export default function CollegesPage() {
 
       if (userCollegesData) {
         setUserColleges(userCollegesData.map(uc => uc.college_id));
+      }
+
+      // Load which colleges have prompts
+      const { data: promptColleges } = await supabase
+        .from('college_prompts')
+        .select('college_id');
+
+      if (promptColleges) {
+        setCollegesWithPrompts(new Set(promptColleges.map(p => p.college_id)));
       }
     } catch (error) {
       console.error('Error loading colleges:', error);
@@ -172,7 +185,7 @@ export default function CollegesPage() {
           borderRadius: '4px',
         }}>
           <p className="font-body text-sm" style={{ color: '#F3E5AB', lineHeight: '1.6', margin: 0 }}>
-            <strong style={{ color: '#D4AF37' }}>Important:</strong> Essay prompts are from the <strong>2025 application cycle</strong>. These are <strong>not</strong> the current questions and may change for the upcoming year. Use them for practice and preparation. When new prompts are released, essays written for outdated questions may be removed.
+            <strong style={{ color: '#D4AF37' }}>Important:</strong> Essay prompts are from the <strong>2025 application cycle</strong>. These are <strong>not</strong> the current questions and may change for the upcoming year. Use them for practice and preparation. <strong>When new prompts are released, essays written for outdated questions may be removed.</strong>
           </p>
         </div>
 
@@ -208,6 +221,11 @@ export default function CollegesPage() {
                         <h3 className="font-heading text-2xl mb-2" style={{ color: '#D4AF37', cursor: 'pointer' }}>{college.name}</h3>
                       </Link>
                       <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>{college.location}</p>
+                      {collegesWithPrompts.has(college.id) ? (
+                        <span className="font-body" style={{ fontSize: '11px', color: '#D4AF37', background: 'rgba(212,175,55,0.15)', padding: '2px 8px', borderRadius: '3px', marginTop: '6px', display: 'inline-block' }}>2025 Prompts Available</span>
+                      ) : (
+                        <span className="font-body" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '6px', display: 'inline-block' }}>2026 Prompts Come in August</span>
+                      )}
                     </div>
                     <button
                       onClick={() => handleRemoveCollege(college.id)}
@@ -255,6 +273,11 @@ export default function CollegesPage() {
                   <div style={{ marginBottom: '16px' }}>
                     <h3 className="font-heading text-2xl mb-2" style={{ color: '#D4AF37' }}>{college.name}</h3>
                     <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>{college.location}</p>
+                    {collegesWithPrompts.has(college.id) ? (
+                      <span className="font-body" style={{ fontSize: '11px', color: '#D4AF37', background: 'rgba(212,175,55,0.15)', padding: '2px 8px', borderRadius: '3px', marginTop: '6px', display: 'inline-block' }}>2025 Prompts Available</span>
+                    ) : (
+                      <span className="font-body" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '6px', display: 'inline-block' }}>Prompts Coming Soon</span>
+                    )}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
                     {college.acceptance_rate != null && Number(college.acceptance_rate) === college.acceptance_rate && (
