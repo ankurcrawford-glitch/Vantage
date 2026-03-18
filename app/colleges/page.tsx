@@ -172,7 +172,7 @@ export default function CollegesPage() {
           borderRadius: '4px',
         }}>
           <p className="font-body text-sm" style={{ color: '#F3E5AB', lineHeight: '1.6', margin: 0 }}>
-            <strong style={{ color: '#D4AF37' }}>Important:</strong> Essay prompts are from the <strong>2025 application cycle</strong>. These are <strong>not</strong> the current questions and may change for the upcoming year. Use them for practice and preparation. <strong>When new prompts are released, essays written for outdated questions may be removed.
+            <strong style={{ color: '#D4AF37' }}>Important:</strong> Essay prompts are from the <strong>2025 application cycle</strong>. These are <strong>not</strong> the current questions and may change for the upcoming year. Use them for practice and preparation. When new prompts are released, essays written for outdated questions may be removed.
           </p>
         </div>
 
