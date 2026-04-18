@@ -1189,6 +1189,7 @@ export default function ProfilePage() {
           {/* Account deletion. Required by California's Eraser Button law
               for users under 18 and a general CCPA right. Two-step confirm
               prevents accidental clicks. */}
+          <div style={{ marginTop: '32px' }}>
           <Card>
             <h2 className="font-heading text-2xl mb-4" style={{ color: '#F87171' }}>Delete Account</h2>
             <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '16px', lineHeight: '1.6' }}>
@@ -1196,6 +1197,7 @@ export default function ProfilePage() {
             </p>
             <DeleteAccountButton />
           </Card>
+          </div>
         </div>
       </div>
     </div>
