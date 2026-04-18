@@ -31,7 +31,13 @@ OPENING CONSTRAINT — your first paragraph must name the single biggest problem
 - If the application is weak, spend most of the response on what to change, not on reassurance.
 - Assume a skeptical admissions reader at this specific college. Address what they might doubt, find generic, or skim past.
 
-REQUIRED MECHANICS / CLICHÉ PASS — scan all essays for common clichés and missing apostrophes. Clichés to flag when present: "in today's world," "at the end of the day," "the glue that holds," "memories I will carry forever," "the heartbeat of every community," "the person I am today," "staying connected to my roots," "spending quality time," "taught me the value of," "taught me the importance of," "shaped me into who I am," "I learned that," "in conclusion," "to conclude," "all in all." Also check for missing apostrophes in common words (todays, its, everyones, dont, im).
+REQUIRED MECHANICS / CLICHÉ PASS — scan all submitted essays for issues that ACTUALLY APPEAR in the text. Do not flag errors that are not present. Every finding must quote the exact phrase or sentence from the specific essay where the issue occurs. If you cannot quote the phrase, do not include the finding.
+
+Issue types to scan for (flag ONLY if actually present in an essay):
+1. Clichés: common ones include "in today's world," "at the end of the day," "the glue that holds," "memories I will carry forever," "the heartbeat of every community," "the person I am today," "staying connected to my roots," "spending quality time," "taught me the value of," "taught me the importance of," "shaped me into who I am," "I learned that," "in conclusion," "to conclude," "all in all."
+2. Missing apostrophes: "todays" → "today's", "its" used where "it's" is meant, "everyones", "dont", "im" — but only flag if the exact misspelling appears in an essay.
+
+ANTI-REPETITION RULE — list each distinct issue at most ONCE per essay. Do not repeat the same finding multiple times.
 
 MECHANICS OUTPUT FORMAT — put all mechanics findings in a clearly separated section at the very end of your response. The section must:
 - Begin with a bold header on its own line: **Mechanics**
@@ -223,7 +229,12 @@ export async function POST(request: NextRequest) {
         })
         .filter(Boolean);
       if (answeredQuestions.length > 0) {
-        discoveryContext = `\n\nWHO THIS STUDENT IS (their personal insight responses):\n${answeredQuestions.join('\n\n')}`;
+        discoveryContext = `\n\nWHO THIS STUDENT IS (PRIVATE SCAFFOLDING — NEVER SUBMITTED TO ANY COLLEGE):
+These Insight Question responses are the student's own self-knowledge bank. They are never shown to any admissions office and are not part of any application. The student's intended workflow is to draw FROM this material when writing their actual essays.
+
+IMPORTANT: If a submitted essay draws on content from these Insight Question responses, that is expected and desirable — it means the student is effectively using their own raw material. DO NOT treat overlap between an essay and an Insight Question response as duplication or redundancy. Insight Question content is meant to be reused in essays. Only flag duplication BETWEEN SUBMITTED ESSAYS (e.g., Common App essay covering the same territory as a supplemental essay).
+
+${answeredQuestions.join('\n\n')}`;
       }
     }
 
@@ -316,7 +327,7 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
           // Lower temperature for holistic feedback — less generic praise,
           // stronger instruction-following on the gaps-first rule.
           temperature: 0.35,
-          maxOutputTokens: 3000,
+          maxOutputTokens: 2000,
         },
         // Override default safety thresholds. Gemini's defaults are aggressive
         // enough that feedback on essays touching on identity, mental health,

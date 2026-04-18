@@ -6,10 +6,17 @@ import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
 // function timeout to 60s so responses don't get cut off mid-generation.
 export const maxDuration = 60;
 
-// Model selection by mode — DIAGNOSTIC: temporarily using flash-lite for
-// feedback modes to isolate whether Flash specifically is causing the
-// mid-generation truncation we're seeing when the essay has content.
-// Revert to 'gemini-2.5-flash' for feedback once root cause is confirmed.
+// Model selection by mode. Currently both use flash-lite:
+// - Flash (gemini-2.5-flash) had mid-generation truncation with non-empty
+//   essay content at low temperatures; flash-lite is stable under the same
+//   conditions.
+// - With the tightened FEEDBACK_RULES / temperature 0.3, flash-lite follows
+//   the anti-sycophancy rules well enough to pass the acceptance bar, so
+//   the extra cost of Flash is not justified right now.
+// If quality regresses or we need stronger reasoning, revisit:
+// - 'gemini-2.5-flash' at higher temperature (0.5+)
+// - 'gemini-2.0-flash' (different version, more stable at low temp)
+// - 'gemini-2.5-pro' (expensive but highest quality)
 const MODEL_BRAINSTORM = 'gemini-2.5-flash-lite';
 const MODEL_FEEDBACK = 'gemini-2.5-flash-lite';
 const MIN_INSIGHT_ANSWERS = 6;
@@ -30,11 +37,15 @@ OPENING CONSTRAINT — your first paragraph must name the biggest problem in the
 - If the draft is weak, spend most of the response on what to change, not on reassurance.
 - Assume a skeptical admissions reader. Address what they might doubt, find generic, flag as cliché, or skim past.
 
-REQUIRED MECHANICS PASS — before concluding your response, you must scan the draft for:
-1. Missing apostrophes. Specifically check for: "todays" (should be today's), "its" where "it's" is meant, "everyones" (should be everyone's), "im" or "dont" or similar contractions without apostrophes, possessive nouns missing 's.
-2. Cliché phrases. Any of these must be quoted back and flagged: "in today's world," "in todays world," "in today's fast-paced world," "at the end of the day," "the glue that holds," "memories I will carry forever," "memories I will carry with me forever," "the heartbeat of every community," "the person I am today," "staying connected to my roots," "spending quality time," "the people who matter most," "taught me the value of," "taught me the importance of," "shaped me into who I am," "blessed to have," "truly grateful," "words cannot describe," "I learned that," "in conclusion," "to conclude," "all in all," "moving forward."
-3. "In conclusion" / "To conclude" / "In summary" endings — always flag these; they signal a tell-instead-of-show finish.
-4. Passive voice that obscures who is doing what.
+REQUIRED MECHANICS PASS — scan the draft for issues that ACTUALLY APPEAR in the text. Do not flag errors that are not present. Every finding must quote the exact phrase or sentence from the draft where the issue occurs. If you cannot quote the phrase, do not include the finding.
+
+Issue types to scan for (flag ONLY if actually present):
+1. Missing apostrophes. Examples of patterns to check for if they appear in the draft: "todays" → "today's", "its" used where "it's" is meant, "everyones" → "everyone's", "im" → "I'm", "dont" → "don't". Do NOT invent instances of these errors — only flag if the exact misspelling appears in the draft.
+2. Cliché phrases that appear in the draft. Common ones to watch for: "in today's world," "at the end of the day," "the glue that holds," "memories I will carry forever," "the person I am today," "staying connected to my roots," "spending quality time," "the people who matter most," "taught me the value of," "taught me the importance of," "shaped me into who I am," "I learned that," "in conclusion," "to conclude," "all in all." For each cliché you flag, quote the exact phrase from the draft.
+3. "In conclusion" / "To conclude" / "In summary" endings — flag only if the draft actually uses one of these.
+4. Passive voice that obscures who is doing what — flag only specific instances you can quote.
+
+ANTI-REPETITION RULE — list each distinct issue at most ONCE. Do not repeat the same finding multiple times. If you have already flagged a cliché or error, move on to the next one. If you find nothing in a category, say "no issues found" for that category or omit it.
 
 MECHANICS OUTPUT FORMAT — put the mechanics findings in a clearly separated section at the very end of your response. The section must:
 - Begin with a bold header on its own line: **Mechanics**
@@ -236,7 +247,12 @@ export async function POST(request: NextRequest) {
         })
         .filter(Boolean);
       if (answered.length > 0) {
-        discoveryContext = `\n\nSTUDENT'S PERSONAL INSIGHT RESPONSES:\n${answered.join('\n\n')}`;
+        discoveryContext = `\n\nSTUDENT'S PERSONAL INSIGHT RESPONSES (PRIVATE SCAFFOLDING — NEVER SUBMITTED TO ANY COLLEGE):
+These responses are the student's own self-knowledge bank, used by you to understand who they are. They are never shown to any admissions office and are not part of any application. The student's intended workflow is to draw FROM this material when writing their actual essays.
+
+IMPORTANT: If the student's essay draft draws on or overlaps with content from these Insight Question responses, that is expected and desirable — it means they are effectively using their own raw material. DO NOT treat this as duplication, redundancy, or a "range" problem. Never tell the student their essay "overlaps with their Insight Question response." Insight Question content is meant to be reused. Only flag duplication between actual submitted essays (e.g., Common App essay vs. supplemental essays).
+
+${answered.join('\n\n')}`;
       }
     }
 
@@ -383,7 +399,7 @@ Do NOT rewrite their essay.${formatRules}`;
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: systemMessage }] },
         contents: [{ parts: [{ text: aiPrompt }] }],
-        generationConfig: { temperature: modeTemperature, maxOutputTokens: 2000 },
+        generationConfig: { temperature: modeTemperature, maxOutputTokens: 1200 },
         // Override default safety thresholds. Gemini's defaults are aggressive
         // enough that feedback essays touching on identity, mental health, or
         // difficult experiences can trigger silent mid-generation truncation.
