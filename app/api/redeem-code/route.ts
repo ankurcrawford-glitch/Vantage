@@ -16,16 +16,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Code required' }, { status: 400 });
     }
 
-    // Check the code against the environment variable.
-    // TODO (from SECURITY-AUDIT.md): replace the shared env-var code with a
-    // single-use codes table, rate-limit per IP, and store hashes, not
-    // plaintext. For now this is a cohort-level shared secret.
-    const validCode = process.env.ACCESS_CODE;
-    if (!validCode) {
-      return NextResponse.json({ error: 'Access codes are not configured' }, { status: 503 });
+    // Supported env vars (checked in order):
+    //   ACCESS_CODES   — comma-separated list of valid codes (preferred)
+    //   ACCESS_CODE    — single code (legacy, kept for backward compat)
+    //
+    // TODO (from SECURITY-AUDIT.md): move to a single-use codes table in
+    // Supabase, hash the codes, and track which account redeemed which
+    // code. Rate-limit per IP. For now codes are cohort-level shared
+    // secrets — anyone with a valid code can activate their own account.
+    const rawPlural = process.env.ACCESS_CODES || '';
+    const legacy = process.env.ACCESS_CODE || '';
+    const validCodes = [
+      ...rawPlural.split(',').map((c) => c.trim()).filter(Boolean),
+      ...(legacy.trim() ? [legacy.trim()] : []),
+    ].map((c) => c.toUpperCase());
+
+    if (validCodes.length === 0) {
+      return NextResponse.json(
+        { error: 'Access codes are not configured' },
+        { status: 503 }
+      );
     }
 
-    if (code.trim().toUpperCase() !== validCode.trim().toUpperCase()) {
+    const submitted = code.trim().toUpperCase();
+    if (!validCodes.includes(submitted)) {
       return NextResponse.json({ error: 'Invalid access code' }, { status: 403 });
     }
 
