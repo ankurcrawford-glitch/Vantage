@@ -237,13 +237,75 @@ export default function CollegeDetailPage() {
           </div>
         </div>
 
-        {/* The Round Table — holistic application review. Lives at the
-            college level because it reads the full package (Common App essay
-            + all of this college's supplementals) together. Hidden for the
-            Common App "pseudo-college" since there are no supplementals to
-            review against. */}
+        <div>
+          <h2 className="font-heading text-2xl mb-6" style={{ color: 'white' }}>Essay Prompts ({getCurrentApplicationYear()})</h2>
+          {prompts.length === 0 ? (
+            <Card>
+              <p style={{ color: 'rgba(255,255,255,0.7)', textAlign: 'center', padding: '32px' }}>
+                No prompts available for {getCurrentApplicationYear()}. Prompts are typically released in August.
+              </p>
+            </Card>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {prompts.map((prompt) => (
+                <Card key={prompt.id}>
+                  <div style={{ marginBottom: '16px' }}>
+                    <h3 className="font-heading text-lg mb-2" style={{ color: '#D4AF37' }}>
+                      Prompt {prompt.sort_order}
+                    </h3>
+                    <p className="font-body" style={{ color: 'rgba(255,255,255,0.9)', lineHeight: '1.6' }}>
+                      {prompt.prompt_text}
+                    </p>
+                    {prompt.word_limit && (
+                      <p className="font-body text-sm mt-2" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                        Word Limit: {prompt.word_limit} words
+                      </p>
+                    )}
+                  </div>
+                  <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(212,175,55,0.2)' }}>
+                    <Link 
+                      href={`/essays/${collegeId}/${prompt.id}`}
+                      style={{
+                        display: 'inline-block',
+                        background: '#D4AF37',
+                        color: '#0B1623',
+                        padding: '12px 24px',
+                        fontFamily: 'var(--font-body)',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        textDecoration: 'none',
+                        borderRadius: '2px',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = '#D4AF37';
+                        e.currentTarget.style.border = '1px solid #D4AF37';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#D4AF37';
+                        e.currentTarget.style.color = '#0B1623';
+                        e.currentTarget.style.border = 'none';
+                      }}
+                    >
+                      Write Essay
+                    </Link>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* The Round Table — holistic application review. Positioned AFTER
+            the Essay Prompts list because it's a later-stage tool: students
+            should first see what essays they need to write, then use
+            Round Table once they have drafts. Hidden for the Common App
+            "pseudo-college" since there are no supplementals to review. */}
         {collegeId !== COMMON_APP_COLLEGE_ID && (
-          <div style={{ marginBottom: '48px' }}>
+          <div style={{ marginTop: '48px' }}>
             <Card>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: '280px' }}>
@@ -324,68 +386,6 @@ export default function CollegeDetailPage() {
             </Card>
           </div>
         )}
-
-        <div>
-          <h2 className="font-heading text-2xl mb-6" style={{ color: 'white' }}>Essay Prompts ({getCurrentApplicationYear()})</h2>
-          {prompts.length === 0 ? (
-            <Card>
-              <p style={{ color: 'rgba(255,255,255,0.7)', textAlign: 'center', padding: '32px' }}>
-                No prompts available for {getCurrentApplicationYear()}. Prompts are typically released in August.
-              </p>
-            </Card>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {prompts.map((prompt) => (
-                <Card key={prompt.id}>
-                  <div style={{ marginBottom: '16px' }}>
-                    <h3 className="font-heading text-lg mb-2" style={{ color: '#D4AF37' }}>
-                      Prompt {prompt.sort_order}
-                    </h3>
-                    <p className="font-body" style={{ color: 'rgba(255,255,255,0.9)', lineHeight: '1.6' }}>
-                      {prompt.prompt_text}
-                    </p>
-                    {prompt.word_limit && (
-                      <p className="font-body text-sm mt-2" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                        Word Limit: {prompt.word_limit} words
-                      </p>
-                    )}
-                  </div>
-                  <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(212,175,55,0.2)' }}>
-                    <Link 
-                      href={`/essays/${collegeId}/${prompt.id}`}
-                      style={{
-                        display: 'inline-block',
-                        background: '#D4AF37',
-                        color: '#0B1623',
-                        padding: '12px 24px',
-                        fontFamily: 'var(--font-body)',
-                        fontSize: '14px',
-                        fontWeight: 600,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                        textDecoration: 'none',
-                        borderRadius: '2px',
-                        transition: 'all 0.2s',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.color = '#D4AF37';
-                        e.currentTarget.style.border = '1px solid #D4AF37';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#D4AF37';
-                        e.currentTarget.style.color = '#0B1623';
-                        e.currentTarget.style.border = 'none';
-                      }}
-                    >
-                      Write Essay
-                    </Link>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
