@@ -231,7 +231,19 @@ export default function PersonalStatementPage() {
             const allGroups = Array.from(groupsMap.values());
             allGroups.forEach((g) => g.essays.sort((a, b) => a.prompt_sort_order - b.prompt_sort_order));
 
+            // Common App behaves differently from school supplementals:
+            // students pick ONE of the 7 Common App prompts to answer, so once
+            // they've started one we only show that one. Before they pick, we
+            // show all 7 so they can choose. Other colleges show every prompt
+            // because all supplementals are typically required.
             const commonAppGroup = allGroups.find((g) => g.collegeId === COMMON_APP_COLLEGE_ID);
+            if (commonAppGroup) {
+              const startedCommonApp = commonAppGroup.essays.filter((e) => e.started);
+              if (startedCommonApp.length > 0) {
+                commonAppGroup.essays = startedCommonApp;
+              }
+            }
+
             const otherGroups = allGroups
               .filter((g) => g.collegeId !== COMMON_APP_COLLEGE_ID)
               .sort((a, b) => a.collegeName.localeCompare(b.collegeName));
