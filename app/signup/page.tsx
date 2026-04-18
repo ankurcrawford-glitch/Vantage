@@ -15,6 +15,7 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [isUnder18, setIsUnder18] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -24,6 +25,11 @@ export default function SignupPage() {
 
     if (!ageConfirmed) {
       setError('You must confirm you are at least 13 years old to create an account.');
+      return;
+    }
+
+    if (!agreedToTerms) {
+      setError('You must agree to the Terms of Service and Privacy Policy to create an account.');
       return;
     }
 
@@ -40,9 +46,10 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      // Sign up without triggering email confirmation. We store age
-      // attestation flags in user_metadata so admin/reporting can see them
-      // without a separate table.
+      // Sign up without triggering email confirmation. Age + terms attestation
+      // flags are stored in user_metadata so admin/reporting can audit them
+      // without a separate table. terms_accepted_version lets us prompt users
+      // to re-accept if we make material changes to the Terms.
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
@@ -52,6 +59,9 @@ export default function SignupPage() {
             age_confirmed_13_plus: true,
             age_confirmed_at: new Date().toISOString(),
             self_reported_under_18: isUnder18,
+            terms_accepted: true,
+            terms_accepted_at: new Date().toISOString(),
+            terms_accepted_version: '2026-04-18',
           },
           // Don't set emailRedirectTo to avoid triggering emails
         },
@@ -186,10 +196,29 @@ export default function SignupPage() {
                 </p>
               </div>
             )}
+
+            {/* Required agreement to Terms + Privacy. Storing the acceptance
+                timestamp + version in user_metadata gives a paper trail for
+                legal compliance. */}
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', marginTop: '4px' }}>
+              <input
+                type="checkbox"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                required
+                style={{ marginTop: '3px', cursor: 'pointer' }}
+              />
+              <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.85)', lineHeight: '1.5' }}>
+                I agree to the{' '}
+                <Link href="/terms" target="_blank" style={{ color: '#D4AF37', textDecoration: 'underline' }}>Terms of Service</Link>
+                {' '}and{' '}
+                <Link href="/privacy" target="_blank" style={{ color: '#D4AF37', textDecoration: 'underline' }}>Privacy Policy</Link>.
+              </span>
+            </label>
           </div>
 
           <div style={{ marginTop: '8px' }}>
-            <Button type="submit" style={{ width: '100%', height: '48px' }} disabled={loading || !ageConfirmed}>
+            <Button type="submit" style={{ width: '100%', height: '48px' }} disabled={loading || !ageConfirmed || !agreedToTerms}>
               {loading ? 'Creating account...' : 'Create Account'}
             </Button>
           </div>
