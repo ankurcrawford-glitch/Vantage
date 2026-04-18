@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
 import { getAuthedUser, getAdminClient } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // Round Table uses Gemini Pro and synthesizes multiple essays — can take
 // 20-40s on larger applications. Bump the serverless function timeout to 60s
@@ -88,6 +89,11 @@ export async function POST(request: NextRequest) {
     const auth = await getAuthedUser(request);
     if (!auth.ok) return auth.response;
     const userId = auth.userId;
+
+    // Rate limit (per-user: 2/min, 5/hr, 15/day). Round Table uses Gemini
+    // Pro at ~2¢ per call — stricter limits than per-essay feedback.
+    const rl = await checkRateLimit(userId, 'round-table');
+    if (!rl.ok) return rl.response;
 
     const { collegeId } = await request.json();
 
@@ -389,14 +395,17 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
     let aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated';
 
     // Log Gemini response metadata so we can diagnose truncation / safety
-    // filter issues from Vercel function logs. Grep for "[round-table]".
+    // filter issues. `rawTailPreview` leaks essay-feedback content and is
+    // gated to non-production to avoid landing student content in logs.
     console.log('[round-table] gemini response', JSON.stringify({
       model: AI_MODEL,
       finishReason: data.candidates?.[0]?.finishReason,
       safetyRatings: data.candidates?.[0]?.safetyRatings,
       promptFeedback: data.promptFeedback,
       rawLength: aiResponse.length,
-      rawTailPreview: aiResponse.slice(-200),
+      ...(process.env.NODE_ENV !== 'production' && {
+        rawTailPreview: aiResponse.slice(-200),
+      }),
     }));
 
     if (!aiResponse || aiResponse === 'No response generated') {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
 import { getAuthedUser, getAdminClient } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // Feedback generation with Flash can take 10-20s. Bump the serverless
 // function timeout to 60s so responses don't get cut off mid-generation.
@@ -144,6 +145,11 @@ export async function POST(request: NextRequest) {
     const auth = await getAuthedUser(request);
     if (!auth.ok) return auth.response;
     const userId = auth.userId;
+
+    // Rate limit (per-user: 10/min, 60/hr, 200/day). Blocks runaway loops
+    // and automated abuse before they burn through your Gemini budget.
+    const rl = await checkRateLimit(userId, 'thinking-partner');
+    if (!rl.ok) return rl.response;
 
     const { essayContent, promptId, collegeId } = await request.json();
 
@@ -456,7 +462,9 @@ Do NOT rewrite their essay.${formatRules}`;
     const rawResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
     // Log Gemini response metadata so we can diagnose truncation / safety
-    // filter issues from Vercel function logs. Grep for "[thinking-partner]".
+    // filter issues. The `rawTailPreview` field contains 200 chars of the
+    // generated guidance (i.e. essay feedback text). We gate it behind
+    // non-production so student-essay fragments never land in production logs.
     console.log('[thinking-partner] gemini response', JSON.stringify({
       mode,
       model: modelForMode,
@@ -464,7 +472,9 @@ Do NOT rewrite their essay.${formatRules}`;
       safetyRatings: data.candidates?.[0]?.safetyRatings,
       promptFeedback: data.promptFeedback,
       rawLength: rawResponse.length,
-      rawTailPreview: rawResponse.slice(-200),
+      ...(process.env.NODE_ENV !== 'production' && {
+        rawTailPreview: rawResponse.slice(-200),
+      }),
     }));
 
     if (!rawResponse) {
