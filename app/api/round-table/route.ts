@@ -318,6 +318,15 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
           temperature: 0.35,
           maxOutputTokens: 3000,
         },
+        // Override default safety thresholds. Gemini's defaults are aggressive
+        // enough that feedback on essays touching on identity, mental health,
+        // or difficult experiences can trigger silent mid-generation truncation.
+        safetySettings: [
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
+        ],
       }),
     });
 
@@ -332,6 +341,17 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
 
     const data = await response.json();
     let aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated';
+
+    // Log Gemini response metadata so we can diagnose truncation / safety
+    // filter issues from Vercel function logs. Grep for "[round-table]".
+    console.log('[round-table] gemini response', JSON.stringify({
+      model: AI_MODEL,
+      finishReason: data.candidates?.[0]?.finishReason,
+      safetyRatings: data.candidates?.[0]?.safetyRatings,
+      promptFeedback: data.promptFeedback,
+      rawLength: aiResponse.length,
+      rawTailPreview: aiResponse.slice(-200),
+    }));
 
     if (!aiResponse || aiResponse === 'No response generated') {
       return NextResponse.json({ error: 'No response generated. Please try again.' }, { status: 500 });

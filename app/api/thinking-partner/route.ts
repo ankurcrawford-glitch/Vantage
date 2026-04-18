@@ -383,6 +383,15 @@ Do NOT rewrite their essay.${formatRules}`;
         systemInstruction: { parts: [{ text: systemMessage }] },
         contents: [{ parts: [{ text: aiPrompt }] }],
         generationConfig: { temperature: modeTemperature, maxOutputTokens: 2000 },
+        // Override default safety thresholds. Gemini's defaults are aggressive
+        // enough that feedback essays touching on identity, mental health, or
+        // difficult experiences can trigger silent mid-generation truncation.
+        safetySettings: [
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
+        ],
       }),
     });
 
@@ -397,6 +406,18 @@ Do NOT rewrite their essay.${formatRules}`;
 
     const data = await response.json();
     const rawResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    // Log Gemini response metadata so we can diagnose truncation / safety
+    // filter issues from Vercel function logs. Grep for "[thinking-partner]".
+    console.log('[thinking-partner] gemini response', JSON.stringify({
+      mode,
+      model: modelForMode,
+      finishReason: data.candidates?.[0]?.finishReason,
+      safetyRatings: data.candidates?.[0]?.safetyRatings,
+      promptFeedback: data.promptFeedback,
+      rawLength: rawResponse.length,
+      rawTailPreview: rawResponse.slice(-200),
+    }));
 
     if (!rawResponse) {
       return NextResponse.json({ error: 'No response generated. Please try again.' }, { status: 500 });
