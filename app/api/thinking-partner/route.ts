@@ -30,7 +30,12 @@ REQUIRED MECHANICS PASS — before concluding your response, you must scan the d
 2. Cliché phrases. Any of these must be quoted back and flagged: "in today's world," "in todays world," "in today's fast-paced world," "at the end of the day," "the glue that holds," "memories I will carry forever," "memories I will carry with me forever," "the heartbeat of every community," "the person I am today," "staying connected to my roots," "spending quality time," "the people who matter most," "taught me the value of," "taught me the importance of," "shaped me into who I am," "blessed to have," "truly grateful," "words cannot describe," "I learned that," "in conclusion," "to conclude," "all in all," "moving forward."
 3. "In conclusion" / "To conclude" / "In summary" endings — always flag these; they signal a tell-instead-of-show finish.
 4. Passive voice that obscures who is doing what.
-If you find any of the above, name each instance by quoting it. If you truly find none, say so explicitly ("no mechanics or cliché issues found"). Do not skip this pass.
+
+MECHANICS OUTPUT FORMAT — put the mechanics findings in a clearly separated section at the very end of your response. The section must:
+- Begin with a bold header on its own line: **Mechanics**
+- Then list each finding on its own line, prefixed with a hyphen and a space (e.g., "- \"todays\" should be \"today's\""). One finding per line. This is the only place in your response where list formatting is allowed.
+- If you truly find no mechanics or cliché issues, write: "- No mechanics or cliché issues found."
+Do not skip this pass. Do not merge the mechanics list into the prose body above it.
 
 - Tone is warm but measured. No exaggerated enthusiasm. No exclamation points. No emoji. Firm enough to be useful.`;
 
@@ -41,9 +46,22 @@ function determineMode(essayContent: string | null, wordCount: number, versionNu
   return 'revision';
 }
 
-// Clean markdown artifacts from AI response
+// Clean markdown artifacts from AI response.
+// The prose body is forced into plain paragraphs. The Mechanics section at
+// the end (marked by a **Mechanics** header) keeps its list format intact.
 function cleanResponse(text: string): string {
-  return text
+  // Split off the Mechanics section if present so its list survives cleaning.
+  const mechanicsMatch = text.match(/\n\s*\*\*Mechanics\*\*\s*\n/i);
+
+  let body = text;
+  let mechanics = '';
+
+  if (mechanicsMatch && typeof mechanicsMatch.index === 'number') {
+    body = text.slice(0, mechanicsMatch.index);
+    mechanics = text.slice(mechanicsMatch.index);
+  }
+
+  const cleanedBody = body
     // Remove markdown headers (### 1. PROMPT FIT, ## Strengths, etc.)
     .replace(/^#{1,6}\s+(?:\d+\.?\s*)?/gm, '')
     // Remove bullet points (* item, - item)
@@ -54,9 +72,20 @@ function cleanResponse(text: string): string {
     .replace(/\*{3,}/g, '**')
     // Remove single asterisks (italic) but keep ** (bold)
     .replace(/(?<!\*)\*(?!\*)/g, '')
-    // Remove trailing/leading whitespace per line and collapse 3+ newlines
+    // Collapse 3+ newlines
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+
+  // Light cleanup on the mechanics section — strip stray triple asterisks
+  // but keep the header and hyphen-prefixed list intact.
+  const cleanedMechanics = mechanics
+    .replace(/\*{3,}/g, '**')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  return cleanedMechanics
+    ? `${cleanedBody}\n\n${cleanedMechanics}`
+    : cleanedBody;
 }
 
 // ============================================
@@ -224,12 +253,13 @@ export async function POST(request: NextRequest) {
     // Build prompt based on mode
     // ============================================
     const formatRules = `\n\nCRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
-1. Write ONLY in flowing prose paragraphs. NO bullet points. NO numbered lists. NO markdown headers (no # or ##). NO dashes as list items.
-2. Use **bold** sparingly for key terms or phrases. That is the ONLY markdown allowed.
-3. Separate paragraphs with a single blank line.
-4. Do NOT use asterisks for emphasis except **double asterisks for bold**.
-5. Tone: warm but measured, honest, specific. Like a trusted mentor who respects the student enough to tell them the truth.
-6. Keep it concise. 4-6 paragraphs maximum.`;
+1. Write the main body of the response in flowing prose paragraphs. NO bullet points in the prose body. NO numbered lists in the prose body. NO markdown headers (no # or ##) in the prose body. NO dashes as list items in the prose body.
+2. EXCEPTION: the final "Mechanics" section at the end of the response must use a bold header (**Mechanics**) on its own line, followed by a hyphen-prefixed list — one finding per line. This is the only place lists are allowed.
+3. Use **bold** sparingly in prose for key terms or phrases. That is the ONLY markdown allowed in the prose body.
+4. Separate paragraphs with a single blank line.
+5. Do NOT use asterisks for emphasis except **double asterisks for bold**.
+6. Tone: warm but measured, honest, specific. Like a trusted mentor who respects the student enough to tell them the truth.
+7. Keep the prose body concise — 4-6 paragraphs maximum. The Mechanics section comes after that.`;
 
     const profileBlock = [
       userStats ? `Academics: GPA ${userStats.gpa_weighted || 'N/A'} weighted, ${userStats.gpa_unweighted || 'N/A'} unweighted. SAT: ${userStats.sat_score || 'N/A'}. ACT: ${userStats.act_score || 'N/A'}.` : '',

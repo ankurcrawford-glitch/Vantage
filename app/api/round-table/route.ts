@@ -26,7 +26,13 @@ OPENING CONSTRAINT — your first paragraph must name the single biggest problem
 - If the application is weak, spend most of the response on what to change, not on reassurance.
 - Assume a skeptical admissions reader at this specific college. Address what they might doubt, find generic, or skim past.
 
-REQUIRED MECHANICS / CLICHÉ PASS — before concluding, scan the essays for common clichés and flag each instance by quoting it: "in today's world," "at the end of the day," "the glue that holds," "memories I will carry forever," "the heartbeat of every community," "the person I am today," "staying connected to my roots," "spending quality time," "taught me the value of," "taught me the importance of," "shaped me into who I am," "I learned that," "in conclusion," "to conclude," "all in all." Also check for missing apostrophes in common words (todays, its, everyones, dont, im).
+REQUIRED MECHANICS / CLICHÉ PASS — scan all essays for common clichés and missing apostrophes. Clichés to flag when present: "in today's world," "at the end of the day," "the glue that holds," "memories I will carry forever," "the heartbeat of every community," "the person I am today," "staying connected to my roots," "spending quality time," "taught me the value of," "taught me the importance of," "shaped me into who I am," "I learned that," "in conclusion," "to conclude," "all in all." Also check for missing apostrophes in common words (todays, its, everyones, dont, im).
+
+MECHANICS OUTPUT FORMAT — put all mechanics findings in a clearly separated section at the very end of your response. The section must:
+- Begin with a bold header on its own line: **Mechanics**
+- Then list each finding on its own line, prefixed with a hyphen and a space. For each finding, name the essay it came from (e.g., "- Common App essay: \"todays\" should be \"today's\"" or "- BC Prompt 1: cliché \"the glue that holds\""). One finding per line. This is the only place in your response where list formatting is allowed.
+- If you truly find no mechanics or cliché issues across any essay, write: "- No mechanics or cliché issues found."
+Do not skip this pass. Do not merge the mechanics list into the prose body above it.
 
 - Tone is warm but measured. No exaggerated enthusiasm. No exclamation points. No emoji.`;
 
@@ -285,12 +291,13 @@ Then assess how the application reads as a whole. When you finish reading all th
 End with your honest assessment of the single most impactful change this student could make to strengthen their overall application package.
 
 CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
-1. Write ONLY in flowing prose paragraphs. NO bullet points. NO numbered lists. NO markdown headers (no # or ##). NO dashes as list items.
-2. Use **bold** sparingly for key terms or phrases. That is the ONLY markdown allowed.
-3. Separate paragraphs with a single blank line.
-4. Do NOT use asterisks for emphasis except **double asterisks for bold**.
-5. Tone: warm but measured, honest and specific — like a trusted admissions advisor who respects this student enough to tell them the truth about their ${collegeName} application.
-6. Keep it focused and substantial but not overwhelming — 5-8 paragraphs.`;
+1. Write the main body of the response in flowing prose paragraphs. NO bullet points in the prose body. NO numbered lists in the prose body. NO markdown headers (no # or ##) in the prose body. NO dashes as list items in the prose body.
+2. EXCEPTION: the final "Mechanics" section at the end of the response must use a bold header (**Mechanics**) on its own line, followed by a hyphen-prefixed list — one finding per line. This is the only place lists are allowed.
+3. Use **bold** sparingly in prose for key terms or phrases. That is the ONLY markdown allowed in the prose body.
+4. Separate paragraphs with a single blank line.
+5. Do NOT use asterisks for emphasis except **double asterisks for bold**.
+6. Tone: warm but measured, honest and specific — like a trusted admissions advisor who respects this student enough to tell them the truth about their ${collegeName} application.
+7. Keep the prose body focused and substantial but not overwhelming — 5-8 paragraphs. The Mechanics section comes after that.`;
 
     // Call Gemini
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${geminiApiKey}`;
@@ -325,15 +332,35 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
       return NextResponse.json({ error: 'No response generated. Please try again.' }, { status: 500 });
     }
 
-    // Clean up formatting
-    aiResponse = aiResponse
-      .replace(/^#{1,6}\s+(?:\d+\.?\s*)?/gm, '')
-      .replace(/^[\s]*[\*\-]\s+/gm, '')
-      .replace(/^[\s]*\d+\.\s+/gm, '')
-      .replace(/\*{3,}/g, '**')
-      .replace(/(?<!\*)\*(?!\*)/g, '')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
+    // Clean up formatting. Preserve the Mechanics list section at the end —
+    // only the prose body gets its lists stripped.
+    {
+      const mechanicsMatch = aiResponse.match(/\n\s*\*\*Mechanics\*\*\s*\n/i);
+      let body = aiResponse;
+      let mechanics = '';
+      if (mechanicsMatch && typeof mechanicsMatch.index === 'number') {
+        body = aiResponse.slice(0, mechanicsMatch.index);
+        mechanics = aiResponse.slice(mechanicsMatch.index);
+      }
+
+      const cleanedBody = body
+        .replace(/^#{1,6}\s+(?:\d+\.?\s*)?/gm, '')
+        .replace(/^[\s]*[\*\-]\s+/gm, '')
+        .replace(/^[\s]*\d+\.\s+/gm, '')
+        .replace(/\*{3,}/g, '**')
+        .replace(/(?<!\*)\*(?!\*)/g, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+
+      const cleanedMechanics = mechanics
+        .replace(/\*{3,}/g, '**')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+
+      aiResponse = cleanedMechanics
+        ? `${cleanedBody}\n\n${cleanedMechanics}`
+        : cleanedBody;
+    }
 
     // Auto-save to history
     const insertPayload = {
