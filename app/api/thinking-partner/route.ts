@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
 
-const AI_MODEL = 'gemini-2.5-flash-lite';
+// Model selection by mode — feedback modes use the stronger Flash model for
+// better instruction-following on the anti-sycophancy rules; pre-writing
+// brainstorming stays on cheaper Flash-Lite where variety beats strictness.
+const MODEL_BRAINSTORM = 'gemini-2.5-flash-lite';
+const MODEL_FEEDBACK = 'gemini-2.5-flash';
 const MIN_INSIGHT_ANSWERS = 6;
 
 // Shared anti-sycophancy / honesty rules injected into every mode's systemMessage.
@@ -335,8 +339,9 @@ Do NOT rewrite their essay.${formatRules}`;
     // stronger instruction-following).
     // Keep higher temperature for pre-writing brainstorming where variety helps.
     const modeTemperature = mode === 'pre_writing' ? 0.7 : 0.3;
+    const modelForMode = mode === 'pre_writing' ? MODEL_BRAINSTORM : MODEL_FEEDBACK;
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${geminiApiKey}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelForMode}:generateContent?key=${geminiApiKey}`;
     const response = await fetch(geminiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
 
-const AI_MODEL = 'gemini-2.5-flash-lite';
+// Round Table is the most important feedback moment in the product — holistic
+// review of a student's entire application to a specific school. It runs
+// infrequently (once per major revision pass), so we use Gemini 2.5 Pro for
+// the strongest reasoning and instruction-following even though it costs
+// ~4x Flash.
+const AI_MODEL = 'gemini-2.5-pro';
 const COMMON_APP_COLLEGE_ID = 'a0000000-0000-0000-0000-000000000000';
 
 // Shared anti-sycophancy / honesty rules injected into the Round Table systemMessage.
