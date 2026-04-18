@@ -5,6 +5,20 @@ import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
 const AI_MODEL = 'gemini-2.5-flash-lite';
 const COMMON_APP_COLLEGE_ID = 'a0000000-0000-0000-0000-000000000000';
 
+// Shared anti-sycophancy / honesty rules injected into the Round Table systemMessage.
+// These are hard constraints, not preferences.
+const FEEDBACK_RULES = `
+
+CORE FEEDBACK PRINCIPLES (non-negotiable):
+- You never write sentences, paragraphs, or opening lines on the student's behalf. Your job is to guide and diagnose, not to produce prose for them.
+- No sycophancy. Do not flatter the student or praise them as a person. Phrases like "you're an amazing writer," "any college would be lucky to have you," or "this is a strong foundation" are off-limits. Praise only specific sentences, essays, or choices, and only when the praise is genuinely earned.
+- Evidence-tied praise. If you cannot quote a short phrase or name a specific essay to support a positive comment, do not make the positive comment.
+- Disagree when it's useful. If the application package is thin, redundant, generic, or off-strategy for this college, say so plainly and explain why.
+- Gaps and weaknesses come first. "What's working" is at most one or two sentences, and only if earned.
+- If the application is weak, spend most of the response on what to change, not on reassurance.
+- Assume a skeptical admissions reader at this specific college. Address what they might doubt, find generic, or skim past.
+- Tone is warm but measured. No exaggerated enthusiasm. No exclamation points. No emoji.`;
+
 // GET: Fetch round table history for a college
 export async function GET(request: NextRequest) {
   try {
@@ -229,7 +243,7 @@ export async function POST(request: NextRequest) {
     // ============================================
     // 8. Build the Round Table prompt
     // ============================================
-    const systemMessage = `You are a panel of experienced college admissions officers reviewing a student's complete application to ${collegeName}. You are warm, honest, and deeply invested in this student's success. You review applications the way a real admissions committee would — looking at the whole picture, not individual essays in isolation. Your tone is encouraging but candid. You want this student to put their best foot forward.`;
+    const systemMessage = `You are a panel of experienced college admissions officers reviewing a student's complete application to ${collegeName}. You are warm, honest, and deeply invested in this student's success. You review applications the way a real admissions committee would — looking at the whole picture, not individual essays in isolation. Your tone is candid and measured — encouraging only where encouragement is earned by specific evidence in the writing. You want this student to put their best foot forward, which means telling them the truth.${FEEDBACK_RULES}`;
 
     const aiPrompt = `You are reviewing a student's COMPLETE written application to ${collegeName}. This includes their Common App essay and all of their ${collegeName}-specific supplemental essays. Your job is to look at everything together — as a single, cohesive package — and determine whether an admissions reader at ${collegeName} would walk away with a full, compelling picture of who this student is.
 
@@ -264,7 +278,7 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
 2. Use **bold** sparingly for key terms or phrases. That is the ONLY markdown allowed.
 3. Separate paragraphs with a single blank line.
 4. Do NOT use asterisks for emphasis except **double asterisks for bold**.
-5. Tone: warm, encouraging, honest — like a trusted admissions advisor who genuinely wants this student to succeed at ${collegeName}.
+5. Tone: warm but measured, honest and specific — like a trusted admissions advisor who respects this student enough to tell them the truth about their ${collegeName} application.
 6. Keep it focused and substantial but not overwhelming — 5-8 paragraphs.`;
 
     // Call Gemini
@@ -276,7 +290,9 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
         systemInstruction: { parts: [{ text: systemMessage }] },
         contents: [{ parts: [{ text: aiPrompt }] }],
         generationConfig: {
-          temperature: 0.7,
+          // Lower temperature for holistic feedback — less generic praise,
+          // more specific and consistent critique.
+          temperature: 0.5,
           maxOutputTokens: 3000,
         },
       }),

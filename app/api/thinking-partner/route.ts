@@ -5,6 +5,21 @@ import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
 const AI_MODEL = 'gemini-2.5-flash-lite';
 const MIN_INSIGHT_ANSWERS = 6;
 
+// Shared anti-sycophancy / honesty rules injected into every mode's systemMessage.
+// These are hard constraints, not preferences.
+const FEEDBACK_RULES = `
+
+CORE FEEDBACK PRINCIPLES (non-negotiable):
+- You never write sentences, paragraphs, or opening lines on the student's behalf. Your job is to guide, not to produce prose for them. Ask questions, point at what they already wrote, highlight specific gaps. If you want them to see what "better" looks like, ask a Socratic question or call out one of their own sentences as a stronger candidate to build from.
+- No sycophancy. Do not flatter the student or praise them as a person. Phrases like "you're an amazing writer," "any college would be lucky to have you," or "this is a strong foundation" are off-limits. Praise only specific sentences or choices in the draft, and only when the praise is genuinely earned.
+- Evidence-tied praise. If you cannot quote a short phrase from the draft to support a positive comment, do not make the positive comment.
+- Disagree when it's useful. If a draft is off-prompt, generic, cliché-heavy, or telling instead of showing, say so plainly and explain why.
+- In revision and early-draft feedback, gaps and weaknesses come first. "What's working" is at most one or two sentences, and only if it is earned by specific, quotable evidence.
+- If the draft is weak, spend most of the response on what to change, not on reassurance.
+- Assume a skeptical admissions reader. Address what they might doubt, find generic, flag as cliché, or skim past.
+- Catch mechanics where relevant: missing apostrophes, clichés ("in today's world," "at the end of the day," "memories I will carry forever," "glue that holds us together," "in conclusion"), passive voice that obscures meaning.
+- Tone is warm but measured. No exaggerated enthusiasm. No exclamation points. No emoji. Firm enough to be useful.`;
+
 // Determine guidance mode based on essay maturity
 function determineMode(essayContent: string | null, wordCount: number, versionNumber: number): string {
   if (!essayContent || wordCount < 50) return 'pre_writing';
@@ -199,7 +214,7 @@ export async function POST(request: NextRequest) {
 2. Use **bold** sparingly for key terms or phrases. That is the ONLY markdown allowed.
 3. Separate paragraphs with a single blank line.
 4. Do NOT use asterisks for emphasis except **double asterisks for bold**.
-5. Tone: warm, encouraging, honest — like a trusted mentor talking directly to the student.
+5. Tone: warm but measured, honest, specific. Like a trusted mentor who respects the student enough to tell them the truth.
 6. Keep it concise. 4-6 paragraphs maximum.`;
 
     const profileBlock = [
@@ -213,7 +228,7 @@ export async function POST(request: NextRequest) {
     let aiPrompt = '';
 
     if (mode === 'pre_writing') {
-      systemMessage = `You are an expert college admissions essay coach helping a student think through ONE specific prompt before writing. Be laser-focused on THIS prompt. Specific, practical, personalized.`;
+      systemMessage = `You are an expert college admissions essay coach helping a student think through ONE specific prompt before writing. Be laser-focused on THIS prompt. Specific, practical, personalized.${FEEDBACK_RULES}`;
 
       aiPrompt = `FOCUS: Help this student approach THIS specific prompt. Not general advice.
 
@@ -240,7 +255,7 @@ End with 2-3 common pitfalls for this type of prompt.
 Do NOT write the essay or give sample paragraphs.${formatRules}`;
 
     } else if (mode === 'early_draft') {
-      systemMessage = `You are an expert college admissions essay coach giving feedback on an early draft. The student is just getting started — be encouraging about what's working while pointing toward what the essay needs to become. Focused on THIS prompt only.`;
+      systemMessage = `You are an expert college admissions essay coach giving feedback on an early draft. The student is just getting started. Be specific about what seeds are actually on the page (quote them) and candid about what the essay still needs to become. Focused on THIS prompt only.${FEEDBACK_RULES}`;
 
       aiPrompt = `FOCUS: Feedback on this early draft for this specific prompt.
 
@@ -271,7 +286,7 @@ Do NOT rewrite their essay.${formatRules}`;
 
     } else {
       // revision mode
-      systemMessage = `You are an expert college admissions essay coach giving revision feedback on a developing draft. Be specific about what's working and what needs to change. Focus on what's missing, what could be stronger, and how to elevate the essay. THIS prompt only.`;
+      systemMessage = `You are an expert college admissions essay coach giving revision feedback on a developing draft. Lead with gaps and weaknesses, then what's missing, then (briefly, only if earned) what's working. Specific, evidence-tied, honest. THIS prompt only.${FEEDBACK_RULES}`;
 
       aiPrompt = `FOCUS: Revision feedback on this draft for this specific prompt.
 
@@ -306,6 +321,10 @@ Do NOT rewrite their essay.${formatRules}`;
     // ============================================
     // Call Gemini
     // ============================================
+    // Lower temperature for feedback modes (less sycophantic, less generic praise).
+    // Keep higher temperature for pre-writing brainstorming where variety helps.
+    const modeTemperature = mode === 'pre_writing' ? 0.7 : 0.45;
+
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${geminiApiKey}`;
     const response = await fetch(geminiUrl, {
       method: 'POST',
@@ -313,7 +332,7 @@ Do NOT rewrite their essay.${formatRules}`;
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: systemMessage }] },
         contents: [{ parts: [{ text: aiPrompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 2000 },
+        generationConfig: { temperature: modeTemperature, maxOutputTokens: 2000 },
       }),
     });
 
