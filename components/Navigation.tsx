@@ -45,8 +45,11 @@ export default function Navigation() {
     if (path === '/dashboard') {
       return pathname === '/dashboard';
     }
-    if (path === '/personal-statement' || path === '/essays' || path === '/common-app') {
-      return pathname.startsWith('/personal-statement') || pathname.startsWith('/essays') || pathname.startsWith('/common-app');
+    if (path === '/personal-statement' || path === '/essays') {
+      return pathname.startsWith('/personal-statement') || pathname.startsWith('/essays');
+    }
+    if (path === '/common-app') {
+      return pathname.startsWith('/common-app');
     }
     if (path === '/profile') {
       return pathname === '/profile';
@@ -85,6 +88,7 @@ export default function Navigation() {
             <>
               <Link href="/dashboard" style={getLinkStyle('/dashboard')}>Dashboard</Link>
               <Link href="/personal-statement" style={getLinkStyle('/personal-statement')}>Essays</Link>
+              <Link href="/common-app" style={getLinkStyle('/common-app')}>Common App</Link>
               <Link href="/colleges" style={getLinkStyle('/colleges')}>Portfolio</Link>
               <Link href="/profile" style={getLinkStyle('/profile')}>Profile</Link>
               <Link href="/discovery" style={getLinkStyle('/discovery')}>Insight Questions</Link>

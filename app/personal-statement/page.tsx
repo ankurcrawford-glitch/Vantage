@@ -156,7 +156,8 @@ export default function PersonalStatementPage() {
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
             <Link href="/dashboard" style={{ color: pathname === '/dashboard' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/dashboard' ? 600 : 400 }}>Dashboard</Link>
-            <Link href="/personal-statement" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays') || pathname.startsWith('/common-app')) ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays') || pathname.startsWith('/common-app')) ? 600 : 400 }}>Essays</Link>
+            <Link href="/personal-statement" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? 600 : 400 }}>Essays</Link>
+            <Link href="/common-app" style={{ color: pathname.startsWith('/common-app') ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname.startsWith('/common-app') ? 600 : 400 }}>Common App</Link>
             <Link href="/colleges" style={{ color: pathname.startsWith('/colleges') ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname.startsWith('/colleges') ? 600 : 400 }}>Portfolio</Link>
             <Link href="/profile" style={{ color: pathname === '/profile' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/profile' ? 600 : 400 }}>Profile</Link>
             <Link href="/discovery" style={{ color: pathname === '/discovery' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/discovery' ? 600 : 400 }}>Insight Questions</Link>
@@ -232,15 +233,22 @@ export default function PersonalStatementPage() {
             allGroups.forEach((g) => g.essays.sort((a, b) => a.prompt_sort_order - b.prompt_sort_order));
 
             // Common App behaves differently from school supplementals:
-            // students pick ONE of the 7 Common App prompts to answer, so once
-            // they've started one we only show that one. Before they pick, we
-            // show all 7 so they can choose. Other colleges show every prompt
-            // because all supplementals are typically required.
+            // - If the student has started any Common App essays, show ALL
+            //   of the started ones here (so they can continue any of them).
+            // - If they haven't started any yet, we DON'T dump all 7 prompts
+            //   on this page — the dedicated /common-app page is where they
+            //   choose. We render a single placeholder card here that points
+            //   them over to pick.
             const commonAppGroup = allGroups.find((g) => g.collegeId === COMMON_APP_COLLEGE_ID);
+            let commonAppNeedsPlaceholder = false;
             if (commonAppGroup) {
               const startedCommonApp = commonAppGroup.essays.filter((e) => e.started);
               if (startedCommonApp.length > 0) {
                 commonAppGroup.essays = startedCommonApp;
+              } else {
+                // No Common App essay started yet — render a placeholder.
+                commonAppNeedsPlaceholder = true;
+                commonAppGroup.essays = [];
               }
             }
 
@@ -264,16 +272,56 @@ export default function PersonalStatementPage() {
                       <h2 className="font-heading text-3xl" style={{ color: 'white' }}>
                         {group.collegeName}
                       </h2>
-                      <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                        {(() => {
-                          const total = group.essays.length;
-                          const started = group.essays.filter((e) => e.started).length;
-                          return `${started} of ${total} started`;
-                        })()}
-                      </span>
+                      {!(commonAppNeedsPlaceholder && group.collegeId === COMMON_APP_COLLEGE_ID) && (
+                        <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                          {(() => {
+                            const total = group.essays.length;
+                            const started = group.essays.filter((e) => e.started).length;
+                            return `${started} of ${total} started`;
+                          })()}
+                        </span>
+                      )}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                      {group.essays.map((essay) => (
+                      {commonAppNeedsPlaceholder && group.collegeId === COMMON_APP_COLLEGE_ID ? (
+                        <Card>
+                          <div style={{ textAlign: 'center', padding: '48px 32px' }}>
+                            <h3 className="font-heading text-2xl mb-3" style={{ color: '#D4AF37' }}>
+                              Choose a Common App Prompt
+                            </h3>
+                            <p className="font-body mb-8" style={{ color: 'rgba(255,255,255,0.7)', maxWidth: '520px', margin: '0 auto 32px' }}>
+                              Pick one of the seven Common App prompts to tackle — it will appear here once you start writing.
+                            </p>
+                            <Link href="/common-app">
+                              <button
+                                style={{
+                                  background: '#D4AF37',
+                                  color: '#0B1623',
+                                  padding: '12px 24px',
+                                  fontFamily: 'var(--font-body)',
+                                  fontSize: '14px',
+                                  fontWeight: 600,
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.05em',
+                                  border: 'none',
+                                  borderRadius: '2px',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s',
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = 'rgba(212,175,55,0.8)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = '#D4AF37';
+                                }}
+                              >
+                                Choose a Prompt
+                              </button>
+                            </Link>
+                          </div>
+                        </Card>
+                      ) : (
+                        group.essays.map((essay) => (
               <Card key={essay.prompt_id}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                   <div style={{ flex: 1 }}>
@@ -355,7 +403,8 @@ export default function PersonalStatementPage() {
                   </Link>
                 </div>
               </Card>
-                      ))}
+                        ))
+                      )}
                     </div>
                   </section>
                 ))}
