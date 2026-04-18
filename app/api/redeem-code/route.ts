@@ -16,20 +16,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Code required' }, { status: 400 });
     }
 
-    // Supported env vars (checked in order):
-    //   ACCESS_CODES   — comma-separated list of valid codes (preferred)
-    //   ACCESS_CODE    — single code (legacy, kept for backward compat)
+    // Supported env vars (both accept comma-separated lists):
+    //   ACCESS_CODES   — preferred name
+    //   ACCESS_CODE    — legacy name, still supported
+    // Either env var can hold one code or many, comma-separated. Whitespace
+    // around codes is trimmed. Matching is case-insensitive.
     //
     // TODO (from SECURITY-AUDIT.md): move to a single-use codes table in
     // Supabase, hash the codes, and track which account redeemed which
     // code. Rate-limit per IP. For now codes are cohort-level shared
     // secrets — anyone with a valid code can activate their own account.
-    const rawPlural = process.env.ACCESS_CODES || '';
-    const legacy = process.env.ACCESS_CODE || '';
     const validCodes = [
-      ...rawPlural.split(',').map((c) => c.trim()).filter(Boolean),
-      ...(legacy.trim() ? [legacy.trim()] : []),
-    ].map((c) => c.toUpperCase());
+      ...(process.env.ACCESS_CODES || '').split(','),
+      ...(process.env.ACCESS_CODE || '').split(','),
+    ]
+      .map((c) => c.trim().toUpperCase())
+      .filter(Boolean);
 
     if (validCodes.length === 0) {
       return NextResponse.json(
