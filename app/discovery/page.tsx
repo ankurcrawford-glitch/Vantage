@@ -18,6 +18,9 @@ export default function DiscoveryPage() {
   const [saving, setSaving] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [accessCode, setAccessCode] = useState('');
+  const [codeLoading, setCodeLoading] = useState(false);
+  const [codeError, setCodeError] = useState('');
 
   useEffect(() => {
     checkAuthAndSubscription();
@@ -98,6 +101,31 @@ export default function DiscoveryPage() {
     }
   };
 
+  /** Same as dashboard: `ACCESS_CODE` in env + `/api/redeem-code` writes `user_subscriptions`. */
+  const handleRedeemCode = async () => {
+    if (!userId || !accessCode.trim()) return;
+    setCodeLoading(true);
+    setCodeError('');
+    try {
+      const res = await fetch('/api/redeem-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: accessCode.trim(), userId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAccessCode('');
+        await checkAuthAndSubscription();
+      } else {
+        setCodeError(data.error || 'Invalid code');
+      }
+    } catch {
+      setCodeError('Unable to verify code. Please try again.');
+    } finally {
+      setCodeLoading(false);
+    }
+  };
+
   const handleSaveAnswer = async (questionId: string) => {
     if (!editAnswerText.trim()) {
       alert('Please enter an answer.');
@@ -158,10 +186,15 @@ export default function DiscoveryPage() {
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '64px 32px' }}>
         {!hasSubscription ? (
+          <>
           <Card>
             <h1 className="font-heading text-3xl mb-4" style={{ color: 'white' }}>Insight Questions</h1>
             <p className="font-body text-lg mb-6" style={{ color: 'rgba(255,255,255,0.9)' }}>
-              The 12 reflective questions are available after you subscribe. They help us understand your story, values, and what makes you unique—and power Strategic Intelligence for your essays.
+              The 12 reflective questions unlock after a one-time purchase—
+              <strong style={{ color: '#F3E5AB', fontWeight: 600 }}>
+                {' '}or use an access code if you were given one
+              </strong>
+              . They help us understand your story and power Strategic Intelligence for your essays.
             </p>
             <button
               onClick={handleCheckout}
@@ -184,7 +217,143 @@ export default function DiscoveryPage() {
             <p className="font-body text-sm mt-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
               One-time payment. Full access to Insight Questions and Strategic Intelligence.
             </p>
+
+            <div
+              style={{
+                marginTop: '28px',
+                paddingTop: '24px',
+                borderTop: '1px solid rgba(255,255,255,0.12)',
+              }}
+            >
+              <p className="font-body text-sm mb-3" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                Have an access code? Redeem it here to unlock without paying.
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', maxWidth: '440px' }}>
+                <input
+                  type="text"
+                  value={accessCode}
+                  onChange={(e) => {
+                    setAccessCode(e.target.value);
+                    setCodeError('');
+                  }}
+                  placeholder="Enter code"
+                  autoComplete="off"
+                  style={{
+                    flex: '1 1 200px',
+                    minWidth: '180px',
+                    background: 'rgba(0,0,0,0.35)',
+                    border: '1px solid rgba(212,175,55,0.35)',
+                    color: 'white',
+                    padding: '12px 14px',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: '14px',
+                    borderRadius: '2px',
+                    outline: 'none',
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') void handleRedeemCode();
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => void handleRedeemCode()}
+                  disabled={codeLoading || !accessCode.trim()}
+                  style={{
+                    background: 'transparent',
+                    color: '#D4AF37',
+                    border: '1px solid rgba(212,175,55,0.55)',
+                    padding: '12px 22px',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    borderRadius: '2px',
+                    cursor: codeLoading || !accessCode.trim() ? 'not-allowed' : 'pointer',
+                    opacity: codeLoading || !accessCode.trim() ? 0.55 : 1,
+                  }}
+                >
+                  {codeLoading ? 'Verifying…' : 'Redeem code'}
+                </button>
+              </div>
+              {codeError ? (
+                <p className="font-body text-sm mt-3" style={{ color: '#ff8a8a' }}>
+                  {codeError}
+                </p>
+              ) : null}
+            </div>
           </Card>
+
+          <div style={{ marginTop: '24px' }}>
+            <Card>
+            <div
+              style={{
+                padding: '4px 0 0 0',
+                borderLeft: '3px solid #D4AF37',
+                paddingLeft: '16px',
+              }}
+            >
+              <h2 className="font-heading text-xl mb-2" style={{ color: '#D4AF37' }}>
+                Not locked out
+              </h2>
+              <p className="font-body text-sm mb-4" style={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1.6 }}>
+                If you received a complimentary or school access code, enter it below—no payment required. This is the
+                same redemption as on your Dashboard.
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', maxWidth: '480px' }}>
+                <input
+                  type="text"
+                  value={accessCode}
+                  onChange={(e) => {
+                    setAccessCode(e.target.value);
+                    setCodeError('');
+                  }}
+                  placeholder="Access code"
+                  autoComplete="off"
+                  aria-label="Access code"
+                  style={{
+                    flex: '1 1 220px',
+                    minWidth: '200px',
+                    background: 'rgba(0,0,0,0.35)',
+                    border: '1px solid rgba(212,175,55,0.45)',
+                    color: 'white',
+                    padding: '14px 16px',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: '15px',
+                    borderRadius: '2px',
+                    outline: 'none',
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') void handleRedeemCode();
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => void handleRedeemCode()}
+                  disabled={codeLoading || !accessCode.trim()}
+                  style={{
+                    background: '#D4AF37',
+                    color: '#0B1623',
+                    border: 'none',
+                    padding: '14px 24px',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    borderRadius: '2px',
+                    cursor: codeLoading || !accessCode.trim() ? 'not-allowed' : 'pointer',
+                    opacity: codeLoading || !accessCode.trim() ? 0.55 : 1,
+                  }}
+                >
+                  {codeLoading ? 'Verifying…' : 'Unlock with code'}
+                </button>
+              </div>
+              {codeError ? (
+                <p className="font-body text-sm mt-3" style={{ color: '#ff8a8a' }}>
+                  {codeError}
+                </p>
+              ) : null}
+            </div>
+            </Card>
+          </div>
+          </>
         ) : (
           <>
             <div style={{ marginBottom: '32px' }}>
