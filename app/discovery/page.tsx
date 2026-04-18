@@ -101,7 +101,6 @@ export default function DiscoveryPage() {
     }
   };
 
-  /** Same as dashboard: `ACCESS_CODE` in env + `/api/redeem-code` writes `user_subscriptions`. */
   const handleRedeemCode = async () => {
     if (!userId || !accessCode.trim()) return;
     setCodeLoading(true);
@@ -186,7 +185,6 @@ export default function DiscoveryPage() {
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '64px 32px' }}>
         {!hasSubscription ? (
-          <>
           <Card>
             <h1 className="font-heading text-3xl mb-4" style={{ color: 'white' }}>Insight Questions</h1>
             <p className="font-body text-lg mb-6" style={{ color: 'rgba(255,255,255,0.9)' }}>
@@ -238,6 +236,7 @@ export default function DiscoveryPage() {
                   }}
                   placeholder="Enter code"
                   autoComplete="off"
+                  aria-label="Access code"
                   style={{
                     flex: '1 1 200px',
                     minWidth: '180px',
@@ -281,79 +280,6 @@ export default function DiscoveryPage() {
               ) : null}
             </div>
           </Card>
-
-          <div style={{ marginTop: '24px' }}>
-            <Card>
-            <div
-              style={{
-                padding: '4px 0 0 0',
-                borderLeft: '3px solid #D4AF37',
-                paddingLeft: '16px',
-              }}
-            >
-              <h2 className="font-heading text-xl mb-2" style={{ color: '#D4AF37' }}>
-                Not locked out
-              </h2>
-              <p className="font-body text-sm mb-4" style={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1.6 }}>
-                If you received a complimentary or school access code, enter it below—no payment required. This is the
-                same redemption as on your Dashboard.
-              </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', maxWidth: '480px' }}>
-                <input
-                  type="text"
-                  value={accessCode}
-                  onChange={(e) => {
-                    setAccessCode(e.target.value);
-                    setCodeError('');
-                  }}
-                  placeholder="Access code"
-                  autoComplete="off"
-                  aria-label="Access code"
-                  style={{
-                    flex: '1 1 220px',
-                    minWidth: '200px',
-                    background: 'rgba(0,0,0,0.35)',
-                    border: '1px solid rgba(212,175,55,0.45)',
-                    color: 'white',
-                    padding: '14px 16px',
-                    fontFamily: 'var(--font-body)',
-                    fontSize: '15px',
-                    borderRadius: '2px',
-                    outline: 'none',
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') void handleRedeemCode();
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => void handleRedeemCode()}
-                  disabled={codeLoading || !accessCode.trim()}
-                  style={{
-                    background: '#D4AF37',
-                    color: '#0B1623',
-                    border: 'none',
-                    padding: '14px 24px',
-                    fontFamily: 'var(--font-body)',
-                    fontSize: '14px',
-                    fontWeight: 700,
-                    borderRadius: '2px',
-                    cursor: codeLoading || !accessCode.trim() ? 'not-allowed' : 'pointer',
-                    opacity: codeLoading || !accessCode.trim() ? 0.55 : 1,
-                  }}
-                >
-                  {codeLoading ? 'Verifying…' : 'Unlock with code'}
-                </button>
-              </div>
-              {codeError ? (
-                <p className="font-body text-sm mt-3" style={{ color: '#ff8a8a' }}>
-                  {codeError}
-                </p>
-              ) : null}
-            </div>
-            </Card>
-          </div>
-          </>
         ) : (
           <>
             <div style={{ marginBottom: '32px' }}>
