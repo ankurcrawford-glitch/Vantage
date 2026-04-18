@@ -40,7 +40,9 @@ HONEST ABOUT WEAKNESSES — if a draft is off-prompt, generic, cliché-heavy, or
 
 USING THE STUDENT'S BRAINSTORMING NOTES — the context may include a section called "WHAT THE STUDENT HAS SHARED ABOUT THEMSELVES." That material is private scaffolding, not submitted content. Use it to understand who the student is and to suggest specific experiences or details they could weave into this essay. Never treat it as content to compare against for overlap or redundancy. Never refer to it as "Q1," "Q4," "your Insight Question response," etc.
 
-REQUIRED MECHANICS PASS — scan ONLY THE STUDENT'S ESSAY DRAFT for mechanics issues that ACTUALLY APPEAR in that draft. Do NOT scan the student's brainstorming notes / biographical background / any other context — those are not submitted content. Every finding must quote the exact phrase or sentence from the essay draft itself. If you cannot quote it verbatim from the draft, do not include the finding. Never invent errors. Scan for:
+REQUIRED MECHANICS PASS — the essay draft is wrapped between the exact markers \`<<<ESSAY_DRAFT_BEGIN>>>\` and \`<<<ESSAY_DRAFT_END>>>\`. Mechanics findings may ONLY quote text that appears literally between those two markers. Text outside those markers is CONTEXT (the student's brainstorming notes, profile, prompt, previous guidance) — it is NOT submitted writing and MUST NOT be scanned, quoted, or flagged in the Mechanics section. If a cliché or apostrophe error appears only in the brainstorming notes (e.g., "im pacing myself," "dont talk about it"), do not flag it — it is not part of the essay.
+
+Before writing each Mechanics bullet, verify the quoted phrase appears character-for-character between the two markers. If it does not, drop the bullet. Never invent errors and never pull from context. Scan for:
 1. Missing apostrophes (e.g. "todays" → "today's", "its" where "it's" is meant, "everyones", "im", "dont"). Flag ONLY if the exact misspelling appears in the draft.
 2. Cliché phrases if they appear ("in today's world," "at the end of the day," "the glue that holds," "memories I will carry forever," "the person I am today," "staying connected to my roots," "spending quality time," "the people who matter most," "taught me the value of," "taught me the importance of," "I learned that," "in conclusion," "to conclude," "all in all"). Quote the exact phrase.
 3. "In conclusion" / "To conclude" / "In summary" endings — flag only if actually used.
@@ -353,7 +355,9 @@ ${currentPrompt?.word_limit ? `Word Limit: ${currentPrompt.word_limit} words` : 
 ${collegeName ? `For: ${collegeName}` : ''}
 
 STUDENT'S DRAFT (${wordCount} words, version ${currentVersionNumber}):
+<<<ESSAY_DRAFT_BEGIN>>>
 ${essayContent}
+<<<ESSAY_DRAFT_END>>>
 
 STUDENT BACKGROUND:
 ${profileBlock}
@@ -384,7 +388,9 @@ ${currentPrompt?.word_limit ? `Word Limit: ${currentPrompt.word_limit} words` : 
 ${collegeName ? `For: ${collegeName}` : ''}
 
 STUDENT'S DRAFT (${wordCount} words, version ${currentVersionNumber}):
+<<<ESSAY_DRAFT_BEGIN>>>
 ${essayContent}
+<<<ESSAY_DRAFT_END>>>
 
 STUDENT BACKGROUND:
 ${profileBlock}

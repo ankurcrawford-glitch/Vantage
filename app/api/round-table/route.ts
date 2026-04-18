@@ -36,7 +36,9 @@ NO SYCOPHANCY — do not flatter the student as a person. Phrases like "you're a
 
 HONEST ABOUT GAPS — if the package is thin, redundant, or doesn't capture the student as fully as their background suggests it could, say so clearly. Be specific about which essay would be the right place to address a gap. The student is getting this review because they want the truth.
 
-REQUIRED MECHANICS PASS — scan ONLY THE SUBMITTED ESSAYS (Common App essay + this college's supplemental essays) for mechanics issues that ACTUALLY APPEAR in those essays. Do NOT scan the student's brainstorming notes / biographical background — that is not submitted content and is not graded. Every finding must quote the exact phrase from the specific submitted essay. If you cannot quote it verbatim from a submitted essay, do not include the finding. Never invent errors. Scan for:
+REQUIRED MECHANICS PASS — each submitted essay is wrapped between the exact markers \`<<<ESSAY_DRAFT_BEGIN>>>\` and \`<<<ESSAY_DRAFT_END>>>\`. Mechanics findings may ONLY quote text that appears literally between those two markers in one of the submitted essays. Text outside those markers — brainstorming notes, profile, previous guidance — is CONTEXT and MUST NOT be scanned, quoted, or flagged in the Mechanics section. If a cliché or apostrophe error appears only in the brainstorming notes, do not flag it — it is not part of any submitted essay.
+
+Before writing each Mechanics bullet, verify the quoted phrase appears character-for-character between a pair of markers. If it does not, drop the bullet. Never invent errors and never pull from context. Scan for:
 1. Clichés: "in today's world," "at the end of the day," "the glue that holds," "memories I will carry forever," "the heartbeat of every community," "the person I am today," "staying connected to my roots," "spending quality time," "taught me the value of," "taught me the importance of," "I learned that," "in conclusion," "to conclude," "all in all."
 2. Missing apostrophes: "todays," "its" where "it's" is meant, "everyones," "dont," "im."
 List each distinct issue at most once per essay.
@@ -264,13 +266,18 @@ ${flattened.join('\n\n---\n\n')}`;
     // 7. Build the essay summaries for the prompt
     // ============================================
 
+    // Each submitted essay is wrapped with <<<ESSAY_DRAFT_BEGIN>>> and
+    // <<<ESSAY_DRAFT_END>>> markers. The Mechanics pass rule restricts
+    // scanning to text between these markers, so findings can't leak in from
+    // the brainstorming notes or other context.
+
     // Common App essay(s)
     let commonAppSection = '';
     if (commonAppPrompts && commonAppPrompts.length > 0) {
       const commonAppEssays = commonAppPrompts.map(p => {
         const essay = essayMap[p.id];
         if (essay) {
-          return `COMMON APP PROMPT: "${p.prompt_text}"\nSTUDENT'S RESPONSE (${essay.wordCount} words):\n${essay.content}`;
+          return `COMMON APP PROMPT: "${p.prompt_text}"\nSTUDENT'S RESPONSE (${essay.wordCount} words):\n<<<ESSAY_DRAFT_BEGIN>>>\n${essay.content}\n<<<ESSAY_DRAFT_END>>>`;
         }
         return `COMMON APP PROMPT: "${p.prompt_text}"\n(Not yet written)`;
       });
@@ -281,7 +288,7 @@ ${flattened.join('\n\n---\n\n')}`;
     const collegeEssays = collegePrompts.map(p => {
       const essay = essayMap[p.id];
       if (essay) {
-        return `${collegeName.toUpperCase()} PROMPT ${p.sort_order}: "${p.prompt_text}"${p.word_limit ? ` (${p.word_limit} word limit)` : ''}\nSTUDENT'S RESPONSE (${essay.wordCount} words):\n${essay.content}`;
+        return `${collegeName.toUpperCase()} PROMPT ${p.sort_order}: "${p.prompt_text}"${p.word_limit ? ` (${p.word_limit} word limit)` : ''}\nSTUDENT'S RESPONSE (${essay.wordCount} words):\n<<<ESSAY_DRAFT_BEGIN>>>\n${essay.content}\n<<<ESSAY_DRAFT_END>>>`;
       }
       return `${collegeName.toUpperCase()} PROMPT ${p.sort_order}: "${p.prompt_text}"${p.word_limit ? ` (${p.word_limit} word limit)` : ''}\n(Not yet written)`;
     });
