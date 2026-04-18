@@ -6,11 +6,12 @@ import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
 // function timeout to 60s so responses don't get cut off mid-generation.
 export const maxDuration = 60;
 
-// Model selection by mode — feedback modes use the stronger Flash model for
-// better instruction-following on the anti-sycophancy rules; pre-writing
-// brainstorming stays on cheaper Flash-Lite where variety beats strictness.
+// Model selection by mode — DIAGNOSTIC: temporarily using flash-lite for
+// feedback modes to isolate whether Flash specifically is causing the
+// mid-generation truncation we're seeing when the essay has content.
+// Revert to 'gemini-2.5-flash' for feedback once root cause is confirmed.
 const MODEL_BRAINSTORM = 'gemini-2.5-flash-lite';
-const MODEL_FEEDBACK = 'gemini-2.5-flash';
+const MODEL_FEEDBACK = 'gemini-2.5-flash-lite';
 const MIN_INSIGHT_ANSWERS = 6;
 
 // Shared anti-sycophancy / honesty rules injected into every mode's systemMessage.
