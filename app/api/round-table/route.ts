@@ -331,13 +331,15 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
         systemInstruction: { parts: [{ text: systemMessage }] },
         contents: [{ parts: [{ text: aiPrompt }] }],
         generationConfig: {
-          // Lower temperature for holistic feedback — less generic praise,
-          // stronger instruction-following on the gaps-first rule.
-          temperature: 0.35,
+          // Pro had mid-generation truncation at lower temperatures (0.35) on
+          // long structured output — same pattern we saw with Flash. Bumping
+          // to 0.6 stabilizes it. With the tightened anti-sycophancy rules in
+          // FEEDBACK_RULES, moderate temperature doesn't cause drift back to
+          // generic praise.
+          temperature: 0.6,
           // Round Table synthesizes the full application package plus a
           // Mechanics section — needs more output headroom than per-essay
-          // feedback. 4000 tokens ≈ 3000 words, well above what a good
-          // holistic review typically produces.
+          // feedback. 4000 tokens ≈ 3000 words.
           maxOutputTokens: 4000,
         },
         // Override default safety thresholds. Gemini's defaults are aggressive
