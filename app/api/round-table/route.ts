@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
 import { getAuthedUser, getAdminClient } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { checkBudget, recordSpend } from '@/lib/budget';
 
 // Round Table uses Gemini Pro and synthesizes multiple essays — can take
 // 20-40s on larger applications. Bump the serverless function timeout to 60s
@@ -94,6 +95,10 @@ export async function POST(request: NextRequest) {
     // Pro at ~2¢ per call — stricter limits than per-essay feedback.
     const rl = await checkRateLimit(userId, 'round-table');
     if (!rl.ok) return rl.response;
+
+    // Budget circuit breaker — per-user cap, global backstop, kill-switch.
+    const budget = await checkBudget(userId);
+    if (!budget.ok) return budget.response;
 
     const { collegeId } = await request.json();
 
@@ -434,6 +439,10 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
         .replace(/\n{3,}/g, '\n\n')
         .trim();
     }
+
+    // Record spend against per-user + global monthly counters.
+    // Fire and forget — never block on analytics.
+    recordSpend(userId, 'round-table').catch(() => {});
 
     // Auto-save to history
     const insertPayload = {

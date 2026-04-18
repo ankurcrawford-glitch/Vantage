@@ -13,12 +13,19 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [isUnder18, setIsUnder18] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!ageConfirmed) {
+      setError('You must confirm you are at least 13 years old to create an account.');
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
@@ -33,13 +40,18 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      // Sign up without triggering email confirmation
+      // Sign up without triggering email confirmation. We store age
+      // attestation flags in user_metadata so admin/reporting can see them
+      // without a separate table.
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
         options: {
           data: {
             full_name: fullName,
+            age_confirmed_13_plus: true,
+            age_confirmed_at: new Date().toISOString(),
+            self_reported_under_18: isUnder18,
           },
           // Don't set emailRedirectTo to avoid triggering emails
         },
@@ -134,8 +146,50 @@ export default function SignupPage() {
             autoComplete="new-password"
           />
 
+          {/* Age attestation. The 13+ checkbox is the legally-required
+              COPPA gate. The under-18 checkbox is optional (no data gate)
+              and just triggers a soft parental-guidance banner. */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '4px', padding: '14px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px' }}>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={ageConfirmed}
+                onChange={(e) => setAgeConfirmed(e.target.checked)}
+                required
+                style={{ marginTop: '3px', cursor: 'pointer' }}
+              />
+              <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.85)', lineHeight: '1.5' }}>
+                I am at least 13 years old.
+              </span>
+            </label>
+
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={isUnder18}
+                onChange={(e) => setIsUnder18(e.target.checked)}
+                style={{ marginTop: '3px', cursor: 'pointer' }}
+              />
+              <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.7)', lineHeight: '1.5' }}>
+                I am under 18. (Optional — just so we can show you age-appropriate information.)
+              </span>
+            </label>
+
+            {isUnder18 && (
+              <div style={{ marginTop: '4px', padding: '10px 12px', background: 'rgba(212,175,55,0.08)', borderLeft: '2px solid rgba(212,175,55,0.5)', borderRadius: '2px' }}>
+                <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.8)', lineHeight: '1.6' }}>
+                  Since you're under 18, we recommend you review our{' '}
+                  <Link href="/terms" style={{ color: '#D4AF37', textDecoration: 'underline' }}>Terms of Service</Link>
+                  {' '}and{' '}
+                  <Link href="/privacy" style={{ color: '#D4AF37', textDecoration: 'underline' }}>Privacy Policy</Link>
+                  {' '}with a parent or guardian before continuing. Paid subscriptions require a parent or guardian to authorize the purchase.
+                </p>
+              </div>
+            )}
+          </div>
+
           <div style={{ marginTop: '8px' }}>
-            <Button type="submit" style={{ width: '100%', height: '48px' }} disabled={loading}>
+            <Button type="submit" style={{ width: '100%', height: '48px' }} disabled={loading || !ageConfirmed}>
               {loading ? 'Creating account...' : 'Create Account'}
             </Button>
           </div>

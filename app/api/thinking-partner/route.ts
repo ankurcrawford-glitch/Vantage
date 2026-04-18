@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
 import { getAuthedUser, getAdminClient } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { checkBudget, recordSpend } from '@/lib/budget';
 
 // Feedback generation with Flash can take 10-20s. Bump the serverless
 // function timeout to 60s so responses don't get cut off mid-generation.
@@ -150,6 +151,11 @@ export async function POST(request: NextRequest) {
     // and automated abuse before they burn through your Gemini budget.
     const rl = await checkRateLimit(userId, 'thinking-partner');
     if (!rl.ok) return rl.response;
+
+    // Budget circuit breaker: per-user cap (primary), global cap (backstop),
+    // and manual kill-switch. Rejects with 503 if any fires.
+    const budget = await checkBudget(userId);
+    if (!budget.ok) return budget.response;
 
     const { essayContent, promptId, collegeId } = await request.json();
 
@@ -482,6 +488,10 @@ Do NOT rewrite their essay.${formatRules}`;
     }
 
     const guidanceText = cleanResponse(rawResponse);
+
+    // Record estimated cost against per-user + global monthly counters.
+    // Fire and forget — never block the user's response on analytics.
+    recordSpend(userId, 'thinking-partner').catch(() => {});
 
     // ============================================
     // Auto-save to history

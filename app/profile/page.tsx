@@ -1185,7 +1185,147 @@ export default function ProfilePage() {
               </p>
             )}
           </Card>
+
+          {/* Account deletion. Required by California's Eraser Button law
+              for users under 18 and a general CCPA right. Two-step confirm
+              prevents accidental clicks. */}
+          <Card>
+            <h2 className="font-heading text-2xl mb-4" style={{ color: '#F87171' }}>Delete Account</h2>
+            <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '16px', lineHeight: '1.6' }}>
+              Permanently delete your Vantage account and all associated data: your essays, essay versions, Insight Question responses, college list, activities, awards, AI guidance history, and subscription record. This action cannot be undone.
+            </p>
+            <DeleteAccountButton />
+          </Card>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function DeleteAccountButton() {
+  const [stage, setStage] = useState<'idle' | 'confirming' | 'deleting' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState<string>('');
+  const [confirmText, setConfirmText] = useState<string>('');
+  const router = useRouter();
+
+  const handleDelete = async () => {
+    if (confirmText !== 'DELETE MY ACCOUNT') {
+      setErrorMsg('Please type DELETE MY ACCOUNT to confirm.');
+      return;
+    }
+    setStage('deleting');
+    setErrorMsg('');
+    try {
+      const res = await fetch('/api/delete-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirm: 'DELETE MY ACCOUNT' }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error || 'Deletion failed');
+      }
+      await supabase.auth.signOut();
+      router.push('/');
+      router.refresh();
+    } catch (e: any) {
+      setErrorMsg(e?.message || 'Deletion failed. Please contact support.');
+      setStage('error');
+    }
+  };
+
+  if (stage === 'idle') {
+    return (
+      <button
+        onClick={() => setStage('confirming')}
+        style={{
+          background: 'transparent',
+          color: '#F87171',
+          border: '1px solid #F87171',
+          padding: '10px 20px',
+          fontFamily: 'var(--font-body)',
+          fontSize: '14px',
+          fontWeight: 600,
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+          borderRadius: '2px',
+          cursor: 'pointer',
+        }}
+      >
+        Delete My Account
+      </button>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <p className="font-body text-sm" style={{ color: '#F87171', fontWeight: 600 }}>
+        Type <strong>DELETE MY ACCOUNT</strong> below to confirm. This cannot be undone.
+      </p>
+      <input
+        type="text"
+        value={confirmText}
+        onChange={(e) => setConfirmText(e.target.value)}
+        placeholder="DELETE MY ACCOUNT"
+        disabled={stage === 'deleting'}
+        style={{
+          padding: '10px 14px',
+          background: 'rgba(0,0,0,0.3)',
+          border: '1px solid rgba(248,113,113,0.5)',
+          color: 'white',
+          borderRadius: '2px',
+          fontFamily: 'var(--font-body)',
+          fontSize: '14px',
+        }}
+      />
+      {errorMsg && (
+        <p className="font-body text-sm" style={{ color: '#F87171' }}>
+          {errorMsg}
+        </p>
+      )}
+      <div style={{ display: 'flex', gap: '12px' }}>
+        <button
+          onClick={handleDelete}
+          disabled={stage === 'deleting' || confirmText !== 'DELETE MY ACCOUNT'}
+          style={{
+            background: confirmText === 'DELETE MY ACCOUNT' && stage !== 'deleting' ? '#F87171' : 'rgba(248,113,113,0.3)',
+            color: '#0B1623',
+            border: 'none',
+            padding: '10px 20px',
+            fontFamily: 'var(--font-body)',
+            fontSize: '14px',
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            borderRadius: '2px',
+            cursor: confirmText === 'DELETE MY ACCOUNT' && stage !== 'deleting' ? 'pointer' : 'not-allowed',
+          }}
+        >
+          {stage === 'deleting' ? 'Deleting...' : 'Permanently Delete'}
+        </button>
+        <button
+          onClick={() => {
+            setStage('idle');
+            setConfirmText('');
+            setErrorMsg('');
+          }}
+          disabled={stage === 'deleting'}
+          style={{
+            background: 'transparent',
+            color: 'rgba(255,255,255,0.7)',
+            border: '1px solid rgba(255,255,255,0.3)',
+            padding: '10px 20px',
+            fontFamily: 'var(--font-body)',
+            fontSize: '14px',
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            borderRadius: '2px',
+            cursor: stage === 'deleting' ? 'not-allowed' : 'pointer',
+          }}
+        >
+          Cancel
+        </button>
       </div>
     </div>
   );
