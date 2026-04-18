@@ -99,7 +99,12 @@ export default function CommonAppPage() {
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '64px 32px' }}>
         <div style={{ marginBottom: '48px' }}>
-          <h1 className="font-heading text-5xl mb-4" style={{ color: 'white' }}>Common Application Essay</h1>
+          <h1 className="font-heading text-5xl mb-4" style={{ color: 'white' }}>
+            Common Application Essay
+            <span className="font-body" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '20px', fontWeight: 400, marginLeft: '16px', letterSpacing: '0.05em' }}>
+              2026–27
+            </span>
+          </h1>
           <p className="font-body text-lg" style={{ color: '#F3E5AB' }}>
             Choose one of the seven prompts below. You only need to answer one prompt for your Common App essay.
           </p>
