@@ -1210,9 +1210,22 @@ function DeleteAccountButton() {
   const [confirmText, setConfirmText] = useState<string>('');
   const router = useRouter();
 
+  const openModal = () => {
+    setStage('confirming');
+    setConfirmText('');
+    setErrorMsg('');
+  };
+
+  const closeModal = () => {
+    if (stage === 'deleting') return;
+    setStage('idle');
+    setConfirmText('');
+    setErrorMsg('');
+  };
+
   const handleDelete = async () => {
     if (confirmText !== 'DELETE MY ACCOUNT') {
-      setErrorMsg('Please type DELETE MY ACCOUNT to confirm.');
+      setErrorMsg('Please type DELETE MY ACCOUNT exactly to confirm.');
       return;
     }
     setStage('deleting');
@@ -1236,10 +1249,10 @@ function DeleteAccountButton() {
     }
   };
 
-  if (stage === 'idle') {
-    return (
+  return (
+    <>
       <button
-        onClick={() => setStage('confirming')}
+        onClick={openModal}
         style={{
           background: 'transparent',
           color: '#F87171',
@@ -1256,79 +1269,137 @@ function DeleteAccountButton() {
       >
         Delete My Account
       </button>
-    );
-  }
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      <p className="font-body text-sm" style={{ color: '#F87171', fontWeight: 600 }}>
-        Type <strong>DELETE MY ACCOUNT</strong> below to confirm. This cannot be undone.
-      </p>
-      <input
-        type="text"
-        value={confirmText}
-        onChange={(e) => setConfirmText(e.target.value)}
-        placeholder="DELETE MY ACCOUNT"
-        disabled={stage === 'deleting'}
-        style={{
-          padding: '10px 14px',
-          background: 'rgba(0,0,0,0.3)',
-          border: '1px solid rgba(248,113,113,0.5)',
-          color: 'white',
-          borderRadius: '2px',
-          fontFamily: 'var(--font-body)',
-          fontSize: '14px',
-        }}
-      />
-      {errorMsg && (
-        <p className="font-body text-sm" style={{ color: '#F87171' }}>
-          {errorMsg}
-        </p>
+      {stage !== 'idle' && (
+        <div
+          onClick={closeModal}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.75)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '24px',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-account-title"
+            style={{
+              background: '#0B1623',
+              border: '1px solid rgba(248,113,113,0.5)',
+              borderRadius: '4px',
+              padding: '32px',
+              maxWidth: '520px',
+              width: '100%',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+            }}
+          >
+            <h3
+              id="delete-account-title"
+              className="font-heading text-2xl mb-4"
+              style={{ color: '#F87171' }}
+            >
+              Permanently Delete Account
+            </h3>
+            <p
+              className="font-body text-sm"
+              style={{ color: 'rgba(255,255,255,0.85)', lineHeight: '1.6', marginBottom: '20px' }}
+            >
+              This will permanently remove your essays, essay versions, Insight Question
+              answers, college list, activities, awards, AI guidance history, and subscription
+              record. <strong style={{ color: '#F87171' }}>This cannot be undone.</strong>
+            </p>
+
+            <p
+              className="font-body text-sm"
+              style={{ color: 'rgba(255,255,255,0.75)', marginBottom: '10px' }}
+            >
+              Type <strong style={{ color: '#F87171' }}>DELETE MY ACCOUNT</strong> to continue:
+            </p>
+
+            <input
+              type="text"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="DELETE MY ACCOUNT"
+              autoFocus
+              disabled={stage === 'deleting'}
+              style={{
+                width: '100%',
+                padding: '12px 14px',
+                background: 'rgba(0,0,0,0.4)',
+                border: '1px solid rgba(248,113,113,0.5)',
+                color: 'white',
+                borderRadius: '2px',
+                fontFamily: 'var(--font-body)',
+                fontSize: '14px',
+                marginBottom: '16px',
+              }}
+            />
+
+            {errorMsg && (
+              <p className="font-body text-sm" style={{ color: '#F87171', marginBottom: '16px' }}>
+                {errorMsg}
+              </p>
+            )}
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={closeModal}
+                disabled={stage === 'deleting'}
+                style={{
+                  background: 'transparent',
+                  color: 'rgba(255,255,255,0.8)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  padding: '10px 20px',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  borderRadius: '2px',
+                  cursor: stage === 'deleting' ? 'not-allowed' : 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={stage === 'deleting' || confirmText !== 'DELETE MY ACCOUNT'}
+                style={{
+                  background:
+                    confirmText === 'DELETE MY ACCOUNT' && stage !== 'deleting'
+                      ? '#F87171'
+                      : 'rgba(248,113,113,0.3)',
+                  color: '#0B1623',
+                  border: 'none',
+                  padding: '10px 20px',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  borderRadius: '2px',
+                  cursor:
+                    confirmText === 'DELETE MY ACCOUNT' && stage !== 'deleting'
+                      ? 'pointer'
+                      : 'not-allowed',
+                }}
+              >
+                {stage === 'deleting' ? 'Deleting...' : 'Permanently Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
-      <div style={{ display: 'flex', gap: '12px' }}>
-        <button
-          onClick={handleDelete}
-          disabled={stage === 'deleting' || confirmText !== 'DELETE MY ACCOUNT'}
-          style={{
-            background: confirmText === 'DELETE MY ACCOUNT' && stage !== 'deleting' ? '#F87171' : 'rgba(248,113,113,0.3)',
-            color: '#0B1623',
-            border: 'none',
-            padding: '10px 20px',
-            fontFamily: 'var(--font-body)',
-            fontSize: '14px',
-            fontWeight: 600,
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            borderRadius: '2px',
-            cursor: confirmText === 'DELETE MY ACCOUNT' && stage !== 'deleting' ? 'pointer' : 'not-allowed',
-          }}
-        >
-          {stage === 'deleting' ? 'Deleting...' : 'Permanently Delete'}
-        </button>
-        <button
-          onClick={() => {
-            setStage('idle');
-            setConfirmText('');
-            setErrorMsg('');
-          }}
-          disabled={stage === 'deleting'}
-          style={{
-            background: 'transparent',
-            color: 'rgba(255,255,255,0.7)',
-            border: '1px solid rgba(255,255,255,0.3)',
-            padding: '10px 20px',
-            fontFamily: 'var(--font-body)',
-            fontSize: '14px',
-            fontWeight: 600,
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            borderRadius: '2px',
-            cursor: stage === 'deleting' ? 'not-allowed' : 'pointer',
-          }}
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
+    </>
   );
 }
