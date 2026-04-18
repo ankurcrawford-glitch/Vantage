@@ -9,6 +9,9 @@ import Card from '@/components/Card';
 interface College {
   id: string;
   name: string;
+  motto?: string | null;
+  motto_translation?: string | null;
+  website_url?: string | null;
 }
 
 interface Prompt {
@@ -213,7 +216,7 @@ export default function EssayWritingPage() {
       // Load college
       const { data: collegeData } = await supabase
         .from('colleges')
-        .select('id, name')
+        .select('id, name, motto, motto_translation, website_url')
         .eq('id', collegeId)
         .single();
 
@@ -865,6 +868,33 @@ export default function EssayWritingPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <h1 className="font-heading text-4xl mb-2" style={{ color: 'white' }}>{college.name}</h1>
+              {(college.motto || college.website_url) && (
+                <div style={{ marginBottom: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {college.motto && (
+                    <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.6)', fontStyle: 'italic' }}>
+                      &ldquo;{college.motto}&rdquo;
+                      {college.motto_translation && (
+                        <span style={{ color: 'rgba(255,255,255,0.4)', fontStyle: 'normal' }}>
+                          {' '}— {college.motto_translation}
+                        </span>
+                      )}
+                    </p>
+                  )}
+                  {college.website_url && (
+                    <a
+                      href={college.website_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-body text-sm"
+                      style={{ color: '#D4AF37', textDecoration: 'none' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
+                    >
+                      {college.website_url.replace(/^https?:\/\/(www\.)?/, '')} ↗
+                    </a>
+                  )}
+                </div>
+              )}
               <h2 className="font-heading text-xl mb-4" style={{ color: '#D4AF37' }}>Prompt {prompt.sort_order}</h2>
             </div>
             {!isOwner && hasPermission && (
