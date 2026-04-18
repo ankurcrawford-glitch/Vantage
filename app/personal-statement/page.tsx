@@ -271,6 +271,11 @@ export default function PersonalStatementPage() {
                     }}>
                       <h2 className="font-heading text-3xl" style={{ color: 'white' }}>
                         {group.collegeName}
+                        {group.collegeId === COMMON_APP_COLLEGE_ID && (
+                          <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 400, marginLeft: '12px', letterSpacing: '0.05em' }}>
+                            2026–27
+                          </span>
+                        )}
                       </h2>
                       {!(commonAppNeedsPlaceholder && group.collegeId === COMMON_APP_COLLEGE_ID) && (
                         <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>

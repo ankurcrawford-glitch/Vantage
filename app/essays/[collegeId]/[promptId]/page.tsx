@@ -869,7 +869,14 @@ export default function EssayWritingPage() {
           </Link>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <h1 className="font-heading text-4xl mb-2" style={{ color: 'white' }}>{college.name}</h1>
+              <h1 className="font-heading text-4xl mb-2" style={{ color: 'white' }}>
+                {college.name}
+                {collegeId === 'a0000000-0000-0000-0000-000000000000' && (
+                  <span className="font-body text-base" style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 400, marginLeft: '12px', letterSpacing: '0.05em' }}>
+                    2026–27
+                  </span>
+                )}
+              </h1>
               {(college.motto || college.website_url) && (
                 <div style={{ marginBottom: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   {college.motto && (
