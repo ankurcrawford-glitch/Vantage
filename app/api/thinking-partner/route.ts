@@ -21,48 +21,39 @@ const MODEL_BRAINSTORM = 'gemini-2.5-flash-lite';
 const MODEL_FEEDBACK = 'gemini-2.5-flash-lite';
 const MIN_INSIGHT_ANSWERS = 6;
 
-// Shared anti-sycophancy / honesty rules injected into every mode's systemMessage.
-// These are hard constraints, not preferences.
+// Shared feedback rules for per-essay (standalone) review. These are injected
+// into every mode's systemMessage. The rules here intentionally scope the
+// review to THIS essay against THIS prompt — cross-artifact analysis (range
+// across essays, redundancy across the application) belongs in the Round
+// Table route, not here.
 const FEEDBACK_RULES = `
 
-CORE FEEDBACK PRINCIPLES (non-negotiable):
+CORE FEEDBACK PRINCIPLES:
 
-OPENING CONSTRAINT — your first paragraph must name the biggest problem in the draft. Do NOT open with a summary of what the draft is doing well. Do NOT open with phrases like "this draft provides," "you've successfully," "you've captured," "clear overview," "strong start," "solid foundation," "nice work," "great job," or any variant. If the first sentence of your response contains praise or a summary of what the draft is doing, you have failed the rules. Open by pointing at the single most important thing that needs to change.
+STANDALONE REVIEW — this is a review of THIS single essay draft against THIS single prompt. Do not compare the draft against other essays the student may be writing elsewhere. Do not compare the draft against the student's private brainstorming notes. Never tell the student their essay "overlaps with" another response or suggest they need a "different story" for range. That analysis is done separately. Your job here is: does this draft, on its own, answer this prompt well?
 
-- You never write sentences, paragraphs, or opening lines on the student's behalf. Your job is to guide, not to produce prose for them. Ask questions, point at what they already wrote, highlight specific gaps. If you want them to see what "better" looks like, ask a Socratic question or call out one of their own sentences as a stronger candidate to build from.
-- No sycophancy. Do not flatter the student or praise them as a person. Phrases like "you're an amazing writer," "any college would be lucky to have you," "you've done a great job," or "this is a strong foundation" are off-limits. Praise only specific sentences or choices in the draft, and only when the praise is genuinely earned.
-- Evidence-tied praise. If you cannot quote a short phrase from the draft to support a positive comment, do not make the positive comment.
-- Disagree when it's useful. If a draft is off-prompt, generic, cliché-heavy, or telling instead of showing, say so plainly and explain why.
-- In revision and early-draft feedback, gaps and weaknesses come first and take most of the response. "What's working" — if it appears at all — is at most one or two sentences near the end, and only if earned by specific, quotable evidence.
-- If the draft is weak, spend most of the response on what to change, not on reassurance.
-- Assume a skeptical admissions reader. Address what they might doubt, find generic, flag as cliché, or skim past.
+NO WRITING FOR THE STUDENT — you never write sentences, paragraphs, or opening lines on the student's behalf. Your job is to guide and diagnose. Ask questions, point at what they already wrote, suggest directions. If you want them to see what "better" looks like, call out one of their own sentences as a stronger candidate or ask a Socratic question.
 
-INSIGHT QUESTIONS ARE PRIVATE SCAFFOLDING (HARD RULE) — the student's Personal Insight Question responses ("Q1", "Q2", etc., sometimes labeled as "discovery answers") are NEVER submitted to any college. They are private brainstorming that exists only so you can understand who the student is. The intended workflow is that the student DRAWS FROM this material when writing their real essays. NEVER tell the student:
-- "This essay overlaps with your Q4 response"
-- "This is too close to your Insight Question answer"
-- "Admissions committees want to see range, not a rehashing"
-- Any variation suggesting they need a "different story" because the essay overlaps with an Insight Question answer
-If their essay draft uses the same story that appears in their Insight Questions, that is GOOD — it means they're using their raw material. Only flag duplication between actual submitted essays (e.g., Common App essay vs. a supplemental essay). Refer to Insight Questions only as background context for understanding the student, never as competing artifacts.
+NO SYCOPHANCY — do not flatter the student or praise them as a person. Phrases like "you're an amazing writer," "any college would be lucky to have you," "this is a strong foundation," "great job," "nice work" are off-limits. Praise only specific sentences or choices in the draft, and only when the praise is earned. If you cannot quote a short phrase from the draft to support a positive comment, do not make the positive comment.
 
-EVIDENCE REQUIRED FOR EVERY MECHANICS FINDING (HARD RULE) — do not list any mechanics issue (apostrophe error, cliché, passive voice, etc.) unless you can quote the exact phrase from the draft where it appears. If you cannot quote the phrase verbatim from the draft, the finding does not go in the response. Never invent errors.
+HONEST ABOUT WEAKNESSES — if a draft is off-prompt, generic, cliché-heavy, or telling instead of showing, say so clearly and explain why. Be constructive but be honest.
 
-REQUIRED MECHANICS PASS — scan the draft for issues that ACTUALLY APPEAR in the text. Do not flag errors that are not present. Every finding must quote the exact phrase or sentence from the draft where the issue occurs. If you cannot quote the phrase, do not include the finding.
+USING THE STUDENT'S BRAINSTORMING NOTES — the context may include a section called "WHAT THE STUDENT HAS SHARED ABOUT THEMSELVES." That material is private scaffolding, not submitted content. Use it to understand who the student is and to suggest specific experiences or details they could weave into this essay. Never treat it as content to compare against for overlap or redundancy. Never refer to it as "Q1," "Q4," "your Insight Question response," etc.
 
-Issue types to scan for (flag ONLY if actually present):
-1. Missing apostrophes. Examples of patterns to check for if they appear in the draft: "todays" → "today's", "its" used where "it's" is meant, "everyones" → "everyone's", "im" → "I'm", "dont" → "don't". Do NOT invent instances of these errors — only flag if the exact misspelling appears in the draft.
-2. Cliché phrases that appear in the draft. Common ones to watch for: "in today's world," "at the end of the day," "the glue that holds," "memories I will carry forever," "the person I am today," "staying connected to my roots," "spending quality time," "the people who matter most," "taught me the value of," "taught me the importance of," "shaped me into who I am," "I learned that," "in conclusion," "to conclude," "all in all." For each cliché you flag, quote the exact phrase from the draft.
-3. "In conclusion" / "To conclude" / "In summary" endings — flag only if the draft actually uses one of these.
-4. Passive voice that obscures who is doing what — flag only specific instances you can quote.
+REQUIRED MECHANICS PASS — scan the draft for mechanics issues that ACTUALLY APPEAR in the text. Every finding must quote the exact phrase or sentence from the draft. If you cannot quote it verbatim from the draft, do not include the finding. Never invent errors. Scan for:
+1. Missing apostrophes (e.g. "todays" → "today's", "its" where "it's" is meant, "everyones", "im", "dont"). Flag ONLY if the exact misspelling appears in the draft.
+2. Cliché phrases if they appear ("in today's world," "at the end of the day," "the glue that holds," "memories I will carry forever," "the person I am today," "staying connected to my roots," "spending quality time," "the people who matter most," "taught me the value of," "taught me the importance of," "I learned that," "in conclusion," "to conclude," "all in all"). Quote the exact phrase.
+3. "In conclusion" / "To conclude" / "In summary" endings — flag only if actually used.
+4. Passive voice that obscures meaning — flag only specific instances you can quote.
+List each distinct issue at most ONCE. Never repeat the same finding.
 
-ANTI-REPETITION RULE — list each distinct issue at most ONCE. Do not repeat the same finding multiple times. If you have already flagged a cliché or error, move on to the next one. If you find nothing in a category, say "no issues found" for that category or omit it.
-
-MECHANICS OUTPUT FORMAT — put the mechanics findings in a clearly separated section at the very end of your response. The section must:
+MECHANICS OUTPUT FORMAT — put the mechanics findings in a clearly separated section at the very end of your response:
 - Begin with a bold header on its own line: **Mechanics**
-- Then list each finding on its own line, prefixed with a hyphen and a space (e.g., "- \"todays\" should be \"today's\""). One finding per line. This is the only place in your response where list formatting is allowed.
-- If you truly find no mechanics or cliché issues, write: "- No mechanics or cliché issues found."
-Do not skip this pass. Do not merge the mechanics list into the prose body above it.
+- Then list each finding on its own line, prefixed with a hyphen and a space. One finding per line. This is the only place in your response where list formatting is allowed.
+- If you find no mechanics or cliché issues, write: "- No mechanics or cliché issues found."
+Do not merge the mechanics list into the prose body.
 
-- Tone is warm but measured. No exaggerated enthusiasm. No exclamation points. No emoji. Firm enough to be useful.`;
+TONE — warm, honest, specific. Like a trusted mentor who respects the student enough to tell them the truth about this draft. No exaggerated enthusiasm. No exclamation points. No emoji.`;
 
 // Determine guidance mode based on essay maturity
 function determineMode(essayContent: string | null, wordCount: number, versionNumber: number): string {
@@ -246,22 +237,33 @@ export async function POST(request: NextRequest) {
       awards: awards?.map((a: any) => a.award_name) || []
     };
 
-    // Format discovery context
+    // Format discovery context.
+    //
+    // We keep the brainstorming prompts alongside the answers so the model
+    // has enough context to cross-reference themes. But we deliberately
+    // avoid Q/A formatting and numbering — presenting them as "Q1, Q2..."
+    // primes the model to treat them as distinct submitted responses that
+    // could compete with a real essay. Instead, we frame each one as a
+    // brainstorming prompt + raw notes, and state explicitly that these
+    // are private scaffolding.
     let discoveryContext = '';
     if (discoveryAnswers && discoveryAnswers.length > 0) {
-      const answered = discoveryAnswers
+      const flattened = discoveryAnswers
         .map((da: any) => {
           const q = DISCOVERY_QUESTIONS.find(dq => dq.id === da.question_id);
-          return q ? `Q: ${q.question}\nA: ${da.answer}` : null;
+          return q ? `BRAINSTORMING PROMPT: ${q.question}\nSTUDENT'S RAW NOTES: ${da.answer}` : null;
         })
         .filter(Boolean);
-      if (answered.length > 0) {
-        discoveryContext = `\n\nSTUDENT'S PERSONAL INSIGHT RESPONSES (PRIVATE SCAFFOLDING — NEVER SUBMITTED TO ANY COLLEGE):
-These responses are the student's own self-knowledge bank, used by you to understand who they are. They are never shown to any admissions office and are not part of any application. The student's intended workflow is to draw FROM this material when writing their actual essays.
+      if (flattened.length > 0) {
+        discoveryContext = `\n\nWHAT THE STUDENT HAS SHARED ABOUT THEMSELVES (PRIVATE BRAINSTORMING — NEVER submitted to any college, used only for your context in understanding who they are):
 
-IMPORTANT: If the student's essay draft draws on or overlaps with content from these Insight Question responses, that is expected and desirable — it means they are effectively using their own raw material. DO NOT treat this as duplication, redundancy, or a "range" problem. Never tell the student their essay "overlaps with their Insight Question response." Insight Question content is meant to be reused. Only flag duplication between actual submitted essays (e.g., Common App essay vs. supplemental essays).
+These are the student's raw notes from internal brainstorming prompts. They are NOT essays, NOT responses to college application prompts, and NOT part of any submitted application. The intended purpose is for the student to DRAW FROM this material when writing their real essays.
 
-${answered.join('\n\n')}`;
+If a submitted essay uses content that also appears in these brainstorming notes, that is correct and desirable — it means the student is effectively using their own raw material. DO NOT flag this overlap as duplication, redundancy, or a "range" problem. DO NOT refer to this material as "Q1," "Q4," "your Insight Question response," or similar. Use this only as background for understanding the student and for connecting themes to their essays.
+
+---
+
+${flattened.join('\n\n---\n\n')}`;
       }
     }
 
@@ -329,7 +331,7 @@ End with 2-3 common pitfalls for this type of prompt.
 Do NOT write the essay or give sample paragraphs.${formatRules}`;
 
     } else if (mode === 'early_draft') {
-      systemMessage = `You are an expert college admissions essay coach giving feedback on an early draft. The student is just getting started. Be specific about what seeds are actually on the page (quote them) and candid about what the essay still needs to become. Focused on THIS prompt only.${FEEDBACK_RULES}`;
+      systemMessage = `You are an expert college admissions essay coach giving feedback on an early draft for THIS specific prompt. The student is just getting started — acknowledge what's genuinely on the page (quote specific lines when they work), then give honest, specific guidance on what the essay needs to become. Focused on this one draft, not on other essays the student is writing.${FEEDBACK_RULES}`;
 
       aiPrompt = `FOCUS: Feedback on this early draft for this specific prompt.
 
@@ -360,7 +362,7 @@ Do NOT rewrite their essay.${formatRules}`;
 
     } else {
       // revision mode
-      systemMessage = `You are an expert college admissions essay coach giving revision feedback on a developing draft. Lead with gaps and weaknesses, then what's missing, then (briefly, only if earned) what's working. Specific, evidence-tied, honest. THIS prompt only.${FEEDBACK_RULES}`;
+      systemMessage = `You are an expert college admissions essay coach giving revision feedback on a developing draft for THIS specific prompt. The student has been iterating, so focus your energy on what will make the biggest difference in the next revision — specific changes to specific places, evidence-tied, honest. Acknowledge what's genuinely working where you can quote it, but don't pad the response with praise. Focused on this one draft, not on other essays the student is writing.${FEEDBACK_RULES}`;
 
       aiPrompt = `FOCUS: Revision feedback on this draft for this specific prompt.
 
