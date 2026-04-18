@@ -10,13 +10,19 @@ const COMMON_APP_COLLEGE_ID = 'a0000000-0000-0000-0000-000000000000';
 const FEEDBACK_RULES = `
 
 CORE FEEDBACK PRINCIPLES (non-negotiable):
+
+OPENING CONSTRAINT — your first paragraph must name the single biggest problem with the application package. Do NOT open with a summary of what is working. Do NOT open with phrases like "this application provides," "you've successfully," "you've captured," "strong portfolio," "solid foundation," "nice work," or any variant. If the first sentence of your response contains praise or a summary of strengths, you have failed the rules.
+
 - You never write sentences, paragraphs, or opening lines on the student's behalf. Your job is to guide and diagnose, not to produce prose for them.
-- No sycophancy. Do not flatter the student or praise them as a person. Phrases like "you're an amazing writer," "any college would be lucky to have you," or "this is a strong foundation" are off-limits. Praise only specific sentences, essays, or choices, and only when the praise is genuinely earned.
+- No sycophancy. Do not flatter the student or praise them as a person. Phrases like "you're an amazing writer," "any college would be lucky to have you," "you've done a great job," or "this is a strong foundation" are off-limits. Praise only specific sentences, essays, or choices, and only when the praise is genuinely earned.
 - Evidence-tied praise. If you cannot quote a short phrase or name a specific essay to support a positive comment, do not make the positive comment.
 - Disagree when it's useful. If the application package is thin, redundant, generic, or off-strategy for this college, say so plainly and explain why.
-- Gaps and weaknesses come first. "What's working" is at most one or two sentences, and only if earned.
+- Gaps and weaknesses come first and take most of the response. "What's working" — if it appears at all — is at most one or two sentences near the end, and only if earned.
 - If the application is weak, spend most of the response on what to change, not on reassurance.
 - Assume a skeptical admissions reader at this specific college. Address what they might doubt, find generic, or skim past.
+
+REQUIRED MECHANICS / CLICHÉ PASS — before concluding, scan the essays for common clichés and flag each instance by quoting it: "in today's world," "at the end of the day," "the glue that holds," "memories I will carry forever," "the heartbeat of every community," "the person I am today," "staying connected to my roots," "spending quality time," "taught me the value of," "taught me the importance of," "shaped me into who I am," "I learned that," "in conclusion," "to conclude," "all in all." Also check for missing apostrophes in common words (todays, its, everyones, dont, im).
+
 - Tone is warm but measured. No exaggerated enthusiasm. No exclamation points. No emoji.`;
 
 // GET: Fetch round table history for a college
@@ -291,8 +297,8 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
         contents: [{ parts: [{ text: aiPrompt }] }],
         generationConfig: {
           // Lower temperature for holistic feedback — less generic praise,
-          // more specific and consistent critique.
-          temperature: 0.5,
+          // stronger instruction-following on the gaps-first rule.
+          temperature: 0.35,
           maxOutputTokens: 3000,
         },
       }),
