@@ -7,15 +7,19 @@ import { supabase } from '@/lib/supabase';
 import Card from '@/components/Card';
 
 interface Essay {
-  id: string;
+  // Present only for started essays
+  id?: string;
+  latest_version?: number;
+  latest_word_count?: number;
+  updated_at?: string;
+  // Always present (built from college_prompts + user_colleges)
   college_id: string;
   college_name: string;
   prompt_id: string;
   prompt_text: string;
   prompt_sort_order: number;
-  latest_version: number;
-  latest_word_count: number;
-  updated_at: string;
+  word_limit?: number;
+  started: boolean;
 }
 
 export default function PersonalStatementPage() {
@@ -44,55 +48,89 @@ export default function PersonalStatementPage() {
         return;
       }
 
-      // Load essays with college and prompt info
-      const { data: essaysData, error } = await supabase
+      // Load the user's portfolio colleges. Common App is always implicitly
+      // in the portfolio; other colleges come from user_colleges.
+      const { data: userColleges } = await supabase
+        .from('user_colleges')
+        .select('college_id, colleges:college_id(id, name)')
+        .eq('user_id', user.id);
+
+      const collegeNameMap = new Map<string, string>();
+      const collegeIds: string[] = [];
+      if (userColleges) {
+        for (const uc of userColleges as any[]) {
+          const c = uc.colleges;
+          if (c?.id) {
+            collegeNameMap.set(c.id, c.name);
+            collegeIds.push(c.id);
+          }
+        }
+      }
+
+      // Always include the Common App pseudo-college so its prompts appear
+      // on this page even if the user hasn't explicitly added it.
+      const COMMON_APP_COLLEGE_ID = 'a0000000-0000-0000-0000-000000000000';
+      if (!collegeNameMap.has(COMMON_APP_COLLEGE_ID)) {
+        collegeIds.push(COMMON_APP_COLLEGE_ID);
+        collegeNameMap.set(COMMON_APP_COLLEGE_ID, 'Common Application');
+      }
+
+      if (collegeIds.length === 0) {
+        setEssays([]);
+        return;
+      }
+
+      // Load all prompts for those colleges so unstarted ones still appear.
+      const { data: prompts, error: promptsError } = await supabase
+        .from('college_prompts')
+        .select('id, prompt_text, sort_order, college_id, word_limit')
+        .in('college_id', collegeIds)
+        .order('sort_order', { ascending: true });
+
+      if (promptsError) throw promptsError;
+
+      // Load the user's existing essays so we can mark which prompts have
+      // been started and show version/word-count info for those.
+      const { data: essaysData } = await supabase
         .from('essays')
         .select(`
           id,
           college_prompt_id,
           updated_at,
-          college_prompts:college_prompt_id (
-            id,
-            prompt_text,
-            sort_order,
-            college_id,
-            colleges:college_id (
-              id,
-              name
-            )
-          ),
           essay_versions (
             version_number,
             word_count,
             is_current
           )
         `)
-        .eq('user_id', user.id)
-        .order('updated_at', { ascending: false });
+        .eq('user_id', user.id);
 
-      if (error) throw error;
-
-      if (essaysData) {
-        const formattedEssays: Essay[] = essaysData.map((essay: any) => {
-          const prompt = essay.college_prompts;
-          const college = prompt.colleges;
-          const currentVersion = essay.essay_versions?.find((v: any) => v.is_current) || essay.essay_versions?.[0];
-
-          return {
-            id: essay.id,
-            college_id: college.id,
-            college_name: college.name,
-            prompt_id: prompt.id,
-            prompt_text: prompt.prompt_text,
-            prompt_sort_order: prompt.sort_order,
-            latest_version: currentVersion?.version_number || 0,
-            latest_word_count: currentVersion?.word_count || 0,
-            updated_at: essay.updated_at,
-          };
-        });
-
-        setEssays(formattedEssays);
+      const essaysByPromptId = new Map<string, any>();
+      for (const e of (essaysData ?? []) as any[]) {
+        if (e.college_prompt_id) essaysByPromptId.set(e.college_prompt_id, e);
       }
+
+      // Merge prompts with existing essays into the unified list.
+      const combined: Essay[] = (prompts ?? []).map((p: any) => {
+        const existing = essaysByPromptId.get(p.id);
+        const currentVersion = existing?.essay_versions?.find((v: any) => v.is_current)
+          || existing?.essay_versions?.[0];
+        return {
+          id: existing?.id,
+          college_id: p.college_id,
+          college_name: collegeNameMap.get(p.college_id) || 'Unknown',
+          prompt_id: p.id,
+          prompt_text: p.prompt_text,
+          prompt_sort_order: p.sort_order,
+          word_limit: p.word_limit,
+          started: !!existing,
+          latest_version: currentVersion?.version_number,
+          latest_word_count: currentVersion?.word_count,
+          updated_at: existing?.updated_at,
+        };
+      });
+
+      setEssays(combined);
     } catch (error) {
       console.error('Error loading essays:', error);
     } finally {
@@ -215,33 +253,62 @@ export default function PersonalStatementPage() {
                         {group.collegeName}
                       </h2>
                       <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                        {group.essays.length} {group.essays.length === 1 ? 'essay' : 'essays'}
+                        {(() => {
+                          const total = group.essays.length;
+                          const started = group.essays.filter((e) => e.started).length;
+                          return `${started} of ${total} started`;
+                        })()}
                       </span>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                       {group.essays.map((essay) => (
-              <Card key={essay.id}>
+              <Card key={essay.prompt_id}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                   <div style={{ flex: 1 }}>
-                    <h3 className="font-heading text-xl mb-2" style={{ color: '#D4AF37' }}>
-                      {essay.college_name}
-                    </h3>
-                    <p className="font-body text-sm mb-3" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                      Prompt {essay.prompt_sort_order}
-                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                      <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                        Prompt {essay.prompt_sort_order}
+                      </p>
+                      {essay.word_limit && (
+                        <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                          · {essay.word_limit} word limit
+                        </span>
+                      )}
+                      {!essay.started && (
+                        <span
+                          className="font-body"
+                          style={{
+                            color: '#D4AF37',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            letterSpacing: '0.08em',
+                            textTransform: 'uppercase',
+                            border: '1px solid rgba(212,175,55,0.4)',
+                            padding: '2px 8px',
+                            borderRadius: '2px',
+                          }}
+                        >
+                          Not started
+                        </span>
+                      )}
+                    </div>
                     <p className="font-body mb-4" style={{ color: 'rgba(255,255,255,0.9)', lineHeight: '1.6' }}>
-                      {essay.prompt_text.length > 200 
-                        ? `${essay.prompt_text.substring(0, 200)}...` 
+                      {essay.prompt_text.length > 200
+                        ? `${essay.prompt_text.substring(0, 200)}...`
                         : essay.prompt_text}
                     </p>
-                    <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-                      <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                        Version {essay.latest_version} • {essay.latest_word_count} words
-                      </span>
-                      <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                        Updated {new Date(essay.updated_at).toLocaleDateString()}
-                      </span>
-                    </div>
+                    {essay.started && (
+                      <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+                        <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                          Version {essay.latest_version ?? 0} • {essay.latest_word_count ?? 0} words
+                        </span>
+                        {essay.updated_at && (
+                          <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                            Updated {new Date(essay.updated_at).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <Link href={`/essays/${essay.college_id}/${essay.prompt_id}`}>
                     <button
@@ -271,7 +338,7 @@ export default function PersonalStatementPage() {
                         e.currentTarget.style.border = 'none';
                       }}
                     >
-                      Continue Writing
+                      {essay.started ? 'Continue Writing' : 'Start Writing'}
                     </button>
                   </Link>
                 </div>
