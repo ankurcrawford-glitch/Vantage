@@ -26,6 +26,12 @@ const MIN_INSIGHT_ANSWERS = 6;
 // review to THIS essay against THIS prompt — cross-artifact analysis (range
 // across essays, redundancy across the application) belongs in the Round
 // Table route, not here.
+//
+// Mechanics/grammar checking is intentionally NOT part of the model's job.
+// Flash-Lite consistently hallucinated mechanics findings (inventing errors
+// that didn't exist in the draft, or pulling errors from brainstorming notes
+// that were never submitted). We'll handle grammar/clichés deterministically
+// in code later. For now, feedback is prose only.
 const FEEDBACK_RULES = `
 
 CORE FEEDBACK PRINCIPLES:
@@ -40,20 +46,7 @@ HONEST ABOUT WEAKNESSES — if a draft is off-prompt, generic, cliché-heavy, or
 
 USING THE STUDENT'S BRAINSTORMING NOTES — the context may include a section called "WHAT THE STUDENT HAS SHARED ABOUT THEMSELVES." That material is private scaffolding, not submitted content. Use it to understand who the student is and to suggest specific experiences or details they could weave into this essay. Never treat it as content to compare against for overlap or redundancy. Never refer to it as "Q1," "Q4," "your Insight Question response," etc.
 
-REQUIRED MECHANICS PASS — the essay draft is wrapped between the exact markers \`<<<ESSAY_DRAFT_BEGIN>>>\` and \`<<<ESSAY_DRAFT_END>>>\`. Mechanics findings may ONLY quote text that appears literally between those two markers. Text outside those markers is CONTEXT (the student's brainstorming notes, profile, prompt, previous guidance) — it is NOT submitted writing and MUST NOT be scanned, quoted, or flagged in the Mechanics section. If a cliché or apostrophe error appears only in the brainstorming notes (e.g., "im pacing myself," "dont talk about it"), do not flag it — it is not part of the essay.
-
-Before writing each Mechanics bullet, verify the quoted phrase appears character-for-character between the two markers. If it does not, drop the bullet. Never invent errors and never pull from context. Scan for:
-1. Missing apostrophes (e.g. "todays" → "today's", "its" where "it's" is meant, "everyones", "im", "dont"). Flag ONLY if the exact misspelling appears in the draft.
-2. Cliché phrases if they appear ("in today's world," "at the end of the day," "the glue that holds," "memories I will carry forever," "the person I am today," "staying connected to my roots," "spending quality time," "the people who matter most," "taught me the value of," "taught me the importance of," "I learned that," "in conclusion," "to conclude," "all in all"). Quote the exact phrase.
-3. "In conclusion" / "To conclude" / "In summary" endings — flag only if actually used.
-4. Passive voice that obscures meaning — flag only specific instances you can quote.
-List each distinct issue at most ONCE. Never repeat the same finding.
-
-MECHANICS OUTPUT FORMAT — put the mechanics findings in a clearly separated section at the very end of your response:
-- Begin with a bold header on its own line: **Mechanics**
-- Then list each finding on its own line, prefixed with a hyphen and a space. One finding per line. This is the only place in your response where list formatting is allowed.
-- If you find no mechanics or cliché issues, write: "- No mechanics or cliché issues found."
-Do not merge the mechanics list into the prose body.
+GRAMMAR AND LINE-LEVEL ISSUES — if you notice a specific grammar, apostrophe, or cliché issue in the draft, mention it naturally within your prose feedback by quoting the exact phrase from the draft. Do NOT produce a bullet list, "Mechanics" section, or grammar checklist at the end of the response. Only comment on issues you can actually point to in the draft — do not invent errors.
 
 TONE — warm, honest, specific. Like a trusted mentor who respects the student enough to tell them the truth about this draft. No exaggerated enthusiasm. No exclamation points. No emoji.`;
 
@@ -64,22 +57,21 @@ function determineMode(essayContent: string | null, wordCount: number, versionNu
   return 'revision';
 }
 
-// Clean markdown artifacts from AI response.
-// The prose body is forced into plain paragraphs. The Mechanics section at
-// the end (marked by a **Mechanics** header) keeps its list format intact.
+// Clean markdown artifacts from the AI response. We force pure prose — no
+// lists, headers, or trailing Mechanics section. Grammar/cliché detection
+// will be added back later as a deterministic code pass, not via the model.
+//
+// If the model slips in a "**Mechanics**" section despite the prompt, strip
+// everything from that header onward so it doesn't appear to users.
 function cleanResponse(text: string): string {
-  // Split off the Mechanics section if present so its list survives cleaning.
-  const mechanicsMatch = text.match(/\n\s*\*\*Mechanics\*\*\s*\n/i);
-
+  // Drop any trailing Mechanics / Grammar / Spelling section the model sneaks in.
+  const trailingSectionMatch = text.match(/\n\s*\*\*\s*(?:Mechanics|Grammar|Spelling|Cliché|Cliches?)\s*\*\*/i);
   let body = text;
-  let mechanics = '';
-
-  if (mechanicsMatch && typeof mechanicsMatch.index === 'number') {
-    body = text.slice(0, mechanicsMatch.index);
-    mechanics = text.slice(mechanicsMatch.index);
+  if (trailingSectionMatch && typeof trailingSectionMatch.index === 'number') {
+    body = text.slice(0, trailingSectionMatch.index);
   }
 
-  const cleanedBody = body
+  return body
     // Remove markdown headers (### 1. PROMPT FIT, ## Strengths, etc.)
     .replace(/^#{1,6}\s+(?:\d+\.?\s*)?/gm, '')
     // Remove bullet points (* item, - item)
@@ -93,17 +85,6 @@ function cleanResponse(text: string): string {
     // Collapse 3+ newlines
     .replace(/\n{3,}/g, '\n\n')
     .trim();
-
-  // Light cleanup on the mechanics section — strip stray triple asterisks
-  // but keep the header and hyphen-prefixed list intact.
-  const cleanedMechanics = mechanics
-    .replace(/\*{3,}/g, '**')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-
-  return cleanedMechanics
-    ? `${cleanedBody}\n\n${cleanedMechanics}`
-    : cleanedBody;
 }
 
 // ============================================
@@ -299,13 +280,12 @@ ${flattened.join('\n\n---\n\n')}`;
     // Build prompt based on mode
     // ============================================
     const formatRules = `\n\nCRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
-1. Write the main body of the response in flowing prose paragraphs. NO bullet points in the prose body. NO numbered lists in the prose body. NO markdown headers (no # or ##) in the prose body. NO dashes as list items in the prose body.
-2. EXCEPTION: the final "Mechanics" section at the end of the response must use a bold header (**Mechanics**) on its own line, followed by a hyphen-prefixed list — one finding per line. This is the only place lists are allowed.
-3. Use **bold** sparingly in prose for key terms or phrases. That is the ONLY markdown allowed in the prose body.
-4. Separate paragraphs with a single blank line.
-5. Do NOT use asterisks for emphasis except **double asterisks for bold**.
-6. Tone: warm but measured, honest, specific. Like a trusted mentor who respects the student enough to tell them the truth.
-7. Keep the prose body concise — 4-6 paragraphs maximum. The Mechanics section comes after that.`;
+1. Write ONLY in flowing prose paragraphs. NO bullet points. NO numbered lists. NO markdown headers (no # or ##). NO dashes as list items. NO "Mechanics" section or grammar list.
+2. Use **bold** sparingly for key terms or phrases. That is the ONLY markdown allowed.
+3. Separate paragraphs with a single blank line.
+4. Do NOT use asterisks for emphasis except **double asterisks for bold**.
+5. Tone: warm but measured, honest, specific. Like a trusted mentor who respects the student enough to tell them the truth.
+6. Keep it concise — 4-6 paragraphs maximum.`;
 
     const profileBlock = [
       userStats ? `Academics: GPA ${userStats.gpa_weighted || 'N/A'} weighted, ${userStats.gpa_unweighted || 'N/A'} unweighted. SAT: ${userStats.sat_score || 'N/A'}. ACT: ${userStats.act_score || 'N/A'}.` : '',
@@ -355,9 +335,7 @@ ${currentPrompt?.word_limit ? `Word Limit: ${currentPrompt.word_limit} words` : 
 ${collegeName ? `For: ${collegeName}` : ''}
 
 STUDENT'S DRAFT (${wordCount} words, version ${currentVersionNumber}):
-<<<ESSAY_DRAFT_BEGIN>>>
 ${essayContent}
-<<<ESSAY_DRAFT_END>>>
 
 STUDENT BACKGROUND:
 ${profileBlock}
@@ -388,9 +366,7 @@ ${currentPrompt?.word_limit ? `Word Limit: ${currentPrompt.word_limit} words` : 
 ${collegeName ? `For: ${collegeName}` : ''}
 
 STUDENT'S DRAFT (${wordCount} words, version ${currentVersionNumber}):
-<<<ESSAY_DRAFT_BEGIN>>>
 ${essayContent}
-<<<ESSAY_DRAFT_END>>>
 
 STUDENT BACKGROUND:
 ${profileBlock}
@@ -422,32 +398,58 @@ Do NOT rewrite their essay.${formatRules}`;
     const modelForMode = mode === 'pre_writing' ? MODEL_BRAINSTORM : MODEL_FEEDBACK;
 
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelForMode}:generateContent?key=${geminiApiKey}`;
-    const response = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemMessage }] },
-        contents: [{ parts: [{ text: aiPrompt }] }],
-        generationConfig: { temperature: modeTemperature, maxOutputTokens: 1200 },
-        // Override default safety thresholds. Gemini's defaults are aggressive
-        // enough that feedback essays touching on identity, mental health, or
-        // difficult experiences can trigger silent mid-generation truncation.
-        safetySettings: [
-          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
-          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
-          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
-          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
-        ],
-      }),
+    const geminiBody = JSON.stringify({
+      systemInstruction: { parts: [{ text: systemMessage }] },
+      contents: [{ parts: [{ text: aiPrompt }] }],
+      generationConfig: { temperature: modeTemperature, maxOutputTokens: 1200 },
+      // Override default safety thresholds. Gemini's defaults are aggressive
+      // enough that feedback essays touching on identity, mental health, or
+      // difficult experiences can trigger silent mid-generation truncation.
+      safetySettings: [
+        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
+      ],
     });
+
+    // Call Gemini with one automatic retry on transient capacity errors.
+    // Gemini returns 429 (rate-limited) or 503 (overloaded) during demand
+    // spikes; these are usually over within a couple of seconds. Retrying
+    // once with a short backoff absorbs most of them silently.
+    async function callGemini(attempt: number): Promise<Response> {
+      const res = await fetch(geminiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: geminiBody,
+      });
+      if ((res.status === 429 || res.status === 503) && attempt === 0) {
+        await new Promise((r) => setTimeout(r, 1500));
+        return callGemini(1);
+      }
+      return res;
+    }
+
+    const response = await callGemini(0);
 
     if (!response.ok) {
       const errorText = await response.text();
       let errorDetails;
       try { errorDetails = JSON.parse(errorText); } catch { errorDetails = { message: errorText }; }
-      console.error('Gemini API error:', errorDetails);
-      const errorMessage = errorDetails.error?.message || errorDetails.message || 'Unknown Gemini API error';
-      return NextResponse.json({ error: `Gemini API Error: ${errorMessage}` }, { status: 500 });
+      console.error('Gemini API error:', response.status, errorDetails);
+      // Surface friendly errors for transient capacity problems (429/503).
+      // For anything else, log details server-side but return a generic
+      // message to avoid leaking internals.
+      if (response.status === 429 || response.status === 503) {
+        return NextResponse.json(
+          { error: 'The AI is temporarily busy. Please try again in a minute.' },
+          { status: 503 }
+        );
+      }
+      return NextResponse.json(
+        { error: 'Unable to generate guidance right now. Please try again shortly.' },
+        { status: 500 }
+      );
     }
 
     const data = await response.json();

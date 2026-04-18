@@ -22,6 +22,10 @@ const COMMON_APP_COLLEGE_ID = 'a0000000-0000-0000-0000-000000000000';
 // package. Tone is warmer than per-essay feedback because this is the
 // student getting the whole-application read, and a panel-of-admissions-
 // officers voice should feel encouraging even when the notes are candid.
+//
+// Mechanics/grammar checking is intentionally NOT part of the model's job —
+// Flash-Lite and Pro both hallucinated findings. Grammar/clichés will be
+// added back later as a deterministic code pass.
 const FEEDBACK_RULES = `
 
 CORE REVIEW PRINCIPLES:
@@ -36,17 +40,7 @@ NO SYCOPHANCY — do not flatter the student as a person. Phrases like "you're a
 
 HONEST ABOUT GAPS — if the package is thin, redundant, or doesn't capture the student as fully as their background suggests it could, say so clearly. Be specific about which essay would be the right place to address a gap. The student is getting this review because they want the truth.
 
-REQUIRED MECHANICS PASS — each submitted essay is wrapped between the exact markers \`<<<ESSAY_DRAFT_BEGIN>>>\` and \`<<<ESSAY_DRAFT_END>>>\`. Mechanics findings may ONLY quote text that appears literally between those two markers in one of the submitted essays. Text outside those markers — brainstorming notes, profile, previous guidance — is CONTEXT and MUST NOT be scanned, quoted, or flagged in the Mechanics section. If a cliché or apostrophe error appears only in the brainstorming notes, do not flag it — it is not part of any submitted essay.
-
-Before writing each Mechanics bullet, verify the quoted phrase appears character-for-character between a pair of markers. If it does not, drop the bullet. Never invent errors and never pull from context. Scan for:
-1. Clichés: "in today's world," "at the end of the day," "the glue that holds," "memories I will carry forever," "the heartbeat of every community," "the person I am today," "staying connected to my roots," "spending quality time," "taught me the value of," "taught me the importance of," "I learned that," "in conclusion," "to conclude," "all in all."
-2. Missing apostrophes: "todays," "its" where "it's" is meant, "everyones," "dont," "im."
-List each distinct issue at most once per essay.
-
-MECHANICS OUTPUT FORMAT — put findings in a clearly separated section at the very end of your response:
-- Begin with a bold header on its own line: **Mechanics**
-- Then list each finding on its own line, prefixed with a hyphen. Name the essay each finding is from (e.g., "- Common App essay: \"todays\" should be \"today's\"").
-- If no issues: "- No mechanics or cliché issues found."
+GRAMMAR AND LINE-LEVEL ISSUES — if you notice a specific grammar, apostrophe, or cliché issue in one of the submitted essays, mention it naturally within your prose by quoting the exact phrase from the essay. Do NOT produce a bullet list, "Mechanics" section, or grammar checklist at the end of the response. Only comment on issues you can actually point to in a submitted essay — do not invent errors.
 
 TONE — warm, encouraging, candid. You are a panel of experienced admissions readers who want this student to succeed. Be direct about gaps but keep the register supportive — this is the student's whole application they're seeing, and the energy should feel like advisors on their side, not a drill sergeant. No exaggerated enthusiasm, exclamation points, or emoji, but the overall tone should be warmer than per-essay feedback.`;
 
@@ -266,18 +260,13 @@ ${flattened.join('\n\n---\n\n')}`;
     // 7. Build the essay summaries for the prompt
     // ============================================
 
-    // Each submitted essay is wrapped with <<<ESSAY_DRAFT_BEGIN>>> and
-    // <<<ESSAY_DRAFT_END>>> markers. The Mechanics pass rule restricts
-    // scanning to text between these markers, so findings can't leak in from
-    // the brainstorming notes or other context.
-
     // Common App essay(s)
     let commonAppSection = '';
     if (commonAppPrompts && commonAppPrompts.length > 0) {
       const commonAppEssays = commonAppPrompts.map(p => {
         const essay = essayMap[p.id];
         if (essay) {
-          return `COMMON APP PROMPT: "${p.prompt_text}"\nSTUDENT'S RESPONSE (${essay.wordCount} words):\n<<<ESSAY_DRAFT_BEGIN>>>\n${essay.content}\n<<<ESSAY_DRAFT_END>>>`;
+          return `COMMON APP PROMPT: "${p.prompt_text}"\nSTUDENT'S RESPONSE (${essay.wordCount} words):\n${essay.content}`;
         }
         return `COMMON APP PROMPT: "${p.prompt_text}"\n(Not yet written)`;
       });
@@ -288,7 +277,7 @@ ${flattened.join('\n\n---\n\n')}`;
     const collegeEssays = collegePrompts.map(p => {
       const essay = essayMap[p.id];
       if (essay) {
-        return `${collegeName.toUpperCase()} PROMPT ${p.sort_order}: "${p.prompt_text}"${p.word_limit ? ` (${p.word_limit} word limit)` : ''}\nSTUDENT'S RESPONSE (${essay.wordCount} words):\n<<<ESSAY_DRAFT_BEGIN>>>\n${essay.content}\n<<<ESSAY_DRAFT_END>>>`;
+        return `${collegeName.toUpperCase()} PROMPT ${p.sort_order}: "${p.prompt_text}"${p.word_limit ? ` (${p.word_limit} word limit)` : ''}\nSTUDENT'S RESPONSE (${essay.wordCount} words):\n${essay.content}`;
       }
       return `${collegeName.toUpperCase()} PROMPT ${p.sort_order}: "${p.prompt_text}"${p.word_limit ? ` (${p.word_limit} word limit)` : ''}\n(Not yet written)`;
     });
@@ -328,53 +317,72 @@ Then assess how the application reads as a whole. When you finish reading all th
 End with your honest assessment of the single most impactful change this student could make to strengthen their overall application package.
 
 CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
-1. Write the main body of the response in flowing prose paragraphs. NO bullet points in the prose body. NO numbered lists in the prose body. NO markdown headers (no # or ##) in the prose body. NO dashes as list items in the prose body.
-2. EXCEPTION: the final "Mechanics" section at the end of the response must use a bold header (**Mechanics**) on its own line, followed by a hyphen-prefixed list — one finding per line. This is the only place lists are allowed.
-3. Use **bold** sparingly in prose for key terms or phrases. That is the ONLY markdown allowed in the prose body.
-4. Separate paragraphs with a single blank line.
-5. Do NOT use asterisks for emphasis except **double asterisks for bold**.
-6. Tone: warm but measured, honest and specific — like a trusted admissions advisor who respects this student enough to tell them the truth about their ${collegeName} application.
-7. Keep the prose body focused and substantial but not overwhelming — 5-8 paragraphs. The Mechanics section comes after that.`;
+1. Write ONLY in flowing prose paragraphs. NO bullet points. NO numbered lists. NO markdown headers (no # or ##). NO dashes as list items. NO "Mechanics" section or grammar list.
+2. Use **bold** sparingly for key terms or phrases. That is the ONLY markdown allowed.
+3. Separate paragraphs with a single blank line.
+4. Do NOT use asterisks for emphasis except **double asterisks for bold**.
+5. Tone: warm but measured, honest and specific — like a trusted admissions advisor who respects this student enough to tell them the truth about their ${collegeName} application.
+6. Keep it focused and substantial but not overwhelming — 5-8 paragraphs.`;
 
     // Call Gemini
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${geminiApiKey}`;
-    const response = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemMessage }] },
-        contents: [{ parts: [{ text: aiPrompt }] }],
-        generationConfig: {
-          // Pro had mid-generation truncation at lower temperatures (0.35) on
-          // long structured output — same pattern we saw with Flash. Bumping
-          // to 0.6 stabilizes it. With the tightened anti-sycophancy rules in
-          // FEEDBACK_RULES, moderate temperature doesn't cause drift back to
-          // generic praise.
-          temperature: 0.6,
-          // Round Table synthesizes the full application package plus a
-          // Mechanics section — needs more output headroom than per-essay
-          // feedback. 4000 tokens ≈ 3000 words.
-          maxOutputTokens: 4000,
-        },
-        // Override default safety thresholds. Gemini's defaults are aggressive
-        // enough that feedback on essays touching on identity, mental health,
-        // or difficult experiences can trigger silent mid-generation truncation.
-        safetySettings: [
-          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
-          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
-          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
-          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
-        ],
-      }),
+    const geminiBody = JSON.stringify({
+      systemInstruction: { parts: [{ text: systemMessage }] },
+      contents: [{ parts: [{ text: aiPrompt }] }],
+      generationConfig: {
+        // Pro had mid-generation truncation at lower temperatures (0.35) on
+        // long structured output — same pattern we saw with Flash. Bumping
+        // to 0.6 stabilizes it. With the tightened anti-sycophancy rules in
+        // FEEDBACK_RULES, moderate temperature doesn't cause drift back to
+        // generic praise.
+        temperature: 0.6,
+        // Round Table synthesizes the full application package plus a
+        // Mechanics section — needs more output headroom than per-essay
+        // feedback. 4000 tokens ≈ 3000 words.
+        maxOutputTokens: 4000,
+      },
+      // Override default safety thresholds. Gemini's defaults are aggressive
+      // enough that feedback on essays touching on identity, mental health,
+      // or difficult experiences can trigger silent mid-generation truncation.
+      safetySettings: [
+        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
+      ],
     });
+
+    // One automatic retry on transient capacity errors (429 / 503).
+    async function callGemini(attempt: number): Promise<Response> {
+      const res = await fetch(geminiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: geminiBody,
+      });
+      if ((res.status === 429 || res.status === 503) && attempt === 0) {
+        await new Promise((r) => setTimeout(r, 2000));
+        return callGemini(1);
+      }
+      return res;
+    }
+
+    const response = await callGemini(0);
 
     if (!response.ok) {
       const errorText = await response.text();
       let errorDetails;
       try { errorDetails = JSON.parse(errorText); } catch { errorDetails = { message: errorText }; }
-      console.error('Gemini API error:', errorDetails);
-      const errorMessage = errorDetails.error?.message || errorDetails.message || 'Unknown Gemini API error';
-      return NextResponse.json({ error: `Gemini API Error: ${errorMessage}` }, { status: 500 });
+      console.error('Gemini API error:', response.status, errorDetails);
+      if (response.status === 429 || response.status === 503) {
+        return NextResponse.json(
+          { error: 'The AI is temporarily busy. Please try again in a minute.' },
+          { status: 503 }
+        );
+      }
+      return NextResponse.json(
+        { error: 'Unable to generate the review right now. Please try again shortly.' },
+        { status: 500 }
+      );
     }
 
     const data = await response.json();
@@ -395,18 +403,20 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
       return NextResponse.json({ error: 'No response generated. Please try again.' }, { status: 500 });
     }
 
-    // Clean up formatting. Preserve the Mechanics list section at the end —
-    // only the prose body gets its lists stripped.
+    // Clean up formatting. Pure prose only now — mechanics is not part of the
+    // model's job. If the model sneaks in a trailing Mechanics / Grammar
+    // section despite the prompt, strip it so users don't see hallucinated
+    // findings.
     {
-      const mechanicsMatch = aiResponse.match(/\n\s*\*\*Mechanics\*\*\s*\n/i);
+      const trailingSectionMatch = aiResponse.match(
+        /\n\s*\*\*\s*(?:Mechanics|Grammar|Spelling|Cliché|Cliches?)\s*\*\*/i
+      );
       let body = aiResponse;
-      let mechanics = '';
-      if (mechanicsMatch && typeof mechanicsMatch.index === 'number') {
-        body = aiResponse.slice(0, mechanicsMatch.index);
-        mechanics = aiResponse.slice(mechanicsMatch.index);
+      if (trailingSectionMatch && typeof trailingSectionMatch.index === 'number') {
+        body = aiResponse.slice(0, trailingSectionMatch.index);
       }
 
-      const cleanedBody = body
+      aiResponse = body
         .replace(/^#{1,6}\s+(?:\d+\.?\s*)?/gm, '')
         .replace(/^[\s]*[\*\-]\s+/gm, '')
         .replace(/^[\s]*\d+\.\s+/gm, '')
@@ -414,15 +424,6 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
         .replace(/(?<!\*)\*(?!\*)/g, '')
         .replace(/\n{3,}/g, '\n\n')
         .trim();
-
-      const cleanedMechanics = mechanics
-        .replace(/\*{3,}/g, '**')
-        .replace(/\n{3,}/g, '\n\n')
-        .trim();
-
-      aiResponse = cleanedMechanics
-        ? `${cleanedBody}\n\n${cleanedMechanics}`
-        : cleanedBody;
     }
 
     // Auto-save to history
