@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
 
+// Feedback generation with Flash can take 10-20s. Bump the serverless
+// function timeout to 60s so responses don't get cut off mid-generation.
+export const maxDuration = 60;
+
 // Model selection by mode — feedback modes use the stronger Flash model for
 // better instruction-following on the anti-sycophancy rules; pre-writing
 // brainstorming stays on cheaper Flash-Lite where variety beats strictness.

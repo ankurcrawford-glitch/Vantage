@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
 
+// Round Table uses Gemini Pro and synthesizes multiple essays — can take
+// 20-40s on larger applications. Bump the serverless function timeout to 60s
+// so responses don't get cut off mid-generation.
+export const maxDuration = 60;
+
 // Round Table is the most important feedback moment in the product — holistic
 // review of a student's entire application to a specific school. It runs
 // infrequently (once per major revision pass), so we use Gemini 2.5 Pro for
