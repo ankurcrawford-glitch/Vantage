@@ -1,27 +1,36 @@
 import { createServerClient } from '@supabase/ssr';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 /**
  * Server-side helper that returns the authenticated user's Supabase session
- * user id, derived from the signed session cookies. NEVER trust `userId` from
- * the request body — that's a trivial cross-tenant data-leak vector.
+ * user id. Checks, in order:
+ *
+ *   1. Authorization: Bearer <access_token> header — works for any client
+ *      that explicitly sends the session token (recommended).
+ *   2. Supabase session cookies — works if the frontend uses @supabase/ssr's
+ *      createBrowserClient (which writes session to cookies).
+ *
+ * This app's frontend uses the plain @supabase/supabase-js client, which
+ * stores the session in localStorage, so cookies are empty. The frontend
+ * must send the access token via Authorization header — see
+ * `lib/authFetch.ts` on the client side.
+ *
+ * NEVER trust `userId` from the request body. That is a trivial cross-tenant
+ * data-leak vector.
  *
  * Usage in an API route:
  *
- *   const auth = await getAuthedUser();
+ *   const auth = await getAuthedUser(request);
  *   if (!auth.ok) return auth.response;
  *   const userId = auth.userId;
- *
- * The discriminated return type makes the auth check visible at the call site
- * and forces the caller to handle the unauthenticated case.
  */
 export type AuthedResult =
   | { ok: true; userId: string; email: string | null }
   | { ok: false; response: NextResponse };
 
-export async function getAuthedUser(): Promise<AuthedResult> {
+export async function getAuthedUser(request?: NextRequest): Promise<AuthedResult> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -35,37 +44,47 @@ export async function getAuthedUser(): Promise<AuthedResult> {
     };
   }
 
-  let cookieStore: Awaited<ReturnType<typeof cookies>>;
+  // Try Authorization header first (primary path for this app).
+  const authHeader = request?.headers.get('authorization') || request?.headers.get('Authorization');
+  if (authHeader && authHeader.toLowerCase().startsWith('bearer ')) {
+    const token = authHeader.slice(7).trim();
+    if (token) {
+      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+        global: { headers: { Authorization: `Bearer ${token}` } },
+      });
+      const { data, error } = await supabase.auth.getUser(token);
+      if (!error && data?.user) {
+        return { ok: true, userId: data.user.id, email: data.user.email ?? null };
+      }
+    }
+  }
+
+  // Fallback: cookie-based session (works only if frontend uses @supabase/ssr).
   try {
-    cookieStore = await cookies();
+    const cookieStore = await cookies();
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll() {
+          // no-op
+        },
+      },
+    });
+    const { data, error } = await supabase.auth.getUser();
+    if (!error && data?.user) {
+      return { ok: true, userId: data.user.id, email: data.user.email ?? null };
+    }
   } catch {
-    return {
-      ok: false,
-      response: NextResponse.json({ error: 'Missing request context' }, { status: 401 }),
-    };
+    // cookies() can fail outside a request context — fall through to 401.
   }
 
-  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
-      },
-      // We don't need setAll for read-only auth checks in API routes.
-      setAll() {
-        // no-op
-      },
-    },
-  });
-
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data?.user) {
-    return {
-      ok: false,
-      response: NextResponse.json({ error: 'Not authenticated' }, { status: 401 }),
-    };
-  }
-
-  return { ok: true, userId: data.user.id, email: data.user.email ?? null };
+  return {
+    ok: false,
+    response: NextResponse.json({ error: 'Not authenticated' }, { status: 401 }),
+  };
 }
 
 /**

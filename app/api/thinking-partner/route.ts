@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
     // SECURITY: userId comes from the authenticated session, not the query
     // string. Query-string userId is accepted only as a legacy no-op and is
     // ignored. Never trust user-supplied identifiers for scoping reads.
-    const auth = await getAuthedUser();
+    const auth = await getAuthedUser(request);
     if (!auth.ok) return auth.response;
     const userId = auth.userId;
 
@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
     // the request body. Any userId the client puts in the body is ignored —
     // trusting it would let any logged-in user read or write another user's
     // essays, insight answers, and guidance history.
-    const auth = await getAuthedUser();
+    const auth = await getAuthedUser(request);
     if (!auth.ok) return auth.response;
     const userId = auth.userId;
 

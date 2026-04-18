@@ -52,7 +52,7 @@ TONE — warm, encouraging, candid. You are a panel of experienced admissions re
 export async function GET(request: NextRequest) {
   try {
     // SECURITY: userId from the authenticated session, not the query string.
-    const auth = await getAuthedUser();
+    const auth = await getAuthedUser(request);
     if (!auth.ok) return auth.response;
     const userId = auth.userId;
 
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     // SECURITY: userId from the authenticated session, not the request body.
     // Trusting body-supplied userId would let any logged-in user exfiltrate
     // another user's complete application package.
-    const auth = await getAuthedUser();
+    const auth = await getAuthedUser(request);
     if (!auth.ok) return auth.response;
     const userId = auth.userId;
 
