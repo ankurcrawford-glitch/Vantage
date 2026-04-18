@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
+import { getAuthedUser, getAdminClient } from '@/lib/auth';
 
 // Feedback generation with Flash can take 10-20s. Bump the serverless
 // function timeout to 60s so responses don't get cut off mid-generation.
@@ -109,21 +109,26 @@ function cleanResponse(text: string): string {
 // ============================================
 export async function GET(request: NextRequest) {
   try {
+    // SECURITY: userId comes from the authenticated session, not the query
+    // string. Query-string userId is accepted only as a legacy no-op and is
+    // ignored. Never trust user-supplied identifiers for scoping reads.
+    const auth = await getAuthedUser();
+    if (!auth.ok) return auth.response;
+    const userId = auth.userId;
+
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
     const promptId = searchParams.get('promptId');
 
-    if (!userId || !promptId) {
-      return NextResponse.json({ error: 'userId and promptId required' }, { status: 400 });
+    if (!promptId) {
+      return NextResponse.json({ error: 'promptId required' }, { status: 400 });
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!supabaseUrl || !supabaseServiceKey) {
+    let supabase;
+    try {
+      supabase = getAdminClient();
+    } catch {
       return NextResponse.json({ error: 'Supabase config missing' }, { status: 500 });
     }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { data: history, error } = await supabase
       .from('strategic_guidance_history')
@@ -149,19 +154,26 @@ export async function GET(request: NextRequest) {
 // ============================================
 export async function POST(request: NextRequest) {
   try {
-    const { essayContent, promptId, collegeId, userId } = await request.json();
+    // SECURITY: userId is derived from the authenticated session cookie, not
+    // the request body. Any userId the client puts in the body is ignored —
+    // trusting it would let any logged-in user read or write another user's
+    // essays, insight answers, and guidance history.
+    const auth = await getAuthedUser();
+    if (!auth.ok) return auth.response;
+    const userId = auth.userId;
 
-    if (!userId || !promptId) {
-      return NextResponse.json({ error: 'User ID and Prompt ID required' }, { status: 400 });
+    const { essayContent, promptId, collegeId } = await request.json();
+
+    if (!promptId) {
+      return NextResponse.json({ error: 'Prompt ID required' }, { status: 400 });
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!supabaseUrl || !supabaseServiceKey) {
+    let supabase;
+    try {
+      supabase = getAdminClient();
+    } catch {
       return NextResponse.json({ error: 'Supabase configuration missing' }, { status: 500 });
     }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const geminiApiKey = process.env.GEMINI_API_KEY;
     if (!geminiApiKey) {

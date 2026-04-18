@@ -1,15 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getAuthedUser, getAdminClient } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
-    const { code, userId } = await request.json();
+    // SECURITY: userId is the authenticated caller's id. Without this, any
+    // logged-in user could activate someone else's subscription by passing
+    // their UUID in the body.
+    const auth = await getAuthedUser();
+    if (!auth.ok) return auth.response;
+    const userId = auth.userId;
 
-    if (!code || !userId) {
-      return NextResponse.json({ error: 'Code and user ID required' }, { status: 400 });
+    const { code } = await request.json();
+
+    if (!code) {
+      return NextResponse.json({ error: 'Code required' }, { status: 400 });
     }
 
-    // Check the code against the environment variable
+    // Check the code against the environment variable.
+    // TODO (from SECURITY-AUDIT.md): replace the shared env-var code with a
+    // single-use codes table, rate-limit per IP, and store hashes, not
+    // plaintext. For now this is a cohort-level shared secret.
     const validCode = process.env.ACCESS_CODE;
     if (!validCode) {
       return NextResponse.json({ error: 'Access codes are not configured' }, { status: 503 });
@@ -19,15 +29,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid access code' }, { status: 403 });
     }
 
-    // Code is valid — activate the user's subscription
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !supabaseServiceKey) {
+    let supabase;
+    try {
+      supabase = getAdminClient();
+    } catch {
       return NextResponse.json({ error: 'Database configuration missing' }, { status: 500 });
     }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { error } = await supabase
       .from('user_subscriptions')

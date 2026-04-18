@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
+import { getAuthedUser, getAdminClient } from '@/lib/auth';
 
 // Round Table uses Gemini Pro and synthesizes multiple essays — can take
 // 20-40s on larger applications. Bump the serverless function timeout to 60s
@@ -51,21 +51,24 @@ TONE — warm, encouraging, candid. You are a panel of experienced admissions re
 // GET: Fetch round table history for a college
 export async function GET(request: NextRequest) {
   try {
+    // SECURITY: userId from the authenticated session, not the query string.
+    const auth = await getAuthedUser();
+    if (!auth.ok) return auth.response;
+    const userId = auth.userId;
+
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
     const collegeId = searchParams.get('collegeId');
 
-    if (!userId || !collegeId) {
-      return NextResponse.json({ error: 'userId and collegeId required' }, { status: 400 });
+    if (!collegeId) {
+      return NextResponse.json({ error: 'collegeId required' }, { status: 400 });
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!supabaseUrl || !supabaseServiceKey) {
+    let supabase;
+    try {
+      supabase = getAdminClient();
+    } catch {
       return NextResponse.json({ error: 'Supabase config missing' }, { status: 500 });
     }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { data: history } = await supabase
       .from('strategic_guidance_history')
@@ -83,21 +86,25 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { collegeId, userId } = await request.json();
+    // SECURITY: userId from the authenticated session, not the request body.
+    // Trusting body-supplied userId would let any logged-in user exfiltrate
+    // another user's complete application package.
+    const auth = await getAuthedUser();
+    if (!auth.ok) return auth.response;
+    const userId = auth.userId;
 
-    if (!userId || !collegeId) {
-      return NextResponse.json({ error: 'User ID and College ID required' }, { status: 400 });
+    const { collegeId } = await request.json();
+
+    if (!collegeId) {
+      return NextResponse.json({ error: 'College ID required' }, { status: 400 });
     }
 
-    // Initialize Supabase
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    
-    if (!supabaseUrl || !supabaseServiceKey) {
+    let supabase;
+    try {
+      supabase = getAdminClient();
+    } catch {
       return NextResponse.json({ error: 'Supabase configuration missing' }, { status: 500 });
     }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get Gemini API key
     const geminiApiKey = process.env.GEMINI_API_KEY;
