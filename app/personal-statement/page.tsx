@@ -171,8 +171,55 @@ export default function PersonalStatementPage() {
             </div>
           </Card>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            {essays.map((essay) => (
+          (() => {
+            // Group essays by college so the list reads as sections rather than
+            // a flat dump. Common App is pinned to the top; other colleges
+            // follow alphabetically. Within each section, essays are ordered
+            // by prompt sort order.
+            const COMMON_APP_COLLEGE_ID = 'a0000000-0000-0000-0000-000000000000';
+            const groupsMap = new Map<string, { collegeId: string; collegeName: string; essays: Essay[] }>();
+            for (const essay of essays) {
+              const existing = groupsMap.get(essay.college_id);
+              if (existing) {
+                existing.essays.push(essay);
+              } else {
+                groupsMap.set(essay.college_id, {
+                  collegeId: essay.college_id,
+                  collegeName: essay.college_name,
+                  essays: [essay],
+                });
+              }
+            }
+            const allGroups = Array.from(groupsMap.values());
+            allGroups.forEach((g) => g.essays.sort((a, b) => a.prompt_sort_order - b.prompt_sort_order));
+
+            const commonAppGroup = allGroups.find((g) => g.collegeId === COMMON_APP_COLLEGE_ID);
+            const otherGroups = allGroups
+              .filter((g) => g.collegeId !== COMMON_APP_COLLEGE_ID)
+              .sort((a, b) => a.collegeName.localeCompare(b.collegeName));
+            const orderedGroups = commonAppGroup ? [commonAppGroup, ...otherGroups] : otherGroups;
+
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
+                {orderedGroups.map((group) => (
+                  <section key={group.collegeId}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'baseline',
+                      justifyContent: 'space-between',
+                      marginBottom: '20px',
+                      paddingBottom: '12px',
+                      borderBottom: '1px solid rgba(212,175,55,0.25)',
+                    }}>
+                      <h2 className="font-heading text-3xl" style={{ color: 'white' }}>
+                        {group.collegeName}
+                      </h2>
+                      <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                        {group.essays.length} {group.essays.length === 1 ? 'essay' : 'essays'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                      {group.essays.map((essay) => (
               <Card key={essay.id}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                   <div style={{ flex: 1 }}>
@@ -229,8 +276,13 @@ export default function PersonalStatementPage() {
                   </Link>
                 </div>
               </Card>
-            ))}
-          </div>
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </div>
+            );
+          })()
         )}
       </div>
     </div>
