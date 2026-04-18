@@ -334,7 +334,11 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
           // Lower temperature for holistic feedback — less generic praise,
           // stronger instruction-following on the gaps-first rule.
           temperature: 0.35,
-          maxOutputTokens: 2000,
+          // Round Table synthesizes the full application package plus a
+          // Mechanics section — needs more output headroom than per-essay
+          // feedback. 4000 tokens ≈ 3000 words, well above what a good
+          // holistic review typically produces.
+          maxOutputTokens: 4000,
         },
         // Override default safety thresholds. Gemini's defaults are aggressive
         // enough that feedback on essays touching on identity, mental health,
