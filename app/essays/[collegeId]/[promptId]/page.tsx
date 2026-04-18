@@ -1225,75 +1225,8 @@ export default function EssayWritingPage() {
               </Card>
             </div>
 
-            {/* The Round Table — Holistic Application Review (school-specific only) */}
-            {collegeId && collegeId !== 'a0000000-0000-0000-0000-000000000000' && (
-              <div style={{ marginTop: '24px' }}>
-                <Card>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                    <div>
-                      <h3 className="font-heading text-lg" style={{ color: '#D4AF37' }}>The Round Table</h3>
-                      <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>
-                        Holistic review of your full {college?.name} application + Common App essay
-                      </p>
-                    </div>
-                    <button
-                      onClick={loadRoundTable}
-                      disabled={loadingRoundTable}
-                      style={{ background: 'transparent', color: loadingRoundTable ? 'rgba(212,175,55,0.5)' : '#D4AF37', padding: '10px 20px', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, border: `1px solid ${loadingRoundTable ? 'rgba(212,175,55,0.3)' : '#D4AF37'}`, borderRadius: '2px', cursor: loadingRoundTable ? 'not-allowed' : 'pointer', opacity: loadingRoundTable ? 0.7 : 1 }}
-                    >
-                      {loadingRoundTable ? 'Reviewing...' : 'Get Holistic Review'}
-                    </button>
-                  </div>
-
-                  {/* Round Table gate */}
-                  {roundTableGateMessage && (
-                    <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(212,175,55,0.08)', borderRadius: '4px', borderLeft: '3px solid rgba(212,175,55,0.5)' }}>
-                      <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.85)', lineHeight: '1.7' }}>{roundTableGateMessage}</p>
-                    </div>
-                  )}
-
-                  {/* Round Table response */}
-                  {roundTableResponse && (
-                    <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', borderLeft: '3px solid #D4AF37' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                        <h4 className="font-heading text-md" style={{ color: '#D4AF37' }}>Holistic Application Review — {college?.name}</h4>
-                        <button onClick={() => { setRoundTableResponse(null); setRoundTableGateMessage(null); }} style={{ background: 'transparent', color: 'rgba(255,255,255,0.5)', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '0', lineHeight: '1' }}>×</button>
-                      </div>
-                      <div className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.9)', lineHeight: '1.8', whiteSpace: 'pre-wrap' }}>
-                        {renderBoldText(roundTableResponse)}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Round Table History */}
-                  {roundTableHistory.length > 0 && (
-                    <div style={{ marginTop: '16px' }}>
-                      <button
-                        onClick={() => setShowRoundTableHistory(!showRoundTableHistory)}
-                        style={{ background: 'transparent', border: 'none', color: 'rgba(212,175,55,0.7)', fontFamily: 'var(--font-body)', fontSize: '13px', cursor: 'pointer', padding: '4px 0', display: 'flex', alignItems: 'center', gap: '6px' }}
-                      >
-                        <span style={{ transform: showRoundTableHistory ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'inline-block' }}>▶</span>
-                        Past Reviews ({roundTableHistory.length})
-                      </button>
-                      {showRoundTableHistory && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
-                          {roundTableHistory.map((entry: any) => (
-                            <details key={entry.id} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                              <summary style={{ padding: '10px 14px', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-body)', fontSize: '12px', listStyle: 'none' }}>
-                                <span>Round Table Review — {new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
-                              </summary>
-                              <div className="font-body text-sm" style={{ padding: '12px 14px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.7', whiteSpace: 'pre-wrap', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                                {renderBoldText(entry.guidance_text)}
-                              </div>
-                            </details>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </Card>
-              </div>
-            )}
+            {/* Round Table moved to the college page — holistic reviews
+                live at the college level, not inside an individual essay. */}
           </div>
 
           {/* Sidebar */}

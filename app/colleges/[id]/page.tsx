@@ -15,7 +15,24 @@ interface College {
   acceptance_rate?: number | null;
   sat_range_low?: number | null;
   sat_range_high?: number | null;
+  motto?: string | null;
+  motto_translation?: string | null;
+  website_url?: string | null;
 }
+
+// Inline renderer for **bold** markers inside prose text — the AI feedback
+// comes back as plain prose with occasional bold markers, no lists.
+function renderBoldText(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
+const COMMON_APP_COLLEGE_ID = 'a0000000-0000-0000-0000-000000000000';
 
 interface Prompt {
   id: string;
@@ -34,15 +51,76 @@ export default function CollegeDetailPage() {
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Round Table state — moved here from the per-essay page so the holistic
+  // application review lives with the college it reviews, not inside an
+  // individual essay.
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [roundTableResponse, setRoundTableResponse] = useState<string | null>(null);
+  const [loadingRoundTable, setLoadingRoundTable] = useState(false);
+  const [roundTableGateMessage, setRoundTableGateMessage] = useState<string | null>(null);
+  const [roundTableHistory, setRoundTableHistory] = useState<any[]>([]);
+  const [showRoundTableHistory, setShowRoundTableHistory] = useState(false);
+
   useEffect(() => {
     checkAuth();
     loadCollegeData();
   }, [collegeId]);
 
+  useEffect(() => {
+    if (currentUserId && collegeId && collegeId !== COMMON_APP_COLLEGE_ID) {
+      loadRoundTableHistory();
+    }
+  }, [currentUserId, collegeId]);
+
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      // Redirect handled by loadCollegeData
+    if (user) {
+      setCurrentUserId(user.id);
+    }
+  };
+
+  const loadRoundTableHistory = async () => {
+    if (!collegeId || collegeId === COMMON_APP_COLLEGE_ID) return;
+    try {
+      const res = await fetch(`/api/round-table?collegeId=${collegeId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setRoundTableHistory(data.history || []);
+      }
+    } catch (e) {
+      console.error('Error loading round table history:', e);
+    }
+  };
+
+  const triggerRoundTable = async () => {
+    if (!collegeId || collegeId === COMMON_APP_COLLEGE_ID) return;
+    setLoadingRoundTable(true);
+    setRoundTableGateMessage(null);
+    try {
+      const response = await fetch('/api/round-table', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ collegeId }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to generate review');
+      }
+
+      const data = await response.json();
+      if (data.gated) {
+        setRoundTableGateMessage(data.message);
+        setRoundTableResponse(null);
+        return;
+      }
+      setRoundTableResponse(data.response);
+      loadRoundTableHistory();
+    } catch (error: any) {
+      console.error('Error loading round table:', error);
+      alert('Error loading Round Table: ' + (error.message || 'Unknown error'));
+    } finally {
+      setLoadingRoundTable(false);
     }
   };
 
@@ -52,7 +130,7 @@ export default function CollegeDetailPage() {
 
       const { data: collegeData } = await supabase
         .from('colleges')
-        .select('*')
+        .select('id, name, location, acceptance_rate, sat_range_low, sat_range_high, motto, motto_translation, website_url')
         .eq('id', collegeId)
         .single();
 
@@ -118,6 +196,33 @@ export default function CollegeDetailPage() {
           <Link href="/colleges" style={{ color: '#D4AF37', textDecoration: 'none', fontSize: '14px', display: 'inline-block', marginBottom: '16px' }}>← Back to Portfolio</Link>
           <h1 className="font-heading text-5xl mb-4" style={{ color: 'white' }}>{college.name}</h1>
           <p className="font-body text-lg" style={{ color: '#F3E5AB' }}>{college.location}</p>
+          {(college.motto || college.website_url) && (
+            <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {college.motto && (
+                <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.6)', fontStyle: 'italic' }}>
+                  &ldquo;{college.motto}&rdquo;
+                  {college.motto_translation && (
+                    <span style={{ color: 'rgba(255,255,255,0.4)', fontStyle: 'normal' }}>
+                      {' '}— {college.motto_translation}
+                    </span>
+                  )}
+                </p>
+              )}
+              {college.website_url && (
+                <a
+                  href={college.website_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-body text-sm"
+                  style={{ color: '#D4AF37', textDecoration: 'none' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
+                >
+                  {college.website_url.replace(/^https?:\/\/(www\.)?/, '')} ↗
+                </a>
+              )}
+            </div>
+          )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
             {college.acceptance_rate != null && college.acceptance_rate !== undefined && (
               <p className="font-body text-base" style={{ color: 'rgba(255,255,255,0.8)' }}>
@@ -131,6 +236,94 @@ export default function CollegeDetailPage() {
             )}
           </div>
         </div>
+
+        {/* The Round Table — holistic application review. Lives at the
+            college level because it reads the full package (Common App essay
+            + all of this college's supplementals) together. Hidden for the
+            Common App "pseudo-college" since there are no supplementals to
+            review against. */}
+        {collegeId !== COMMON_APP_COLLEGE_ID && (
+          <div style={{ marginBottom: '48px' }}>
+            <Card>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: '280px' }}>
+                  <h3 className="font-heading text-xl" style={{ color: '#D4AF37', marginBottom: '6px' }}>The Round Table</h3>
+                  <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.75)', lineHeight: '1.6', marginBottom: '8px' }}>
+                    A panel-style review of your full {college.name} application package — your Common App essay read alongside all of your {college.name} supplemental essays — by a simulated admissions committee.
+                  </p>
+                  <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.5)', lineHeight: '1.6' }}>
+                    <strong style={{ color: 'rgba(255,255,255,0.7)' }}>When to use this:</strong> once you have drafts of most or all of your essays for this school. The Round Table looks at how your essays work together, what story emerges across them, whether anything is redundant, and what parts of your story are missing. It is not for line-editing a single essay — use the per-essay Strategic Intelligence review for that.
+                  </p>
+                </div>
+                <button
+                  onClick={triggerRoundTable}
+                  disabled={loadingRoundTable}
+                  style={{
+                    background: '#D4AF37',
+                    color: '#0B1623',
+                    padding: '12px 24px',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    border: 'none',
+                    borderRadius: '2px',
+                    cursor: loadingRoundTable ? 'not-allowed' : 'pointer',
+                    opacity: loadingRoundTable ? 0.6 : 1,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {loadingRoundTable ? 'Reviewing...' : 'Get Holistic Review'}
+                </button>
+              </div>
+
+              {roundTableGateMessage && (
+                <div style={{ marginTop: '16px', padding: '16px', background: 'rgba(212,175,55,0.08)', borderRadius: '4px', borderLeft: '3px solid rgba(212,175,55,0.5)' }}>
+                  <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.85)', lineHeight: '1.7' }}>{roundTableGateMessage}</p>
+                </div>
+              )}
+
+              {roundTableResponse && (
+                <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', borderLeft: '3px solid #D4AF37' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                    <h4 className="font-heading text-md" style={{ color: '#D4AF37' }}>Holistic Application Review — {college.name}</h4>
+                    <button onClick={() => { setRoundTableResponse(null); setRoundTableGateMessage(null); }} style={{ background: 'transparent', color: 'rgba(255,255,255,0.5)', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '0', lineHeight: '1' }}>×</button>
+                  </div>
+                  <div className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.9)', lineHeight: '1.8', whiteSpace: 'pre-wrap' }}>
+                    {renderBoldText(roundTableResponse)}
+                  </div>
+                </div>
+              )}
+
+              {roundTableHistory.length > 0 && (
+                <div style={{ marginTop: '16px' }}>
+                  <button
+                    onClick={() => setShowRoundTableHistory(!showRoundTableHistory)}
+                    style={{ background: 'transparent', border: 'none', color: 'rgba(212,175,55,0.7)', fontFamily: 'var(--font-body)', fontSize: '13px', cursor: 'pointer', padding: '4px 0', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <span style={{ transform: showRoundTableHistory ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'inline-block' }}>▶</span>
+                    Past Reviews ({roundTableHistory.length})
+                  </button>
+                  {showRoundTableHistory && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                      {roundTableHistory.map((entry: any) => (
+                        <details key={entry.id} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                          <summary style={{ padding: '10px 14px', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-body)', fontSize: '12px', listStyle: 'none' }}>
+                            <span>Round Table Review — {new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
+                          </summary>
+                          <div className="font-body text-sm" style={{ padding: '12px 14px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.7', whiteSpace: 'pre-wrap', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                            {renderBoldText(entry.guidance_text)}
+                          </div>
+                        </details>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </Card>
+          </div>
+        )}
 
         <div>
           <h2 className="font-heading text-2xl mb-6" style={{ color: 'white' }}>Essay Prompts ({getCurrentApplicationYear()})</h2>
