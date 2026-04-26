@@ -25,6 +25,7 @@ export default function CollegesPage() {
   const [collegesWithPrompts, setCollegesWithPrompts] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'acceptance' | 'sat_high' | 'sat_low'>('name');
 
   useEffect(() => {
     checkAuth();
@@ -139,8 +140,41 @@ export default function CollegesPage() {
     college.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const userCollegesList = colleges.filter((c) => userColleges.includes(c.id));
-  const availableColleges = filteredColleges.filter((c) => !userColleges.includes(c.id));
+  // Sort comparator. Colleges missing the relevant field go to the bottom
+  // so the meaningful values stay easy to scan at the top.
+  const sortColleges = (list: College[]) => {
+    const copy = [...list];
+    const nullsLast = (a: number | null | undefined, b: number | null | undefined, asc: boolean) => {
+      const aMissing = a == null;
+      const bMissing = b == null;
+      if (aMissing && bMissing) return 0;
+      if (aMissing) return 1;
+      if (bMissing) return -1;
+      return asc ? (a as number) - (b as number) : (b as number) - (a as number);
+    };
+    switch (sortBy) {
+      case 'acceptance':
+        // Lowest acceptance rate first (most selective)
+        copy.sort((a, b) => nullsLast(a.acceptance_rate, b.acceptance_rate, true));
+        break;
+      case 'sat_high':
+        // Highest SAT first (most competitive)
+        copy.sort((a, b) => nullsLast(a.sat_range_high, b.sat_range_high, false));
+        break;
+      case 'sat_low':
+        // Lowest SAT first (most accessible)
+        copy.sort((a, b) => nullsLast(a.sat_range_low, b.sat_range_low, true));
+        break;
+      case 'name':
+      default:
+        copy.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+    }
+    return copy;
+  };
+
+  const userCollegesList = sortColleges(colleges.filter((c) => userColleges.includes(c.id)));
+  const availableColleges = sortColleges(filteredColleges.filter((c) => !userColleges.includes(c.id)));
 
   if (loading) {
     return (
@@ -190,14 +224,15 @@ export default function CollegesPage() {
           </p>
         </div>
 
-        <div style={{ marginBottom: '32px' }}>
+        <div style={{ marginBottom: '32px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search colleges by name or location..."
             style={{
-              width: '100%',
+              flex: 1,
+              minWidth: '280px',
               maxWidth: '500px',
               background: 'rgba(0,0,0,0.2)',
               border: '1px solid rgba(212,175,55,0.2)',
@@ -208,6 +243,37 @@ export default function CollegesPage() {
               outline: 'none',
             }}
           />
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontFamily: 'var(--font-body)',
+              fontSize: '14px',
+              color: 'rgba(255,255,255,0.7)',
+            }}
+          >
+            <span>Sort by</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+              style={{
+                background: 'rgba(0,0,0,0.2)',
+                border: '1px solid rgba(212,175,55,0.2)',
+                color: 'white',
+                padding: '12px 14px',
+                fontFamily: 'var(--font-body)',
+                fontSize: '14px',
+                outline: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="name">Name (A–Z)</option>
+              <option value="acceptance">Acceptance rate (most selective first)</option>
+              <option value="sat_high">SAT — high end (highest first)</option>
+              <option value="sat_low">SAT — low end (lowest first)</option>
+            </select>
+          </label>
         </div>
 
         {userCollegesList.length > 0 && (
