@@ -13,6 +13,20 @@ interface UserStats {
   act_score: number | null;
 }
 
+// Classifier profile fields — additive, used by /colleges Strategy view.
+interface StrategyProfile {
+  state: string;
+  intended_major: string;
+  ap_count: string; // string for the input; coerced on save
+  test_optional: boolean;
+  hook_recruited_athlete: boolean;
+  hook_first_gen: boolean;
+  hook_urm: boolean;
+  hook_low_income: boolean;
+  hook_legacy_active: boolean;
+  hook_legacy_college_ids: string[];
+}
+
 interface APClass {
   id: string;
   class_name: string;
@@ -58,6 +72,22 @@ export default function ProfilePage() {
   const [newExtracurricular, setNewExtracurricular] = useState({ activity_name: '', role: '', description: '' });
   const [newAward, setNewAward] = useState({ award_name: '', organization: '', year: '' });
 
+  // Classifier-specific profile state (separate save button so existing UX is untouched).
+  const [strategy, setStrategy] = useState<StrategyProfile>({
+    state: '',
+    intended_major: 'Undecided',
+    ap_count: '0',
+    test_optional: false,
+    hook_recruited_athlete: false,
+    hook_first_gen: false,
+    hook_urm: false,
+    hook_low_income: false,
+    hook_legacy_active: false,
+    hook_legacy_college_ids: [],
+  });
+  const [savingStrategy, setSavingStrategy] = useState(false);
+  const [legacyColleges, setLegacyColleges] = useState<{ id: string; name: string }[]>([]);
+
   useEffect(() => {
     checkAuth();
     loadProfile();
@@ -92,6 +122,33 @@ export default function ProfilePage() {
           sat_score: statsData.sat_score,
           act_score: statsData.act_score,
         });
+        // Classifier fields (will be null on rows pre-migration).
+        setStrategy({
+          state: statsData.state ?? '',
+          intended_major: statsData.intended_major ?? 'Undecided',
+          ap_count: statsData.ap_count != null ? String(statsData.ap_count) : '0',
+          test_optional: !!statsData.test_optional,
+          hook_recruited_athlete: !!statsData.hook_recruited_athlete,
+          hook_first_gen: !!statsData.hook_first_gen,
+          hook_urm: !!statsData.hook_urm,
+          hook_low_income: !!statsData.hook_low_income,
+          hook_legacy_active: !!statsData.hook_legacy_active,
+          hook_legacy_college_ids: statsData.hook_legacy_college_ids ?? [],
+        });
+      }
+
+      // Load colleges the user has marked as legacy candidates from (their portfolio).
+      const { data: ucData } = await supabase
+        .from('user_colleges')
+        .select('college_id, colleges(id, name)')
+        .eq('user_id', user.id);
+      if (ucData) {
+        setLegacyColleges(
+          ucData
+            .map((row: any) => row.colleges)
+            .filter((c: any) => c && c.id && c.name)
+            .map((c: any) => ({ id: c.id, name: c.name }))
+        );
       }
 
       // Load AP classes
@@ -139,6 +196,48 @@ export default function ProfilePage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSaveStrategy = async () => {
+    setSavingStrategy(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { alert('You must be logged in to save.'); return; }
+      const apCount = parseInt(strategy.ap_count) || 0;
+      const { error } = await supabase.from('user_stats').upsert({
+        user_id: user.id,
+        state: strategy.state ? strategy.state.toUpperCase().slice(0, 2) : null,
+        intended_major: strategy.intended_major || null,
+        ap_count: apCount,
+        test_optional: strategy.test_optional,
+        hook_recruited_athlete: strategy.hook_recruited_athlete,
+        hook_first_gen: strategy.hook_first_gen,
+        hook_urm: strategy.hook_urm,
+        hook_low_income: strategy.hook_low_income,
+        hook_legacy_active: strategy.hook_legacy_active,
+        hook_legacy_college_ids: strategy.hook_legacy_college_ids,
+      });
+      if (error) {
+        console.error('Error saving strategy profile:', error);
+        alert('Error: ' + error.message);
+      } else {
+        alert('Strategy profile saved.');
+      }
+    } catch (e: any) {
+      console.error(e);
+      alert('Error saving: ' + (e?.message ?? 'Unknown error'));
+    } finally {
+      setSavingStrategy(false);
+    }
+  };
+
+  const toggleLegacyCollege = (collegeId: string) => {
+    setStrategy((prev) => {
+      const ids = prev.hook_legacy_college_ids.includes(collegeId)
+        ? prev.hook_legacy_college_ids.filter((i) => i !== collegeId)
+        : [...prev.hook_legacy_college_ids, collegeId];
+      return { ...prev, hook_legacy_college_ids: ids };
+    });
   };
 
   const handleSaveStats = async () => {
@@ -591,6 +690,139 @@ export default function ProfilePage() {
             {saving ? 'Saving...' : 'Save Stats'}
           </button>
         </Card>
+
+        {/* Strategy Profile (drives Safety/Target/Reach classifier) */}
+        <div style={{ marginTop: '32px' }}>
+          <Card>
+            <h2 className="font-heading text-2xl mb-2" style={{ color: '#D4AF37' }}>Strategy Profile</h2>
+            <p className="font-body" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', marginBottom: '24px', lineHeight: 1.6 }}>
+              These power your Strategy view in Portfolio. We use them to classify each school as Safety / Likely / Target / Reach / Hard Reach and to recommend an ED play.
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+              <div>
+                <label className="font-body" style={{ display: 'block', color: 'rgba(255,255,255,0.85)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>State (2-letter)</label>
+                <input
+                  type="text"
+                  value={strategy.state}
+                  onChange={(e) => setStrategy({ ...strategy, state: e.target.value.toUpperCase().slice(0, 2) })}
+                  placeholder="e.g. CA"
+                  maxLength={2}
+                  style={{ width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(212,175,55,0.2)', color: 'white', padding: '12px 14px', fontFamily: 'var(--font-body)', fontSize: '15px', outline: 'none' }}
+                />
+              </div>
+              <div>
+                <label className="font-body" style={{ display: 'block', color: 'rgba(255,255,255,0.85)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Intended Major</label>
+                <select
+                  value={strategy.intended_major}
+                  onChange={(e) => setStrategy({ ...strategy, intended_major: e.target.value })}
+                  style={{ width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(212,175,55,0.2)', color: 'white', padding: '12px 14px', fontFamily: 'var(--font-body)', fontSize: '15px', outline: 'none', cursor: 'pointer' }}
+                >
+                  <option value="Computer Science">Computer Science</option>
+                  <option value="Engineering">Engineering</option>
+                  <option value="Business">Business</option>
+                  <option value="Liberal Arts">Liberal Arts</option>
+                  <option value="Pre-Med">Pre-Med</option>
+                  <option value="Undecided">Undecided</option>
+                </select>
+              </div>
+              <div>
+                <label className="font-body" style={{ display: 'block', color: 'rgba(255,255,255,0.85)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>AP Course Count</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={20}
+                  value={strategy.ap_count}
+                  onChange={(e) => setStrategy({ ...strategy, ap_count: e.target.value })}
+                  placeholder="0"
+                  style={{ width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(212,175,55,0.2)', color: 'white', padding: '12px 14px', fontFamily: 'var(--font-body)', fontSize: '15px', outline: 'none' }}
+                />
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <div className="font-body" style={{ color: 'rgba(255,255,255,0.85)', fontSize: '13px', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Application Strategy</div>
+              <ProfileToggle label="Applying test-optional" hint="We'll weight GPA + rigor at 100% if you skip SAT/ACT." checked={strategy.test_optional} onChange={(v) => setStrategy({ ...strategy, test_optional: v })} />
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <div className="font-body" style={{ color: 'rgba(255,255,255,0.85)', fontSize: '13px', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Hooks</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '8px' }}>
+                <ProfileToggle label="Recruited athlete" hint="Sets matching schools to Likely once a coach offers." checked={strategy.hook_recruited_athlete} onChange={(v) => setStrategy({ ...strategy, hook_recruited_athlete: v })} />
+                <ProfileToggle label="First-generation college student" hint="+5 holistic score at selective schools." checked={strategy.hook_first_gen} onChange={(v) => setStrategy({ ...strategy, hook_first_gen: v })} />
+                <ProfileToggle label="Underrepresented background (URM)" hint="+5 holistic score at selective schools." checked={strategy.hook_urm} onChange={(v) => setStrategy({ ...strategy, hook_urm: v })} />
+                <ProfileToggle label="Pell-eligible / low-income" hint="Signaled in financial aid review." checked={strategy.hook_low_income} onChange={(v) => setStrategy({ ...strategy, hook_low_income: v })} />
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <div className="font-body" style={{ color: 'rgba(255,255,255,0.85)', fontSize: '13px', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Legacy Status</div>
+              <ProfileToggle
+                label="I have legacy connections"
+                hint="Bumps matching schools (admit rate above 15%) by one tier."
+                checked={strategy.hook_legacy_active}
+                onChange={(v) => setStrategy({ ...strategy, hook_legacy_active: v })}
+              />
+              {strategy.hook_legacy_active && (
+                <div style={{ marginTop: '14px', padding: '14px', background: 'rgba(11,22,35,0.4)', border: '1px solid rgba(212,175,55,0.18)' }}>
+                  <div className="font-body" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', marginBottom: '10px' }}>
+                    Select the colleges where you have legacy status (a parent or grandparent attended).
+                  </div>
+                  {legacyColleges.length === 0 ? (
+                    <p className="font-body" style={{ color: 'rgba(255,255,255,0.45)', fontSize: '12px', fontStyle: 'italic', margin: 0 }}>
+                      Add schools to your portfolio first — then you can mark legacy connections here.
+                    </p>
+                  ) : (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                      {legacyColleges.map((c) => {
+                        const checked = strategy.hook_legacy_college_ids.includes(c.id);
+                        return (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => toggleLegacyCollege(c.id)}
+                            className="font-body"
+                            style={{
+                              background: checked ? 'rgba(212,175,55,0.18)' : 'transparent',
+                              border: `1px solid ${checked ? '#D4AF37' : 'rgba(255,255,255,0.18)'}`,
+                              color: checked ? '#F3E5AB' : 'rgba(255,255,255,0.75)',
+                              padding: '6px 12px',
+                              fontSize: '12px',
+                              cursor: 'pointer',
+                              borderRadius: '999px',
+                              fontWeight: checked ? 600 : 400,
+                            }}
+                          >
+                            {checked ? '✓ ' : ''}{c.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={handleSaveStrategy}
+              disabled={savingStrategy}
+              className="font-body"
+              style={{
+                background: '#D4AF37',
+                color: '#0B1623',
+                border: 'none',
+                padding: '12px 28px',
+                fontSize: '12px',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                cursor: savingStrategy ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {savingStrategy ? 'Saving...' : 'Save Strategy Profile'}
+            </button>
+          </Card>
+        </div>
 
         {/* AP Classes */}
         <div style={{ marginTop: '32px' }}>
@@ -1402,5 +1634,65 @@ function DeleteAccountButton() {
         </div>
       )}
     </>
+  );
+}
+
+/* ---------- Strategy Profile helpers ---------- */
+
+function ProfileToggle({
+  label,
+  hint,
+  checked,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: '12px',
+        background: checked ? 'rgba(212,175,55,0.08)' : 'rgba(0,0,0,0.2)',
+        border: `1px solid ${checked ? 'rgba(212,175,55,0.45)' : 'rgba(255,255,255,0.08)'}`,
+        padding: '12px 14px',
+        textAlign: 'left',
+        cursor: 'pointer',
+        width: '100%',
+        fontFamily: 'var(--font-body)',
+      }}
+    >
+      <span
+        aria-hidden="true"
+        style={{
+          marginTop: '2px',
+          width: '16px',
+          height: '16px',
+          borderRadius: '3px',
+          background: checked ? '#D4AF37' : 'transparent',
+          border: `1px solid ${checked ? '#D4AF37' : 'rgba(255,255,255,0.3)'}`,
+          color: '#0B1623',
+          fontSize: '12px',
+          fontWeight: 700,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        {checked ? '✓' : ''}
+      </span>
+      <span style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+        <span style={{ color: 'white', fontSize: '13px', fontWeight: 500, lineHeight: 1.3 }}>{label}</span>
+        {hint && (
+          <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: '11.5px', lineHeight: 1.4 }}>{hint}</span>
+        )}
+      </span>
+    </button>
   );
 }
