@@ -31,7 +31,7 @@ alter table public.user_stats
   add column if not exists hook_urm boolean default false,
   add column if not exists hook_low_income boolean default false,
   add column if not exists hook_legacy_active boolean default false,
-  add column if not exists hook_legacy_college_ids uuid[] default array[]::uuid[];
+  add column if not exists hook_legacy_college_ids text[] default array[]::text[];
 
 -- =============================================================================
 -- Seed classifier data for the Top 100 (only updates rows where columns are null,
