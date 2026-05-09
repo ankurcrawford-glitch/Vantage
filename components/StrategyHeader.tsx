@@ -13,10 +13,10 @@ export default function StrategyHeader({ totalSchools, pillLabel, pillVariant }:
       : `${totalSchools} ${totalSchools === 1 ? 'school' : 'schools'}, classified across five tiers.`;
 
   const isBalanced = pillVariant === 'balanced';
-  const pillBg = isBalanced ? 'rgba(74, 222, 128, 0.10)' : 'rgba(212, 124, 124, 0.12)';
-  const pillBorder = isBalanced ? 'rgba(74, 222, 128, 0.35)' : 'rgba(212, 124, 124, 0.45)';
-  const pillColor = isBalanced ? '#A7E8BD' : '#E8B7B7';
-  const dotColor = isBalanced ? '#4ADE80' : '#D87C7C';
+  const pillBg = isBalanced ? 'rgba(143, 184, 154, 0.10)' : 'rgba(163, 90, 106, 0.12)';
+  const pillBorder = isBalanced ? 'rgba(143, 184, 154, 0.40)' : 'rgba(163, 90, 106, 0.45)';
+  const pillColor = isBalanced ? '#B8D9C2' : '#C98E99';
+  const dotColor = isBalanced ? '#8FB89A' : '#A35A6A';
 
   return (
     <div
@@ -32,7 +32,7 @@ export default function StrategyHeader({ totalSchools, pillLabel, pillVariant }:
         <h1
           className="font-heading"
           style={{
-            color: '#F3E5AB',
+            color: '#E8DDC9',
             fontSize: '54px',
             fontWeight: 600,
             letterSpacing: '-0.02em',
@@ -46,14 +46,14 @@ export default function StrategyHeader({ totalSchools, pillLabel, pillVariant }:
           style={{
             width: '180px',
             height: '1px',
-            background: 'rgba(243, 229, 171, 0.35)',
+            background: 'rgba(232,221,201, 0.35)',
             marginTop: '14px',
           }}
         />
         <p
           className="font-body"
           style={{
-            color: 'rgba(243, 229, 171, 0.65)',
+            color: 'rgba(232,221,201, 0.65)',
             fontSize: '14px',
             fontStyle: 'italic',
             marginTop: '14px',

@@ -24,25 +24,25 @@ export default function BalanceDiagnostic({ data }: Props) {
   const summary = (
     <>
       You have{' '}
-      <span style={{ color: '#F3E5AB' }}>{counts.Safety} safet{counts.Safety === 1 ? 'y' : 'ies'}</span>,{' '}
-      <span style={{ color: '#F3E5AB' }}>{counts.Likely} likel{counts.Likely === 1 ? 'y' : 'ies'}</span>,{' '}
-      <span style={{ color: '#F3E5AB' }}>{counts.Target} target{counts.Target === 1 ? '' : 's'}</span>,{' '}
-      <span style={{ color: '#F3E5AB' }}>{counts.Reach} reach{counts.Reach === 1 ? '' : 'es'}</span>, and{' '}
-      <span style={{ color: '#F3E5AB' }}>{counts['Hard Reach']} hard reach{counts['Hard Reach'] === 1 ? '' : 'es'}</span>.{' '}
+      <span style={{ color: '#E8DDC9' }}>{counts.Safety} safet{counts.Safety === 1 ? 'y' : 'ies'}</span>,{' '}
+      <span style={{ color: '#E8DDC9' }}>{counts.Likely} likel{counts.Likely === 1 ? 'y' : 'ies'}</span>,{' '}
+      <span style={{ color: '#E8DDC9' }}>{counts.Target} target{counts.Target === 1 ? '' : 's'}</span>,{' '}
+      <span style={{ color: '#E8DDC9' }}>{counts.Reach} reach{counts.Reach === 1 ? '' : 'es'}</span>, and{' '}
+      <span style={{ color: '#E8DDC9' }}>{counts['Hard Reach']} hard reach{counts['Hard Reach'] === 1 ? '' : 'es'}</span>.{' '}
       We recommend{' '}
-      <span style={{ color: '#F3E5AB' }}>2–3 safeties (including 1–2 financial safeties)</span>,{' '}
-      <span style={{ color: '#F3E5AB' }}>1–2 likelies</span>,{' '}
-      <span style={{ color: '#F3E5AB' }}>3–4 targets</span>,{' '}
-      <span style={{ color: '#F3E5AB' }}>2–3 reaches</span>, and at most{' '}
-      <span style={{ color: '#F3E5AB' }}>1–2 hard reaches</span>.
+      <span style={{ color: '#E8DDC9' }}>2–3 safeties (including 1–2 financial safeties)</span>,{' '}
+      <span style={{ color: '#E8DDC9' }}>1–2 likelies</span>,{' '}
+      <span style={{ color: '#E8DDC9' }}>3–4 targets</span>,{' '}
+      <span style={{ color: '#E8DDC9' }}>2–3 reaches</span>, and at most{' '}
+      <span style={{ color: '#E8DDC9' }}>1–2 hard reaches</span>.
     </>
   );
 
   return (
     <div
       style={{
-        background: 'rgba(11, 22, 35, 0.55)',
-        border: '1px solid rgba(243, 229, 171, 0.18)',
+        background: 'rgba(11,19,32, 0.55)',
+        border: '1px solid rgba(232,221,201, 0.18)',
         borderRadius: '6px',
         padding: '24px 28px',
         marginBottom: '32px',
@@ -51,7 +51,7 @@ export default function BalanceDiagnostic({ data }: Props) {
       <h3
         className="font-body"
         style={{
-          color: '#F3E5AB',
+          color: '#E8DDC9',
           fontSize: '15px',
           fontWeight: 700,
           margin: 0,
@@ -63,7 +63,7 @@ export default function BalanceDiagnostic({ data }: Props) {
       <p
         className="font-body"
         style={{
-          color: 'rgba(243, 229, 171, 0.62)',
+          color: 'rgba(232,221,201, 0.62)',
           fontSize: '14px',
           lineHeight: 1.65,
           marginTop: '10px',
@@ -90,7 +90,7 @@ export default function BalanceDiagnostic({ data }: Props) {
               className="font-body"
               style={{
                 fontSize: '13.5px',
-                color: 'rgba(243, 229, 171, 0.78)',
+                color: 'rgba(232,221,201, 0.78)',
                 lineHeight: 1.55,
                 display: 'flex',
                 alignItems: 'flex-start',
@@ -104,7 +104,7 @@ export default function BalanceDiagnostic({ data }: Props) {
                   width: '4px',
                   height: '4px',
                   borderRadius: '999px',
-                  background: 'rgba(212, 175, 55, 0.7)',
+                  background: 'rgba(201,169,119, 0.7)',
                   flexShrink: 0,
                 }}
               />

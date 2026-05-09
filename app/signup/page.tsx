@@ -91,14 +91,14 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-8 py-24" style={{ background: '#0B1623' }}>
+    <div className="min-h-screen flex items-center justify-center px-8 py-24" style={{ background: '#0B1320' }}>
       <div style={{ width: '100%', maxWidth: '520px' }}>
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <span className="font-heading text-3xl font-semibold" style={{ color: 'white' }}>VANTAGE</span>
-            <span className="text-3xl" style={{ color: '#D4AF37' }}>.</span>
+            <span className="font-heading text-3xl font-semibold" style={{ color: '#E8DDC9' }}>VANTAGE</span>
+            <span className="text-3xl" style={{ color: '#C9A977' }}>.</span>
           </div>
-          <p className="font-body text-sm" style={{ color: '#F3E5AB' }}>Begin Your Journey</p>
+          <p className="font-body text-sm" style={{ color: '#E8DDC9' }}>Begin Your Journey</p>
         </div>
 
         <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
@@ -106,7 +106,7 @@ export default function SignupPage() {
             <div style={{ 
               background: 'rgba(248,113,113,0.2)', 
               border: '1px solid rgba(248,113,113,0.5)', 
-              color: '#F87171', 
+              color: '#A35A6A', 
               padding: '12px 16px', 
               borderRadius: '4px',
               fontSize: '14px',
@@ -159,7 +159,7 @@ export default function SignupPage() {
           {/* Age attestation. The 13+ checkbox is the legally-required
               COPPA gate. The under-18 checkbox is optional (no data gate)
               and just triggers a soft parental-guidance banner. */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '4px', padding: '14px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '4px', padding: '14px 16px', background: 'rgba(232,221,201,0.03)', border: '1px solid rgba(232,221,201,0.08)', borderRadius: '4px' }}>
             <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
               <input
                 type="checkbox"
@@ -168,7 +168,7 @@ export default function SignupPage() {
                 required
                 style={{ marginTop: '3px', cursor: 'pointer' }}
               />
-              <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.85)', lineHeight: '1.5' }}>
+              <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', lineHeight: '1.5' }}>
                 I am at least 13 years old.
               </span>
             </label>
@@ -180,18 +180,18 @@ export default function SignupPage() {
                 onChange={(e) => setIsUnder18(e.target.checked)}
                 style={{ marginTop: '3px', cursor: 'pointer' }}
               />
-              <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.7)', lineHeight: '1.5' }}>
+              <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.7)', lineHeight: '1.5' }}>
                 I am under 18. (Optional — just so we can show you age-appropriate information.)
               </span>
             </label>
 
             {isUnder18 && (
-              <div style={{ marginTop: '4px', padding: '10px 12px', background: 'rgba(212,175,55,0.08)', borderLeft: '2px solid rgba(212,175,55,0.5)', borderRadius: '2px' }}>
-                <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.8)', lineHeight: '1.6' }}>
+              <div style={{ marginTop: '4px', padding: '10px 12px', background: 'rgba(201,169,119,0.08)', borderLeft: '2px solid rgba(201,169,119,0.5)', borderRadius: '2px' }}>
+                <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.8)', lineHeight: '1.6' }}>
                   Since you're under 18, we recommend you review our{' '}
-                  <Link href="/terms" style={{ color: '#D4AF37', textDecoration: 'underline' }}>Terms of Service</Link>
+                  <Link href="/terms" style={{ color: '#C9A977', textDecoration: 'underline' }}>Terms of Service</Link>
                   {' '}and{' '}
-                  <Link href="/privacy" style={{ color: '#D4AF37', textDecoration: 'underline' }}>Privacy Policy</Link>
+                  <Link href="/privacy" style={{ color: '#C9A977', textDecoration: 'underline' }}>Privacy Policy</Link>
                   {' '}with a parent or guardian before continuing. Paid subscriptions require a parent or guardian to authorize the purchase.
                 </p>
               </div>
@@ -208,11 +208,11 @@ export default function SignupPage() {
                 required
                 style={{ marginTop: '3px', cursor: 'pointer' }}
               />
-              <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.85)', lineHeight: '1.5' }}>
+              <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', lineHeight: '1.5' }}>
                 I agree to the{' '}
-                <Link href="/terms" target="_blank" style={{ color: '#D4AF37', textDecoration: 'underline' }}>Terms of Service</Link>
+                <Link href="/terms" target="_blank" style={{ color: '#C9A977', textDecoration: 'underline' }}>Terms of Service</Link>
                 {' '}and{' '}
-                <Link href="/privacy" target="_blank" style={{ color: '#D4AF37', textDecoration: 'underline' }}>Privacy Policy</Link>.
+                <Link href="/privacy" target="_blank" style={{ color: '#C9A977', textDecoration: 'underline' }}>Privacy Policy</Link>.
               </span>
             </label>
           </div>
@@ -225,9 +225,9 @@ export default function SignupPage() {
         </form>
 
         <div style={{ marginTop: '32px', textAlign: 'center' }}>
-          <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+          <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
             Already have an account?{' '}
-            <Link href="/login" style={{ color: '#D4AF37', textDecoration: 'none' }}>
+            <Link href="/login" style={{ color: '#C9A977', textDecoration: 'none' }}>
               Sign in
             </Link>
           </p>

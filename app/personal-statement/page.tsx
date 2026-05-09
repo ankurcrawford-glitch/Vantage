@@ -140,36 +140,36 @@ export default function PersonalStatementPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1623' }}>
-        <div style={{ color: '#D4AF37' }}>Loading...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1320' }}>
+        <div style={{ color: '#C9A977' }}>Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#0B1623' }}>
-      <nav style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '24px 32px' }}>
+    <div className="min-h-screen" style={{ background: '#0B1320' }}>
+      <nav style={{ borderBottom: '1px solid rgba(232,221,201,0.1)', padding: '24px 32px' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-            <span className="font-heading text-2xl font-semibold" style={{ color: 'white' }}>VANTAGE</span>
-            <span className="text-2xl" style={{ color: '#D4AF37' }}>.</span>
+            <span className="font-heading text-2xl font-semibold" style={{ color: '#E8DDC9' }}>VANTAGE</span>
+            <span className="text-2xl" style={{ color: '#C9A977' }}>.</span>
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <Link href="/dashboard" style={{ color: pathname === '/dashboard' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/dashboard' ? 600 : 400 }}>Dashboard</Link>
-            <Link href="/personal-statement" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? 600 : 400 }}>Essays</Link>
-            <Link href="/common-app" style={{ color: pathname.startsWith('/common-app') ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname.startsWith('/common-app') ? 600 : 400 }}>Common App</Link>
-            <Link href="/colleges" style={{ color: pathname.startsWith('/colleges') ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname.startsWith('/colleges') ? 600 : 400 }}>Portfolio</Link>
-            <Link href="/profile" style={{ color: pathname === '/profile' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/profile' ? 600 : 400 }}>Profile</Link>
-            <Link href="/discovery" style={{ color: pathname === '/discovery' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/discovery' ? 600 : 400 }}>Insight Questions</Link>
-            <button onClick={async () => { await supabase.auth.signOut(); router.push('/'); }} style={{ background: 'transparent', color: 'rgba(255,255,255,0.7)', border: 'none', fontFamily: 'var(--font-body)', fontSize: '14px', cursor: 'pointer', padding: 0 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#F3E5AB'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}>Logout</button>
+            <Link href="/dashboard" style={{ color: pathname === '/dashboard' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/dashboard' ? 600 : 400 }}>Dashboard</Link>
+            <Link href="/personal-statement" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? 600 : 400 }}>Essays</Link>
+            <Link href="/common-app" style={{ color: pathname.startsWith('/common-app') ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname.startsWith('/common-app') ? 600 : 400 }}>Common App</Link>
+            <Link href="/colleges" style={{ color: pathname.startsWith('/colleges') ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname.startsWith('/colleges') ? 600 : 400 }}>Portfolio</Link>
+            <Link href="/profile" style={{ color: pathname === '/profile' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/profile' ? 600 : 400 }}>Profile</Link>
+            <Link href="/discovery" style={{ color: pathname === '/discovery' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/discovery' ? 600 : 400 }}>Insight Questions</Link>
+            <button onClick={async () => { await supabase.auth.signOut(); router.push('/'); }} style={{ background: 'transparent', color: 'rgba(232,221,201,0.7)', border: 'none', fontFamily: 'var(--font-body)', fontSize: '14px', cursor: 'pointer', padding: 0 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#E8DDC9'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(232,221,201,0.7)'; }}>Logout</button>
           </div>
         </div>
       </nav>
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '64px 32px' }}>
         <div style={{ marginBottom: '48px' }}>
-          <h1 className="font-heading text-5xl mb-4" style={{ color: 'white' }}>My Essays</h1>
-          <p className="font-body text-lg" style={{ color: '#F3E5AB' }}>
+          <h1 className="font-heading text-5xl mb-4" style={{ color: '#E8DDC9' }}>My Essays</h1>
+          <p className="font-body text-lg" style={{ color: '#E8DDC9' }}>
             Manage and continue writing your college application essays
           </p>
         </div>
@@ -177,15 +177,15 @@ export default function PersonalStatementPage() {
         {essays.length === 0 ? (
           <Card>
             <div style={{ textAlign: 'center', padding: '64px 32px' }}>
-              <h3 className="font-heading text-2xl mb-4" style={{ color: '#D4AF37' }}>No Essays Yet</h3>
-              <p className="font-body mb-8" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              <h3 className="font-heading text-2xl mb-4" style={{ color: '#C9A977' }}>No Essays Yet</h3>
+              <p className="font-body mb-8" style={{ color: 'rgba(232,221,201,0.7)' }}>
                 Start writing essays by visiting a college in your portfolio and clicking "Write Essay" on any prompt.
               </p>
               <Link href="/colleges">
                 <button
                   style={{
-                    background: '#D4AF37',
-                    color: '#0B1623',
+                    background: '#C9A977',
+                    color: '#0B1320',
                     padding: '12px 24px',
                     fontFamily: 'var(--font-body)',
                     fontSize: '14px',
@@ -198,10 +198,10 @@ export default function PersonalStatementPage() {
                     transition: 'all 0.2s',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(212,175,55,0.8)';
+                    e.currentTarget.style.background = 'rgba(201,169,119,0.8)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#D4AF37';
+                    e.currentTarget.style.background = '#C9A977';
                   }}
                 >
                   Go to Portfolio
@@ -267,18 +267,18 @@ export default function PersonalStatementPage() {
                       justifyContent: 'space-between',
                       marginBottom: '20px',
                       paddingBottom: '12px',
-                      borderBottom: '1px solid rgba(212,175,55,0.25)',
+                      borderBottom: '1px solid rgba(201,169,119,0.25)',
                     }}>
-                      <h2 className="font-heading text-3xl" style={{ color: 'white' }}>
+                      <h2 className="font-heading text-3xl" style={{ color: '#E8DDC9' }}>
                         {group.collegeName}
                         {group.collegeId === COMMON_APP_COLLEGE_ID && (
-                          <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 400, marginLeft: '12px', letterSpacing: '0.05em' }}>
+                          <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)', fontWeight: 400, marginLeft: '12px', letterSpacing: '0.05em' }}>
                             2026–27
                           </span>
                         )}
                       </h2>
                       {!(commonAppNeedsPlaceholder && group.collegeId === COMMON_APP_COLLEGE_ID) && (
-                        <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                        <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.4)' }}>
                           {(() => {
                             const total = group.essays.length;
                             const started = group.essays.filter((e) => e.started).length;
@@ -291,17 +291,17 @@ export default function PersonalStatementPage() {
                       {commonAppNeedsPlaceholder && group.collegeId === COMMON_APP_COLLEGE_ID ? (
                         <Card>
                           <div style={{ textAlign: 'center', padding: '48px 32px' }}>
-                            <h3 className="font-heading text-2xl mb-3" style={{ color: '#D4AF37' }}>
+                            <h3 className="font-heading text-2xl mb-3" style={{ color: '#C9A977' }}>
                               Choose a Common App Prompt
                             </h3>
-                            <p className="font-body mb-8" style={{ color: 'rgba(255,255,255,0.7)', maxWidth: '520px', margin: '0 auto 32px' }}>
+                            <p className="font-body mb-8" style={{ color: 'rgba(232,221,201,0.7)', maxWidth: '520px', margin: '0 auto 32px' }}>
                               Pick one of the seven Common App prompts to tackle — it will appear here once you start writing.
                             </p>
                             <Link href="/common-app">
                               <button
                                 style={{
-                                  background: '#D4AF37',
-                                  color: '#0B1623',
+                                  background: '#C9A977',
+                                  color: '#0B1320',
                                   padding: '12px 24px',
                                   fontFamily: 'var(--font-body)',
                                   fontSize: '14px',
@@ -314,10 +314,10 @@ export default function PersonalStatementPage() {
                                   transition: 'all 0.2s',
                                 }}
                                 onMouseEnter={(e) => {
-                                  e.currentTarget.style.background = 'rgba(212,175,55,0.8)';
+                                  e.currentTarget.style.background = 'rgba(201,169,119,0.8)';
                                 }}
                                 onMouseLeave={(e) => {
-                                  e.currentTarget.style.background = '#D4AF37';
+                                  e.currentTarget.style.background = '#C9A977';
                                 }}
                               >
                                 Choose a Prompt
@@ -331,11 +331,11 @@ export default function PersonalStatementPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                      <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                      <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
                         Prompt {essay.prompt_sort_order}
                       </p>
                       {essay.word_limit && (
-                        <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                        <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.35)' }}>
                           · {essay.word_limit} word limit
                         </span>
                       )}
@@ -343,12 +343,12 @@ export default function PersonalStatementPage() {
                         <span
                           className="font-body"
                           style={{
-                            color: '#D4AF37',
+                            color: '#C9A977',
                             fontSize: '11px',
                             fontWeight: 600,
                             letterSpacing: '0.08em',
                             textTransform: 'uppercase',
-                            border: '1px solid rgba(212,175,55,0.4)',
+                            border: '1px solid rgba(201,169,119,0.4)',
                             padding: '2px 8px',
                             borderRadius: '2px',
                           }}
@@ -357,18 +357,18 @@ export default function PersonalStatementPage() {
                         </span>
                       )}
                     </div>
-                    <p className="font-body mb-4" style={{ color: 'rgba(255,255,255,0.9)', lineHeight: '1.6' }}>
+                    <p className="font-body mb-4" style={{ color: 'rgba(232,221,201,0.9)', lineHeight: '1.6' }}>
                       {essay.prompt_text.length > 200
                         ? `${essay.prompt_text.substring(0, 200)}...`
                         : essay.prompt_text}
                     </p>
                     {essay.started && (
                       <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-                        <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                        <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
                           Version {essay.latest_version ?? 0} • {essay.latest_word_count ?? 0} words
                         </span>
                         {essay.updated_at && (
-                          <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                          <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
                             Updated {new Date(essay.updated_at).toLocaleDateString()}
                           </span>
                         )}
@@ -378,8 +378,8 @@ export default function PersonalStatementPage() {
                   <Link href={`/essays/${essay.college_id}/${essay.prompt_id}`}>
                     <button
                       style={{
-                        background: '#D4AF37',
-                        color: '#0B1623',
+                        background: '#C9A977',
+                        color: '#0B1320',
                         padding: '12px 24px',
                         fontFamily: 'var(--font-body)',
                         fontSize: '14px',
@@ -394,12 +394,12 @@ export default function PersonalStatementPage() {
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.color = '#D4AF37';
-                        e.currentTarget.style.border = '1px solid #D4AF37';
+                        e.currentTarget.style.color = '#C9A977';
+                        e.currentTarget.style.border = '1px solid #C9A977';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#D4AF37';
-                        e.currentTarget.style.color = '#0B1623';
+                        e.currentTarget.style.background = '#C9A977';
+                        e.currentTarget.style.color = '#0B1320';
                         e.currentTarget.style.border = 'none';
                       }}
                     >

@@ -199,20 +199,20 @@ function DashboardContent() {
   return (
     <div className="min-h-screen bg-midnight">
       {/* Navigation */}
-      <nav className="border-b border-white/10 px-8 py-6">
+      <nav className="border-b border-hairline/10 px-8 py-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <span className="font-heading text-2xl font-semibold text-white">VANTAGE</span>
+            <span className="font-heading text-2xl font-semibold text-cream">VANTAGE</span>
             <span className="text-gold-leaf text-2xl">.</span>
           </Link>
           <div className="flex items-center gap-6">
-            <Link href="/dashboard" className="font-body text-sm transition-colors" style={{ color: pathname === '/dashboard' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', fontWeight: pathname === '/dashboard' ? 600 : 400, textDecoration: 'none' }}>Dashboard</Link>
-            <Link href="/personal-statement" className="font-body text-sm transition-colors" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? '#F3E5AB' : 'rgba(255,255,255,0.7)', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? 600 : 400, textDecoration: 'none' }}>Essays</Link>
-            <Link href="/common-app" className="font-body text-sm transition-colors" style={{ color: pathname.startsWith('/common-app') ? '#F3E5AB' : 'rgba(255,255,255,0.7)', fontWeight: pathname.startsWith('/common-app') ? 600 : 400, textDecoration: 'none' }}>Common App</Link>
-            <Link href="/colleges" className="font-body text-sm transition-colors" style={{ color: pathname.startsWith('/colleges') ? '#F3E5AB' : 'rgba(255,255,255,0.7)', fontWeight: pathname.startsWith('/colleges') ? 600 : 400, textDecoration: 'none' }}>Portfolio</Link>
-            <Link href="/profile" className="font-body text-sm transition-colors" style={{ color: pathname === '/profile' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', fontWeight: pathname === '/profile' ? 600 : 400, textDecoration: 'none' }}>Profile</Link>
-            <Link href="/discovery" className="font-body text-sm transition-colors" style={{ color: pathname === '/discovery' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', fontWeight: pathname === '/discovery' ? 600 : 400, textDecoration: 'none' }}>Insight Questions</Link>
-            <button onClick={handleLogout} className="font-body text-sm transition-colors" style={{ color: 'rgba(255,255,255,0.7)', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#F3E5AB'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}>Logout</button>
+            <Link href="/dashboard" className="font-body text-sm transition-colors" style={{ color: pathname === '/dashboard' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', fontWeight: pathname === '/dashboard' ? 600 : 400, textDecoration: 'none' }}>Dashboard</Link>
+            <Link href="/personal-statement" className="font-body text-sm transition-colors" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? '#E8DDC9' : 'rgba(232,221,201,0.7)', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? 600 : 400, textDecoration: 'none' }}>Essays</Link>
+            <Link href="/common-app" className="font-body text-sm transition-colors" style={{ color: pathname.startsWith('/common-app') ? '#E8DDC9' : 'rgba(232,221,201,0.7)', fontWeight: pathname.startsWith('/common-app') ? 600 : 400, textDecoration: 'none' }}>Common App</Link>
+            <Link href="/colleges" className="font-body text-sm transition-colors" style={{ color: pathname.startsWith('/colleges') ? '#E8DDC9' : 'rgba(232,221,201,0.7)', fontWeight: pathname.startsWith('/colleges') ? 600 : 400, textDecoration: 'none' }}>Portfolio</Link>
+            <Link href="/profile" className="font-body text-sm transition-colors" style={{ color: pathname === '/profile' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', fontWeight: pathname === '/profile' ? 600 : 400, textDecoration: 'none' }}>Profile</Link>
+            <Link href="/discovery" className="font-body text-sm transition-colors" style={{ color: pathname === '/discovery' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', fontWeight: pathname === '/discovery' ? 600 : 400, textDecoration: 'none' }}>Insight Questions</Link>
+            <button onClick={handleLogout} className="font-body text-sm transition-colors" style={{ color: 'rgba(232,221,201,0.7)', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#E8DDC9'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(232,221,201,0.7)'; }}>Logout</button>
           </div>
         </div>
       </nav>
@@ -220,15 +220,15 @@ function DashboardContent() {
       <div className="max-w-7xl mx-auto px-8 py-16">
         {/* Payment Success Banner */}
         {showPaymentSuccess && (
-          <div className="mb-8 p-4 rounded" style={{ background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)' }}>
+          <div className="mb-8 p-4 rounded" style={{ background: 'rgba(201,169,119,0.15)', border: '1px solid rgba(201,169,119,0.3)' }}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-heading text-lg text-gold-leaf">Payment Successful</p>
-                <p className="font-body text-sm text-white/70">Thank you! You now have full access to Insight Questions and Strategic Intelligence.</p>
+                <p className="font-body text-sm text-cream/70">Thank you! You now have full access to Insight Questions and Strategic Intelligence.</p>
               </div>
               <button
                 onClick={() => setShowPaymentSuccess(false)}
-                style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '18px' }}
+                style={{ background: 'transparent', border: 'none', color: 'rgba(232,221,201,0.5)', cursor: 'pointer', fontSize: '18px' }}
               >
                 ×
               </button>
@@ -238,7 +238,7 @@ function DashboardContent() {
 
         {/* Welcome Section */}
         <div className="mb-12">
-          <h1 className="font-heading text-5xl text-white mb-4">
+          <h1 className="font-heading text-5xl text-cream mb-4">
             Welcome back{user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : ''}
           </h1>
           <p className="font-body text-gold-light text-lg">
@@ -253,8 +253,8 @@ function DashboardContent() {
               <h3 className="font-heading text-xl text-gold-leaf">Colleges</h3>
               <span className="text-3xl">◆</span>
             </div>
-            <p className="font-heading text-4xl text-white mb-2">{collegeCount}</p>
-            <p className="font-body text-sm text-white/70">In your portfolio</p>
+            <p className="font-heading text-4xl text-cream mb-2">{collegeCount}</p>
+            <p className="font-body text-sm text-cream/70">In your portfolio</p>
           </Card>
 
           <Card>
@@ -262,8 +262,8 @@ function DashboardContent() {
               <h3 className="font-heading text-xl text-gold-leaf">Essays</h3>
               <span className="text-3xl">▲</span>
             </div>
-            <p className="font-heading text-4xl text-white mb-2">{essayCount}</p>
-            <p className="font-body text-sm text-white/70">In progress</p>
+            <p className="font-heading text-4xl text-cream mb-2">{essayCount}</p>
+            <p className="font-body text-sm text-cream/70">In progress</p>
           </Card>
 
           <Card>
@@ -271,40 +271,40 @@ function DashboardContent() {
               <h3 className="font-heading text-xl text-gold-leaf">Progress</h3>
               <span className="text-3xl">■</span>
             </div>
-            <p className="font-heading text-4xl text-white mb-2">
+            <p className="font-heading text-4xl text-cream mb-2">
               {collegeCount > 0 ? Math.round((essayCount / (collegeCount * 2)) * 100) : 0}%
             </p>
-            <p className="font-body text-sm text-white/70">Complete</p>
+            <p className="font-body text-sm text-cream/70">Complete</p>
           </Card>
         </div>
 
         {/* Academic Stats */}
         {stats && (
           <div className="mb-12">
-            <h2 className="font-heading text-3xl text-white mb-6">Academic Profile</h2>
+            <h2 className="font-heading text-3xl text-cream mb-6">Academic Profile</h2>
             <Card>
               <div className="grid md:grid-cols-4 gap-6">
                 {stats.gpa_weighted && (
                   <div>
-                    <p className="font-body text-sm text-white/70 mb-1">Weighted GPA</p>
+                    <p className="font-body text-sm text-cream/70 mb-1">Weighted GPA</p>
                     <p className="font-heading text-2xl text-gold-leaf">{stats.gpa_weighted}</p>
                   </div>
                 )}
                 {stats.gpa_unweighted && (
                   <div>
-                    <p className="font-body text-sm text-white/70 mb-1">Unweighted GPA</p>
+                    <p className="font-body text-sm text-cream/70 mb-1">Unweighted GPA</p>
                     <p className="font-heading text-2xl text-gold-leaf">{stats.gpa_unweighted}</p>
                   </div>
                 )}
                 {stats.sat_score && (
                   <div>
-                    <p className="font-body text-sm text-white/70 mb-1">SAT Score</p>
+                    <p className="font-body text-sm text-cream/70 mb-1">SAT Score</p>
                     <p className="font-heading text-2xl text-gold-leaf">{stats.sat_score}</p>
                   </div>
                 )}
                 {stats.act_score && (
                   <div>
-                    <p className="font-body text-sm text-white/70 mb-1">ACT Score</p>
+                    <p className="font-body text-sm text-cream/70 mb-1">ACT Score</p>
                     <p className="font-heading text-2xl text-gold-leaf">{stats.act_score}</p>
                   </div>
                 )}
@@ -318,12 +318,12 @@ function DashboardContent() {
 
         {/* Quick Actions */}
         <div>
-          <h2 className="font-heading text-3xl text-white mb-6">Quick Actions</h2>
+          <h2 className="font-heading text-3xl text-cream mb-6">Quick Actions</h2>
           <div className="grid md:grid-cols-3 gap-6">
             <Link href="/colleges">
               <Card className="cursor-pointer hover:bg-royal-blue/80 transition-colors">
                 <h3 className="font-heading text-xl text-gold-leaf mb-3">Add Colleges</h3>
-                <p className="font-body text-white/70 text-sm">
+                <p className="font-body text-cream/70 text-sm">
                   Build your portfolio of target schools
                 </p>
               </Card>
@@ -332,7 +332,7 @@ function DashboardContent() {
             <Link href="/common-app">
               <Card className="cursor-pointer hover:bg-royal-blue/80 transition-colors">
                 <h3 className="font-heading text-xl text-gold-leaf mb-3">Start Common App Essay</h3>
-                <p className="font-body text-white/70 text-sm">
+                <p className="font-body text-cream/70 text-sm">
                   Choose a prompt and begin writing 
                 </p>
               </Card>
@@ -341,7 +341,7 @@ function DashboardContent() {
             <Link href="/profile">
               <Card className="cursor-pointer hover:bg-royal-blue/80 transition-colors">
                 <h3 className="font-heading text-xl text-gold-leaf mb-3">Update Profile</h3>
-                <p className="font-body text-white/70 text-sm">
+                <p className="font-body text-cream/70 text-sm">
                   Edit your stats and activities
                 </p>
               </Card>
@@ -356,18 +356,18 @@ function DashboardContent() {
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                 <div>
                   <h2 className="font-heading text-2xl text-gold-leaf mb-2">Unlock Full Access</h2>
-                  <p className="font-body text-white/70 text-sm" style={{ maxWidth: '600px' }}>
+                  <p className="font-body text-cream/70 text-sm" style={{ maxWidth: '600px' }}>
                     Get access to 12 Insight Questions and Strategic Intelligence, our AI-powered essay coaching that learns your unique story and provides personalized guidance.
                   </p>
-                  <p className="font-heading text-3xl text-white mt-3">$100 <span className="font-body text-sm text-white/50">one-time</span></p>
+                  <p className="font-heading text-3xl text-cream mt-3">$100 <span className="font-body text-sm text-cream/50">one-time</span></p>
                 </div>
                 <button
                   onClick={handleCheckout}
                   disabled={checkoutLoading}
                   className="font-body font-bold text-xs uppercase tracking-wider"
                   style={{
-                    background: '#D4AF37',
-                    color: '#0B1623',
+                    background: '#C9A977',
+                    color: '#0B1320',
                     padding: '14px 32px',
                     border: 'none',
                     cursor: checkoutLoading ? 'not-allowed' : 'pointer',
@@ -378,8 +378,8 @@ function DashboardContent() {
                   {checkoutLoading ? 'Redirecting...' : 'Upgrade Now'}
                 </button>
               </div>
-              <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                <p className="font-body text-sm mb-3" style={{ color: 'rgba(255,255,255,0.7)' }}>Have an access code?</p>
+              <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(232,221,201,0.1)' }}>
+                <p className="font-body text-sm mb-3" style={{ color: 'rgba(232,221,201,0.7)' }}>Have an access code?</p>
                 <div style={{ display: 'flex', gap: '8px', maxWidth: '400px' }}>
                   <input
                     type="text"
@@ -388,8 +388,8 @@ function DashboardContent() {
                     placeholder="Enter code"
                     style={{
                       background: 'rgba(0,0,0,0.3)',
-                      border: '1px solid rgba(255,255,255,0.2)',
-                      color: 'white',
+                      border: '1px solid rgba(232,221,201,0.2)',
+                      color: '#E8DDC9',
                       padding: '10px 14px',
                       fontFamily: 'var(--font-body)',
                       fontSize: '14px',
@@ -404,8 +404,8 @@ function DashboardContent() {
                     disabled={codeLoading || !accessCode.trim()}
                     style={{
                       background: 'transparent',
-                      color: '#D4AF37',
-                      border: '1px solid rgba(212,175,55,0.5)',
+                      color: '#C9A977',
+                      border: '1px solid rgba(201,169,119,0.5)',
                       padding: '10px 20px',
                       fontFamily: 'var(--font-body)',
                       fontSize: '14px',
@@ -419,7 +419,7 @@ function DashboardContent() {
                   </button>
                 </div>
                 {codeError && (
-                  <p className="font-body text-sm mt-2" style={{ color: '#ff6b6b' }}>{codeError}</p>
+                  <p className="font-body text-sm mt-2" style={{ color: '#A35A6A' }}>{codeError}</p>
                 )}
               </div>
             </Card>
@@ -428,9 +428,9 @@ function DashboardContent() {
 
         {/* Upcoming Deadlines (placeholder) */}
         <div className="mt-12">
-          <h2 className="font-heading text-3xl text-white mb-6">Upcoming Deadlines</h2>
+          <h2 className="font-heading text-3xl text-cream mb-6">Upcoming Deadlines</h2>
           <Card>
-            <p className="font-body text-white/70 text-center py-8">
+            <p className="font-body text-cream/70 text-center py-8">
               No upcoming deadlines. Add colleges to see deadlines.
             </p>
           </Card>

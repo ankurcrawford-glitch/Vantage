@@ -87,14 +87,14 @@ export default function OnboardingPage() {
   // Welcome Step
   if (step === 'welcome') {
     return (
-      <div className="min-h-screen flex items-center justify-center px-8 py-24" style={{ background: '#0B1623' }}>
+      <div className="min-h-screen flex items-center justify-center px-8 py-24" style={{ background: '#0B1320' }}>
         <div style={{ width: '100%', maxWidth: '800px', textAlign: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '32px' }}>
-            <span className="font-heading text-5xl font-semibold" style={{ color: 'white' }}>VANTAGE</span>
-            <span className="text-5xl" style={{ color: '#D4AF37' }}>.</span>
+            <span className="font-heading text-5xl font-semibold" style={{ color: '#E8DDC9' }}>VANTAGE</span>
+            <span className="text-5xl" style={{ color: '#C9A977' }}>.</span>
           </div>
-          <h1 className="font-heading text-4xl mb-6" style={{ color: 'white' }}>Welcome to VANTAGE</h1>
-          <p className="font-body text-lg mb-12" style={{ color: '#F3E5AB', maxWidth: '600px', margin: '0 auto 48px' }}>
+          <h1 className="font-heading text-4xl mb-6" style={{ color: '#E8DDC9' }}>Welcome to VANTAGE</h1>
+          <p className="font-body text-lg mb-12" style={{ color: '#E8DDC9', maxWidth: '600px', margin: '0 auto 48px' }}>
             Let's get to know the real you. We'll ask you 12 thoughtful questions to understand your story, values, and what makes you unique. This will help us craft your personalized admissions strategy.
           </p>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
@@ -114,29 +114,29 @@ export default function OnboardingPage() {
     const currentAnswer = answers[currentQuestion.id] || '';
 
     return (
-      <div className="min-h-screen flex items-center justify-center px-8 py-24" style={{ background: '#0B1623' }}>
+      <div className="min-h-screen flex items-center justify-center px-8 py-24" style={{ background: '#0B1320' }}>
         <div style={{ width: '100%', maxWidth: '800px' }}>
           <div style={{ marginBottom: '32px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
                 Question {currentQuestionIndex + 1} of {DISCOVERY_QUESTIONS.length}
               </span>
-              <div style={{ width: '300px', height: '4px', background: '#152C45', borderRadius: '2px', overflow: 'hidden' }}>
+              <div style={{ width: '300px', height: '4px', background: '#0F1828', borderRadius: '2px', overflow: 'hidden' }}>
                 <div
                   style={{ 
                     height: '100%', 
-                    background: '#D4AF37', 
+                    background: '#C9A977', 
                     transition: 'width 0.3s',
                     width: `${((currentQuestionIndex + 1) / DISCOVERY_QUESTIONS.length) * 100}%` 
                   }}
                 />
               </div>
             </div>
-            <h2 className="font-heading text-3xl mb-4" style={{ color: 'white', lineHeight: '1.3' }}>
+            <h2 className="font-heading text-3xl mb-4" style={{ color: '#E8DDC9', lineHeight: '1.3' }}>
               {currentQuestion.question}
             </h2>
             {currentQuestion.hint && (
-              <p className="font-body text-sm" style={{ color: 'rgba(243,229,171,0.7)', fontStyle: 'italic', marginTop: '8px' }}>
+              <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.7)', fontStyle: 'italic', marginTop: '8px' }}>
                 {currentQuestion.hint}
               </p>
             )}
@@ -150,8 +150,8 @@ export default function OnboardingPage() {
               width: '100%',
               minHeight: '300px',
               background: 'rgba(0,0,0,0.2)',
-              border: '1px solid rgba(212,175,55,0.2)',
-              color: 'white',
+              border: '1px solid rgba(201,169,119,0.2)',
+              color: '#E8DDC9',
               padding: '20px',
               fontFamily: 'var(--font-body)',
               fontSize: '16px',
@@ -162,10 +162,10 @@ export default function OnboardingPage() {
               borderRadius: '2px',
             }}
             onFocus={(e) => {
-              e.target.style.borderColor = 'rgba(212,175,55,0.5)';
+              e.target.style.borderColor = 'rgba(201,169,119,0.5)';
             }}
             onBlur={(e) => {
-              e.target.style.borderColor = 'rgba(212,175,55,0.2)';
+              e.target.style.borderColor = 'rgba(201,169,119,0.2)';
             }}
           />
 
@@ -179,7 +179,7 @@ export default function OnboardingPage() {
               disabled={currentQuestionIndex === 0}
               style={{
                 background: currentQuestionIndex === 0 ? 'transparent' : 'transparent',
-                color: currentQuestionIndex === 0 ? 'rgba(255,255,255,0.3)' : '#D4AF37',
+                color: currentQuestionIndex === 0 ? 'rgba(232,221,201,0.3)' : '#C9A977',
                 padding: '12px 24px',
                 fontFamily: 'var(--font-body)',
                 fontSize: '14px',
@@ -187,7 +187,7 @@ export default function OnboardingPage() {
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
                 border: '1px solid',
-                borderColor: currentQuestionIndex === 0 ? 'rgba(255,255,255,0.1)' : 'rgba(212,175,55,0.5)',
+                borderColor: currentQuestionIndex === 0 ? 'rgba(232,221,201,0.1)' : 'rgba(201,169,119,0.5)',
                 borderRadius: '2px',
                 cursor: currentQuestionIndex === 0 ? 'not-allowed' : 'pointer',
                 transition: 'all 0.2s',
@@ -198,8 +198,8 @@ export default function OnboardingPage() {
             <button
               onClick={handleNextQuestion}
               style={{
-                background: '#D4AF37',
-                color: '#0B1623',
+                background: '#C9A977',
+                color: '#0B1320',
                 padding: '12px 24px',
                 fontFamily: 'var(--font-body)',
                 fontSize: '14px',
@@ -212,10 +212,10 @@ export default function OnboardingPage() {
                 transition: 'all 0.2s',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(212,175,55,0.8)';
+                e.currentTarget.style.background = 'rgba(201,169,119,0.8)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#D4AF37';
+                e.currentTarget.style.background = '#C9A977';
               }}
             >
               {currentQuestionIndex < DISCOVERY_QUESTIONS.length - 1 ? 'Next' : 'Continue'}
@@ -229,11 +229,11 @@ export default function OnboardingPage() {
   // Stats Step
   if (step === 'stats') {
     return (
-      <div className="min-h-screen" style={{ background: '#0B1623', padding: '64px 32px' }}>
+      <div className="min-h-screen" style={{ background: '#0B1320', padding: '64px 32px' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <div style={{ marginBottom: '48px' }}>
-            <h2 className="font-heading text-4xl mb-4" style={{ color: 'white', textAlign: 'left' }}>Academic Profile</h2>
-            <p className="font-body text-lg" style={{ color: '#F3E5AB', textAlign: 'left' }}>
+            <h2 className="font-heading text-4xl mb-4" style={{ color: '#E8DDC9', textAlign: 'left' }}>Academic Profile</h2>
+            <p className="font-body text-lg" style={{ color: '#E8DDC9', textAlign: 'left' }}>
               Share your academic statistics. You can update these later.
             </p>
           </div>
@@ -246,7 +246,7 @@ export default function OnboardingPage() {
                   fontFamily: 'var(--font-body)', 
                   fontSize: '14px', 
                   fontWeight: 500, 
-                  color: 'rgba(255,255,255,0.7)', 
+                  color: 'rgba(232,221,201,0.7)', 
                   marginBottom: '12px' 
                 }}>
                   Weighted GPA
@@ -263,8 +263,8 @@ export default function OnboardingPage() {
                     width: '100%',
                     height: '56px',
                     background: 'rgba(0,0,0,0.2)',
-                    border: '1px solid rgba(212,175,55,0.2)',
-                    color: 'white',
+                    border: '1px solid rgba(201,169,119,0.2)',
+                    color: '#E8DDC9',
                     padding: '0 24px',
                     fontFamily: 'var(--font-body)',
                     fontSize: '18px',
@@ -274,10 +274,10 @@ export default function OnboardingPage() {
                     borderRadius: '2px',
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = 'rgba(212,175,55,0.5)';
+                    e.target.style.borderColor = 'rgba(201,169,119,0.5)';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = 'rgba(212,175,55,0.2)';
+                    e.target.style.borderColor = 'rgba(201,169,119,0.2)';
                   }}
                 />
               </div>
@@ -287,7 +287,7 @@ export default function OnboardingPage() {
                   fontFamily: 'var(--font-body)', 
                   fontSize: '14px', 
                   fontWeight: 500, 
-                  color: 'rgba(255,255,255,0.7)', 
+                  color: 'rgba(232,221,201,0.7)', 
                   marginBottom: '12px' 
                 }}>
                   Unweighted GPA
@@ -304,8 +304,8 @@ export default function OnboardingPage() {
                     width: '100%',
                     height: '56px',
                     background: 'rgba(0,0,0,0.2)',
-                    border: '1px solid rgba(212,175,55,0.2)',
-                    color: 'white',
+                    border: '1px solid rgba(201,169,119,0.2)',
+                    color: '#E8DDC9',
                     padding: '0 24px',
                     fontFamily: 'var(--font-body)',
                     fontSize: '18px',
@@ -315,10 +315,10 @@ export default function OnboardingPage() {
                     borderRadius: '2px',
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = 'rgba(212,175,55,0.5)';
+                    e.target.style.borderColor = 'rgba(201,169,119,0.5)';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = 'rgba(212,175,55,0.2)';
+                    e.target.style.borderColor = 'rgba(201,169,119,0.2)';
                   }}
                 />
               </div>
@@ -331,7 +331,7 @@ export default function OnboardingPage() {
                   fontFamily: 'var(--font-body)', 
                   fontSize: '14px', 
                   fontWeight: 500, 
-                  color: 'rgba(255,255,255,0.7)', 
+                  color: 'rgba(232,221,201,0.7)', 
                   marginBottom: '12px' 
                 }}>
                   SAT Score
@@ -347,8 +347,8 @@ export default function OnboardingPage() {
                     width: '100%',
                     height: '56px',
                     background: 'rgba(0,0,0,0.2)',
-                    border: '1px solid rgba(212,175,55,0.2)',
-                    color: 'white',
+                    border: '1px solid rgba(201,169,119,0.2)',
+                    color: '#E8DDC9',
                     padding: '0 24px',
                     fontFamily: 'var(--font-body)',
                     fontSize: '18px',
@@ -358,10 +358,10 @@ export default function OnboardingPage() {
                     borderRadius: '2px',
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = 'rgba(212,175,55,0.5)';
+                    e.target.style.borderColor = 'rgba(201,169,119,0.5)';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = 'rgba(212,175,55,0.2)';
+                    e.target.style.borderColor = 'rgba(201,169,119,0.2)';
                   }}
                 />
               </div>
@@ -371,7 +371,7 @@ export default function OnboardingPage() {
                   fontFamily: 'var(--font-body)', 
                   fontSize: '14px', 
                   fontWeight: 500, 
-                  color: 'rgba(255,255,255,0.7)', 
+                  color: 'rgba(232,221,201,0.7)', 
                   marginBottom: '12px' 
                 }}>
                   ACT Score
@@ -387,8 +387,8 @@ export default function OnboardingPage() {
                     width: '100%',
                     height: '56px',
                     background: 'rgba(0,0,0,0.2)',
-                    border: '1px solid rgba(212,175,55,0.2)',
-                    color: 'white',
+                    border: '1px solid rgba(201,169,119,0.2)',
+                    color: '#E8DDC9',
                     padding: '0 24px',
                     fontFamily: 'var(--font-body)',
                     fontSize: '18px',
@@ -398,10 +398,10 @@ export default function OnboardingPage() {
                     borderRadius: '2px',
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = 'rgba(212,175,55,0.5)';
+                    e.target.style.borderColor = 'rgba(201,169,119,0.5)';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = 'rgba(212,175,55,0.2)';
+                    e.target.style.borderColor = 'rgba(201,169,119,0.2)';
                   }}
                 />
               </div>
@@ -413,8 +413,8 @@ export default function OnboardingPage() {
               onClick={handleSaveStats}
               disabled={loading}
               style={{
-                background: loading ? 'rgba(212,175,55,0.5)' : '#D4AF37',
-                color: '#0B1623',
+                background: loading ? 'rgba(201,169,119,0.5)' : '#C9A977',
+                color: '#0B1320',
                 padding: '14px 32px',
                 fontFamily: 'var(--font-body)',
                 fontSize: '14px',
@@ -428,12 +428,12 @@ export default function OnboardingPage() {
               }}
               onMouseEnter={(e) => {
                 if (!loading) {
-                  e.currentTarget.style.background = 'rgba(212,175,55,0.8)';
+                  e.currentTarget.style.background = 'rgba(201,169,119,0.8)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!loading) {
-                  e.currentTarget.style.background = '#D4AF37';
+                  e.currentTarget.style.background = '#C9A977';
                 }
               }}
             >
@@ -452,12 +452,12 @@ export default function OnboardingPage() {
       <div className="min-h-screen bg-midnight flex items-center justify-center px-8 py-24">
         <div style={{ width: '100%', maxWidth: '1200px', textAlign: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '24px', marginBottom: '32px', flexWrap: 'wrap' }}>
-            <div style={{ width: '80px', height: '80px', background: '#D4AF37', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <span style={{ color: '#0B1623', fontSize: '48px' }}>✓</span>
+            <div style={{ width: '80px', height: '80px', background: '#C9A977', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ color: '#0B1320', fontSize: '48px' }}>✓</span>
             </div>
             <div style={{ textAlign: 'left' }}>
-              <h2 className="font-heading text-5xl" style={{ color: 'white', marginBottom: '12px', whiteSpace: 'nowrap' }}>Setup Complete!</h2>
-              <p className="font-body text-lg" style={{ color: '#F3E5AB', maxWidth: '600px' }}>
+              <h2 className="font-heading text-5xl" style={{ color: '#E8DDC9', marginBottom: '12px', whiteSpace: 'nowrap' }}>Setup Complete!</h2>
+              <p className="font-body text-lg" style={{ color: '#E8DDC9', maxWidth: '600px' }}>
                 Your VANTAGE profile is ready. Let's start building your admissions strategy.
               </p>
             </div>
@@ -472,8 +472,8 @@ export default function OnboardingPage() {
 
   // Fallback if step is ever not one of the four (should not happen with Step type)
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1623' }}>
-      <div style={{ color: '#D4AF37' }}>Loading...</div>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1320' }}>
+      <div style={{ color: '#C9A977' }}>Loading...</div>
     </div>
   );
 }

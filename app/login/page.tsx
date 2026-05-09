@@ -88,14 +88,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-8 py-24" style={{ background: '#0B1623' }}>
+    <div className="min-h-screen flex items-center justify-center px-8 py-24" style={{ background: '#0B1320' }}>
       <div style={{ width: '100%', maxWidth: '520px' }}>
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <span className="font-heading text-3xl font-semibold" style={{ color: 'white' }}>VANTAGE</span>
-            <span className="text-3xl" style={{ color: '#D4AF37' }}>.</span>
+            <span className="font-heading text-3xl font-semibold" style={{ color: '#E8DDC9' }}>VANTAGE</span>
+            <span className="text-3xl" style={{ color: '#C9A977' }}>.</span>
           </div>
-          <p className="font-body text-sm" style={{ color: '#F3E5AB' }}>Client Access</p>
+          <p className="font-body text-sm" style={{ color: '#E8DDC9' }}>Client Access</p>
         </div>
 
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
@@ -103,7 +103,7 @@ export default function LoginPage() {
             <div style={{ 
               background: 'rgba(248,113,113,0.2)', 
               border: '1px solid rgba(248,113,113,0.5)', 
-              color: '#F87171', 
+              color: '#A35A6A', 
               padding: '12px 16px', 
               borderRadius: '4px',
               fontSize: '14px',
@@ -118,7 +118,7 @@ export default function LoginPage() {
             <div style={{ 
               background: 'rgba(16,185,129,0.2)', 
               border: '1px solid rgba(16,185,129,0.5)', 
-              color: '#10B981', 
+              color: '#8FB89A', 
               padding: '12px 16px', 
               borderRadius: '4px',
               fontSize: '14px',
@@ -144,7 +144,7 @@ export default function LoginPage() {
               fontFamily: 'var(--font-body)', 
               fontSize: '14px', 
               fontWeight: 500, 
-              color: 'rgba(255,255,255,0.7)', 
+              color: 'rgba(232,221,201,0.7)', 
               marginBottom: '8px' 
             }}>
               Password
@@ -161,8 +161,8 @@ export default function LoginPage() {
                   width: '100%',
                   height: '48px',
                   background: 'rgba(0,0,0,0.2)',
-                  border: '1px solid rgba(212,175,55,0.2)',
-                  color: 'white',
+                  border: '1px solid rgba(201,169,119,0.2)',
+                  color: '#E8DDC9',
                   padding: '0 50px 0 20px',
                   fontFamily: 'var(--font-body)',
                   fontSize: '16px',
@@ -171,10 +171,10 @@ export default function LoginPage() {
                   boxSizing: 'border-box',
                 }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = 'rgba(212,175,55,0.5)';
+                  e.target.style.borderColor = 'rgba(201,169,119,0.5)';
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = 'rgba(212,175,55,0.2)';
+                  e.target.style.borderColor = 'rgba(201,169,119,0.2)';
                 }}
               />
               <button
@@ -187,7 +187,7 @@ export default function LoginPage() {
                   transform: 'translateY(-50%)',
                   background: 'transparent',
                   border: 'none',
-                  color: 'rgba(255,255,255,0.7)',
+                  color: 'rgba(232,221,201,0.7)',
                   cursor: 'pointer',
                   padding: '4px',
                   display: 'flex',
@@ -196,10 +196,10 @@ export default function LoginPage() {
                   transition: 'color 0.2s',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#D4AF37';
+                  e.currentTarget.style.color = '#C9A977';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
+                  e.currentTarget.style.color = 'rgba(232,221,201,0.7)';
                 }}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
@@ -226,7 +226,7 @@ export default function LoginPage() {
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: '#D4AF37',
+                color: '#C9A977',
                 fontFamily: 'var(--font-body)',
                 fontSize: '14px',
                 cursor: forgotPasswordLoading ? 'not-allowed' : 'pointer',
@@ -247,9 +247,9 @@ export default function LoginPage() {
         </form>
 
         <div style={{ marginTop: '32px', textAlign: 'center' }}>
-          <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+          <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
             Don't have an account?{' '}
-            <Link href="/signup" style={{ color: '#D4AF37', textDecoration: 'none' }}>
+            <Link href="/signup" style={{ color: '#C9A977', textDecoration: 'none' }}>
               Sign up
             </Link>
           </p>

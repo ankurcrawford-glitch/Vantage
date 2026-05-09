@@ -25,8 +25,8 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
   return (
     <div
       style={{
-        background: 'rgba(11, 22, 35, 0.55)',
-        border: '1px solid rgba(243, 229, 171, 0.18)',
+        background: 'rgba(11,19,32, 0.55)',
+        border: '1px solid rgba(232,221,201, 0.18)',
         borderRadius: '6px',
         padding: '32px',
       }}
@@ -41,7 +41,7 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
               fontWeight: 600,
               textTransform: 'uppercase',
               letterSpacing: '0.22em',
-              color: '#D4AF37',
+              color: '#C9A977',
             }}
           >
             Your ED Strategy
@@ -49,7 +49,7 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
           <h2
             className="font-heading"
             style={{
-              color: '#F3E5AB',
+              color: '#E8DDC9',
               fontSize: '34px',
               fontWeight: 600,
               letterSpacing: '-0.02em',
@@ -63,7 +63,7 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
             style={{
               width: '90px',
               height: '1px',
-              background: 'rgba(243, 229, 171, 0.35)',
+              background: 'rgba(232,221,201, 0.35)',
               marginTop: '14px',
             }}
           />
@@ -76,7 +76,7 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
             <p
               className="font-body"
               style={{
-                color: 'rgba(243, 229, 171, 0.88)',
+                color: 'rgba(232,221,201, 0.88)',
                 fontSize: '14px',
                 lineHeight: 1.6,
                 margin: '6px 0 0 0',
@@ -92,14 +92,14 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
           <Block>
             <h4
               className="font-heading"
-              style={{ color: '#F3E5AB', fontSize: '20px', fontWeight: 600, margin: 0 }}
+              style={{ color: '#E8DDC9', fontSize: '20px', fontWeight: 600, margin: 0 }}
             >
               No ED-eligible schools in your current list.
             </h4>
             <p
               className="font-body"
               style={{
-                color: 'rgba(243, 229, 171, 0.6)',
+                color: 'rgba(232,221,201, 0.6)',
                 fontSize: '14px',
                 lineHeight: 1.6,
                 margin: '8px 0 0 0',
@@ -125,14 +125,14 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
           <Block>
             <h4
               className="font-heading"
-              style={{ color: '#F3E5AB', fontSize: '20px', fontWeight: 600, margin: 0 }}
+              style={{ color: '#E8DDC9', fontSize: '20px', fontWeight: 600, margin: 0 }}
             >
               No clear ED play in your current list.
             </h4>
             <p
               className="font-body"
               style={{
-                color: 'rgba(243, 229, 171, 0.6)',
+                color: 'rgba(232,221,201, 0.6)',
                 fontSize: '14px',
                 lineHeight: 1.6,
                 margin: '8px 0 0 0',
@@ -172,8 +172,8 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
                       alignItems: 'flex-start',
                       justifyContent: 'space-between',
                       gap: '16px',
-                      background: 'rgba(11, 22, 35, 0.5)',
-                      border: '1px solid rgba(243, 229, 171, 0.14)',
+                      background: 'rgba(11,19,32, 0.5)',
+                      border: '1px solid rgba(232,221,201, 0.14)',
                       borderRadius: '4px',
                       padding: '14px 18px',
                     }}
@@ -182,7 +182,7 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
                       <div
                         className="font-heading"
                         style={{
-                          color: '#F3E5AB',
+                          color: '#E8DDC9',
                           fontSize: '20px',
                           fontWeight: 600,
                           letterSpacing: '-0.01em',
@@ -193,14 +193,14 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
                       <p
                         className="font-body"
                         style={{
-                          color: 'rgba(243, 229, 171, 0.6)',
+                          color: 'rgba(232,221,201, 0.6)',
                           fontSize: '13px',
                           lineHeight: 1.55,
                           margin: '4px 0 0 0',
                         }}
                       >
                         ED here is roughly{' '}
-                        <span style={{ color: '#D4AF37' }}>{ratio.toFixed(1)}× your odds</span>{' '}(
+                        <span style={{ color: '#C9A977' }}>{ratio.toFixed(1)}× your odds</span>{' '}(
                         {((alt.college.ed_admit_rate ?? 0) * 100).toFixed(0)}% ED vs{' '}
                         {((alt.college.acceptance_rate ?? 0) * 100).toFixed(0)}% RD).
                       </p>
@@ -212,7 +212,7 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
                         fontWeight: 600,
                         textTransform: 'uppercase',
                         letterSpacing: '0.14em',
-                        color: 'rgba(243, 229, 171, 0.55)',
+                        color: 'rgba(232,221,201, 0.55)',
                         whiteSpace: 'nowrap',
                       }}
                     >
@@ -245,7 +245,7 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
                   className="font-body"
                   style={{
                     fontSize: '13px',
-                    color: 'rgba(243, 229, 171, 0.65)',
+                    color: 'rgba(232,221,201, 0.65)',
                     lineHeight: 1.55,
                     display: 'flex',
                     alignItems: 'flex-start',
@@ -259,12 +259,12 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
                       width: '4px',
                       height: '4px',
                       borderRadius: '999px',
-                      background: 'rgba(243, 229, 171, 0.4)',
+                      background: 'rgba(232,221,201, 0.4)',
                       flexShrink: 0,
                     }}
                   />
                   <span>
-                    <span style={{ color: '#F3E5AB', fontWeight: 600 }}>{d.school.college.name}</span>
+                    <span style={{ color: '#E8DDC9', fontWeight: 600 }}>{d.school.college.name}</span>
                     {' — '}
                     {d.reason}
                   </span>
@@ -294,7 +294,7 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
                   className="font-body"
                   style={{
                     fontSize: '13px',
-                    color: 'rgba(243, 229, 171, 0.85)',
+                    color: 'rgba(232,221,201, 0.85)',
                     lineHeight: 1.55,
                     display: 'flex',
                     alignItems: 'flex-start',
@@ -308,7 +308,7 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
                       width: '6px',
                       height: '6px',
                       borderRadius: '999px',
-                      background: '#D4AF37',
+                      background: '#C9A977',
                       flexShrink: 0,
                     }}
                   />
@@ -326,7 +326,7 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
             style={{
               paddingTop: '4px',
               fontSize: '12px',
-              color: 'rgba(243, 229, 171, 0.5)',
+              color: 'rgba(232,221,201, 0.5)',
               fontStyle: 'italic',
               lineHeight: 1.55,
             }}
@@ -337,7 +337,7 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
                 textTransform: 'uppercase',
                 letterSpacing: '0.14em',
                 fontSize: '10px',
-                color: 'rgba(243, 229, 171, 0.45)',
+                color: 'rgba(232,221,201, 0.45)',
                 marginRight: '8px',
               }}
             >
@@ -361,8 +361,8 @@ function Block({ children, tinted }: { children: React.ReactNode; tinted?: boole
   return (
     <div
       style={{
-        background: tinted ? 'rgba(212, 175, 55, 0.05)' : 'rgba(11, 22, 35, 0.5)',
-        border: '1px solid rgba(243, 229, 171, 0.16)',
+        background: tinted ? 'rgba(201,169,119, 0.05)' : 'rgba(11,19,32, 0.5)',
+        border: '1px solid rgba(232,221,201, 0.16)',
         borderRadius: '4px',
         padding: '18px 22px',
       }}
@@ -381,7 +381,7 @@ function Eyebrow({ children, muted }: { children: React.ReactNode; muted?: boole
         fontWeight: 600,
         textTransform: 'uppercase',
         letterSpacing: muted ? '0.18em' : '0.22em',
-        color: muted ? 'rgba(243, 229, 171, 0.55)' : '#D4AF37',
+        color: muted ? 'rgba(232,221,201, 0.55)' : '#C9A977',
       }}
     >
       {children}
@@ -418,8 +418,8 @@ function RecommendedBlock({
   return (
     <div
       style={{
-        background: 'rgba(11, 22, 35, 0.45)',
-        border: '1px solid rgba(243, 229, 171, 0.18)',
+        background: 'rgba(11,19,32, 0.45)',
+        border: '1px solid rgba(232,221,201, 0.18)',
         borderRadius: '4px',
         padding: '28px 30px',
       }}
@@ -438,9 +438,9 @@ function RecommendedBlock({
           style={{
             fontSize: '11px',
             fontWeight: 600,
-            color: '#E8B7B7',
-            background: 'rgba(212, 124, 124, 0.14)',
-            border: '1px solid rgba(212, 124, 124, 0.4)',
+            color: '#C98E99',
+            background: 'rgba(163, 90, 106, 0.14)',
+            border: '1px solid rgba(163, 90, 106, 0.45)',
             padding: '4px 12px',
             borderRadius: '999px',
             whiteSpace: 'nowrap',
@@ -453,7 +453,7 @@ function RecommendedBlock({
       <h3
         className="font-heading"
         style={{
-          color: '#F3E5AB',
+          color: '#E8DDC9',
           fontSize: '40px',
           fontWeight: 600,
           letterSpacing: '-0.02em',
@@ -466,7 +466,7 @@ function RecommendedBlock({
       <p
         className="font-body"
         style={{
-          color: 'rgba(243, 229, 171, 0.55)',
+          color: 'rgba(232,221,201, 0.55)',
           fontSize: '13px',
           margin: '6px 0 0 0',
         }}
@@ -481,7 +481,7 @@ function RecommendedBlock({
           alignItems: 'baseline',
           gap: '8px',
           background: 'transparent',
-          border: '1px solid rgba(212, 175, 55, 0.45)',
+          border: '1px solid rgba(201,169,119, 0.45)',
           borderRadius: '4px',
           padding: '10px 18px',
         }}
@@ -489,7 +489,7 @@ function RecommendedBlock({
         <span
           className="font-heading"
           style={{
-            color: '#D4AF37',
+            color: '#C9A977',
             fontSize: '17px',
             fontWeight: 600,
             fontVariantNumeric: 'tabular-nums',
@@ -507,13 +507,13 @@ function RecommendedBlock({
           flexDirection: 'column',
           gap: '8px',
           fontSize: '14px',
-          color: 'rgba(243, 229, 171, 0.82)',
+          color: 'rgba(232,221,201, 0.82)',
           lineHeight: 1.65,
         }}
       >
         <p style={{ margin: 0 }}>{shiftLine}</p>
         <p style={{ margin: 0 }}>{ratioLine}</p>
-        <p style={{ margin: 0, color: 'rgba(243, 229, 171, 0.55)', fontStyle: 'italic' }}>
+        <p style={{ margin: 0, color: 'rgba(232,221,201, 0.55)', fontStyle: 'italic' }}>
           {commitLine}
         </p>
       </div>

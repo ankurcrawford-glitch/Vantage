@@ -3,27 +3,27 @@
 import { type SchoolClassification, type Tier } from '@/lib/classifier';
 
 const TIER_BAR: Record<Tier, string> = {
-  Safety: '#4ADE80',
-  Likely: '#86EFAC',
-  Target: '#D4AF37',
-  Reach: '#FBBF24',
-  'Hard Reach': '#F87171',
+  Safety: '#8FB89A',
+  Likely: '#8FB89A',
+  Target: '#C9A977',
+  Reach: '#C9A977',
+  'Hard Reach': '#A35A6A',
 };
 
 const TIER_PILL_BG: Record<Tier, string> = {
   Safety: 'rgba(74, 222, 128, 0.12)',
   Likely: 'rgba(134, 239, 172, 0.12)',
-  Target: 'rgba(212, 175, 55, 0.15)',
+  Target: 'rgba(201,169,119, 0.15)',
   Reach: 'rgba(251, 191, 36, 0.15)',
   'Hard Reach': 'rgba(248, 113, 113, 0.15)',
 };
 
 const TIER_PILL_TEXT: Record<Tier, string> = {
-  Safety: '#4ADE80',
-  Likely: '#86EFAC',
-  Target: '#F3E5AB',
-  Reach: '#FBBF24',
-  'Hard Reach': '#F87171',
+  Safety: '#8FB89A',
+  Likely: '#8FB89A',
+  Target: '#E8DDC9',
+  Reach: '#C9A977',
+  'Hard Reach': '#A35A6A',
 };
 
 interface Props {
@@ -42,7 +42,7 @@ export default function SchoolCard({ classification, onOpen, onRemove, hasPrompt
       onClick={onOpen}
       style={{
         position: 'relative',
-        background: '#152C45',
+        background: '#0F1828',
         borderTop: `4px solid ${barColor}`,
         padding: '24px',
         cursor: 'pointer',
@@ -50,7 +50,7 @@ export default function SchoolCard({ classification, onOpen, onRemove, hasPrompt
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.boxShadow = '0 8px 24px -8px rgba(212, 175, 55, 0.18)';
+        e.currentTarget.style.boxShadow = '0 8px 24px -8px rgba(201,169,119, 0.18)';
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = 'translateY(0)';
@@ -61,13 +61,13 @@ export default function SchoolCard({ classification, onOpen, onRemove, hasPrompt
         <div style={{ minWidth: 0, flex: 1 }}>
           <h3
             className="font-heading"
-            style={{ color: '#D4AF37', fontSize: '22px', fontWeight: 600, lineHeight: 1.2, margin: 0 }}
+            style={{ color: '#C9A977', fontSize: '22px', fontWeight: 600, lineHeight: 1.2, margin: 0 }}
           >
             {college.name}
           </h3>
           <p
             className="font-body"
-            style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginTop: '4px', margin: '4px 0 0 0' }}
+            style={{ color: 'rgba(232,221,201,0.6)', fontSize: '12px', marginTop: '4px', margin: '4px 0 0 0' }}
           >
             {college.location}
           </p>
@@ -106,8 +106,8 @@ export default function SchoolCard({ classification, onOpen, onRemove, hasPrompt
           className="font-body"
           style={{
             fontSize: '10px',
-            color: '#D4AF37',
-            background: 'rgba(212,175,55,0.15)',
+            color: '#C9A977',
+            background: 'rgba(201,169,119,0.15)',
             padding: '2px 8px',
             borderRadius: '3px',
             display: 'inline-block',
@@ -130,13 +130,13 @@ export default function SchoolCard({ classification, onOpen, onRemove, hasPrompt
             right: '12px',
             background: 'none',
             border: 'none',
-            color: 'rgba(255,255,255,0.4)',
+            color: 'rgba(232,221,201,0.4)',
             fontSize: '12px',
             cursor: 'pointer',
             fontFamily: 'var(--font-body)',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = '#F87171'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = '#A35A6A'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(232,221,201,0.4)'; }}
         >
           Remove
         </button>
@@ -154,7 +154,7 @@ function Stat({ label, value, highlight }: { label: string; value: string; highl
           fontSize: '9px',
           textTransform: 'uppercase',
           letterSpacing: '0.12em',
-          color: 'rgba(255,255,255,0.45)',
+          color: 'rgba(232,221,201,0.45)',
           whiteSpace: 'nowrap',
         }}
       >
@@ -164,7 +164,7 @@ function Stat({ label, value, highlight }: { label: string; value: string; highl
         className="font-body"
         style={{
           fontSize: '13px',
-          color: highlight ? '#D4AF37' : 'rgba(255,255,255,0.92)',
+          color: highlight ? '#C9A977' : 'rgba(232,221,201,0.92)',
           fontWeight: highlight ? 600 : 400,
           whiteSpace: 'nowrap',
           fontVariantNumeric: 'tabular-nums',
