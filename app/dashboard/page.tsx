@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
+import StatCard from '@/components/StatCard';
 
 interface UserStats {
   gpa_weighted: number | null;
@@ -248,34 +249,25 @@ function DashboardContent() {
 
         {/* Stats Overview */}
         <div className="grid md:grid-cols-3 gap-8 mb-12">
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-heading text-xl text-gold-leaf">Colleges</h3>
-              <span className="text-3xl">◆</span>
-            </div>
-            <p className="font-heading text-4xl text-cream mb-2">{collegeCount}</p>
-            <p className="font-body text-sm text-cream/70">In your portfolio</p>
-          </Card>
-
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-heading text-xl text-gold-leaf">Essays</h3>
-              <span className="text-3xl">▲</span>
-            </div>
-            <p className="font-heading text-4xl text-cream mb-2">{essayCount}</p>
-            <p className="font-body text-sm text-cream/70">In progress</p>
-          </Card>
-
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-heading text-xl text-gold-leaf">Progress</h3>
-              <span className="text-3xl">■</span>
-            </div>
-            <p className="font-heading text-4xl text-cream mb-2">
-              {collegeCount > 0 ? Math.round((essayCount / (collegeCount * 2)) * 100) : 0}%
-            </p>
-            <p className="font-body text-sm text-cream/70">Complete</p>
-          </Card>
+          <StatCard
+            title="Colleges"
+            value={collegeCount}
+            caption="In your portfolio"
+            icon="◆"
+          />
+          <StatCard
+            title="Essays"
+            value={essayCount}
+            caption="In progress"
+            icon="▲"
+          />
+          <StatCard
+            title="Progress"
+            value={collegeCount > 0 ? Math.round((essayCount / (collegeCount * 2)) * 100) : 0}
+            suffix="%"
+            caption="Complete"
+            icon="■"
+          />
         </div>
 
         {/* Academic Stats */}

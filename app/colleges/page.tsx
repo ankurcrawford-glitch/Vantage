@@ -226,6 +226,22 @@ export default function CollegesPage() {
           </div>
         )}
 
+        {/* 2025 Questions Disclaimer Banner */}
+        <div
+          style={{
+            background: 'rgba(201, 169, 119, 0.1)',
+            border: '1px solid rgba(201, 169, 119, 0.3)',
+            borderLeft: '4px solid #C9A977',
+            padding: '16px 24px',
+            marginBottom: '24px',
+            borderRadius: '4px',
+          }}
+        >
+          <p className="font-body text-sm" style={{ color: '#E8DDC9', lineHeight: 1.6, margin: 0 }}>
+            <strong style={{ color: '#C9A977' }}>Important:</strong> Essay prompts are from the <strong>2025 application cycle</strong>. These may not match the current year. Use them for practice; when new prompts ship, outdated-question essays may be removed.
+          </p>
+        </div>
+
         {/* Tab switcher */}
         <div style={{ display: 'flex', gap: '4px', marginBottom: '32px', borderBottom: '1px solid rgba(232,221,201,0.1)' }}>
           {(

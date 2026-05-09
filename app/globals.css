@@ -122,3 +122,144 @@ h4 {
   margin: 0 auto;
   padding: 0 32px;
 }
+
+/* ----------------------------------------------------------------- */
+/* Stat card v2 — premium effects (gold glow, shimmer, brushed-metal) */
+/* Effects only. Colors, layout, and typography are inherited.        */
+/* ----------------------------------------------------------------- */
+
+.stat-card-v2 {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  /* Layered depth: outer gold halo, atmospheric bloom, drop shadow,
+     top inner highlight, bottom inner shade. */
+  box-shadow:
+    0 0 28px rgba(212, 175, 55, 0.18),
+    0 0 64px rgba(212, 175, 55, 0.06),
+    0 12px 28px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(243, 229, 171, 0.12),
+    inset 0 -2px 10px rgba(0, 0, 0, 0.35);
+  background-image:
+    radial-gradient(ellipse 120% 60% at 50% 0%,
+      rgba(243, 229, 171, 0.10) 0%,
+      rgba(212, 175, 55, 0.04) 30%,
+      transparent 70%);
+  /* Pair the radial sheen with the existing royal-blue surface. */
+  background-color: var(--royal-blue);
+  background-blend-mode: screen;
+  transition: box-shadow 300ms ease, transform 300ms ease;
+}
+
+.stat-card-v2:hover {
+  box-shadow:
+    0 0 36px rgba(212, 175, 55, 0.28),
+    0 0 80px rgba(212, 175, 55, 0.10),
+    0 16px 36px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(243, 229, 171, 0.18),
+    inset 0 -2px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* Shimmering 1px gradient border around the sides + bottom.
+   The top edge already carries the 4px solid gold bar from
+   `border-t-4 border-gold-leaf`, so we leave it alone. */
+.stat-card-v2__shimmer {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    120deg,
+    rgba(212, 175, 55, 0.20) 0%,
+    rgba(243, 229, 171, 0.95) 22%,
+    rgba(212, 175, 55, 0.30) 45%,
+    rgba(248, 232, 192, 0.85) 70%,
+    rgba(212, 175, 55, 0.20) 100%
+  );
+  background-size: 320% 100%;
+  animation: vantage-shimmer 6s linear infinite;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  z-index: 1;
+}
+
+/* Light reflecting off brushed metal — a thin highlight just below
+   the top gold bar, pulsing gently. */
+.stat-card-v2__sheen {
+  pointer-events: none;
+  position: absolute;
+  top: 4px; /* sit right under the 4px gold border */
+  left: 14px;
+  right: 14px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(243, 229, 171, 0.55),
+    transparent
+  );
+  animation: vantage-sheen 5s ease-in-out infinite;
+  z-index: 2;
+}
+
+/* Pulsing gold dot to the left of the heading text. */
+.stat-card-v2__pulse {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold-light);
+  box-shadow: 0 0 8px rgba(243, 229, 171, 0.7);
+  animation: vantage-pulse 2.6s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+/* The icon (◆ ▲ ■) gets a soft gold glow at rest. */
+.stat-card-v2__icon {
+  text-shadow: 0 0 10px rgba(212, 175, 55, 0.45);
+  animation: vantage-icon-pulse 3.6s ease-in-out infinite;
+}
+
+@keyframes vantage-shimmer {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 320% 0%; }
+}
+
+@keyframes vantage-sheen {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
+@keyframes vantage-pulse {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(0.92);
+    box-shadow: 0 0 4px rgba(243, 229, 171, 0.45);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow:
+      0 0 14px rgba(243, 229, 171, 0.95),
+      0 0 24px rgba(212, 175, 55, 0.45);
+  }
+}
+
+@keyframes vantage-icon-pulse {
+  0%, 100% { text-shadow: 0 0 8px rgba(212, 175, 55, 0.35); }
+  50%      { text-shadow: 0 0 16px rgba(212, 175, 55, 0.7); }
+}
+
+/* Honour reduced-motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  .stat-card-v2__shimmer,
+  .stat-card-v2__sheen,
+  .stat-card-v2__pulse,
+  .stat-card-v2__icon {
+    animation: none;
+  }
+}

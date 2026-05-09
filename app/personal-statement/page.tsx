@@ -26,6 +26,10 @@ export default function PersonalStatementPage() {
   const router = useRouter();
   const pathname = usePathname();
   const [essays, setEssays] = useState<Essay[]>([]);
+  // Selected colleges (including the Common App pseudo-college) — kept in
+  // state so colleges with no rows in college_prompts still render as a
+  // section with a placeholder, instead of disappearing entirely.
+  const [userColleges, setUserColleges] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -74,6 +78,13 @@ export default function PersonalStatementPage() {
         collegeIds.push(COMMON_APP_COLLEGE_ID);
         collegeNameMap.set(COMMON_APP_COLLEGE_ID, 'Common Application');
       }
+
+      // Save the full college list so the render layer can build a section
+      // for every selected college — including ones that have no prompts
+      // yet in college_prompts.
+      setUserColleges(
+        Array.from(collegeNameMap.entries()).map(([id, name]) => ({ id, name }))
+      );
 
       if (collegeIds.length === 0) {
         setEssays([]);
@@ -216,12 +227,24 @@ export default function PersonalStatementPage() {
             // follow alphabetically. Within each section, essays are ordered
             // by prompt sort order.
             const COMMON_APP_COLLEGE_ID = 'a0000000-0000-0000-0000-000000000000';
+            // Seed a group for every selected college so colleges without
+            // any loaded prompts still appear with a placeholder card.
             const groupsMap = new Map<string, { collegeId: string; collegeName: string; essays: Essay[] }>();
+            for (const college of userColleges) {
+              groupsMap.set(college.id, {
+                collegeId: college.id,
+                collegeName: college.name,
+                essays: [],
+              });
+            }
+            // Add each loaded essay to its college's group.
             for (const essay of essays) {
               const existing = groupsMap.get(essay.college_id);
               if (existing) {
                 existing.essays.push(essay);
               } else {
+                // Fallback: shouldn't normally happen, but render rather
+                // than drop a stray essay.
                 groupsMap.set(essay.college_id, {
                   collegeId: essay.college_id,
                   collegeName: essay.college_name,
@@ -277,7 +300,7 @@ export default function PersonalStatementPage() {
                           </span>
                         )}
                       </h2>
-                      {!(commonAppNeedsPlaceholder && group.collegeId === COMMON_APP_COLLEGE_ID) && (
+                      {!(commonAppNeedsPlaceholder && group.collegeId === COMMON_APP_COLLEGE_ID) && group.essays.length > 0 && (
                         <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.4)' }}>
                           {(() => {
                             const total = group.essays.length;
@@ -323,6 +346,17 @@ export default function PersonalStatementPage() {
                                 Choose a Prompt
                               </button>
                             </Link>
+                          </div>
+                        </Card>
+                      ) : group.essays.length === 0 ? (
+                        <Card>
+                          <div style={{ textAlign: 'center', padding: '48px 32px' }}>
+                            <h3 className="font-heading text-2xl mb-3" style={{ color: '#D4AF37' }}>
+                              Prompts Coming Soon
+                            </h3>
+                            <p className="font-body" style={{ color: 'rgba(255,255,255,0.7)', maxWidth: '520px', margin: '0 auto' }}>
+                              We haven&apos;t loaded {group.collegeName}&apos;s prompts yet. Once they&apos;re available, they&apos;ll appear here so you can start writing.
+                            </p>
                           </div>
                         </Card>
                       ) : (

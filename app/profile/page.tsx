@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { saveUserStats } from '@/lib/save-user-stats';
 import Card from '@/components/Card';
 
 interface UserStats {
@@ -249,8 +250,7 @@ export default function ProfilePage() {
         return;
       }
 
-      const { error } = await supabase.from('user_stats').upsert({
-        user_id: user.id,
+      const { error } = await saveUserStats(supabase, user.id, {
         gpa_weighted: stats.gpa_weighted ? parseFloat(stats.gpa_weighted.toString()) : null,
         gpa_unweighted: stats.gpa_unweighted ? parseFloat(stats.gpa_unweighted.toString()) : null,
         sat_score: stats.sat_score ? parseInt(stats.sat_score.toString()) : null,

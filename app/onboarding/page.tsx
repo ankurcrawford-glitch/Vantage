@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { saveUserStats } from '@/lib/save-user-stats';
 import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
@@ -65,13 +66,16 @@ export default function OnboardingPage() {
 
     setLoading(true);
     try {
-      await supabase.from('user_stats').upsert({
-        user_id: user.id,
+      const { error: statsError } = await saveUserStats(supabase, user.id, {
         gpa_weighted: stats.gpaWeighted ? parseFloat(stats.gpaWeighted) : null,
         gpa_unweighted: stats.gpaUnweighted ? parseFloat(stats.gpaUnweighted) : null,
         sat_score: stats.satScore ? parseInt(stats.satScore) : null,
         act_score: stats.actScore ? parseInt(stats.actScore) : null,
       });
+      if (statsError) {
+        console.error('Error saving stats:', statsError);
+        return;
+      }
       setStep('complete');  // Changed from 'colleges' to 'complete'
     } catch (error) {
       console.error('Error saving stats:', error);
