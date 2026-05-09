@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { saveUserStats } from '@/lib/save-user-stats';
+import { saveUserStats, saveUserStatsStrategy } from '@/lib/save-user-stats';
 import Card from '@/components/Card';
 
 interface UserStats {
@@ -205,8 +205,7 @@ export default function ProfilePage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { alert('You must be logged in to save.'); return; }
       const apCount = parseInt(strategy.ap_count) || 0;
-      const { error } = await supabase.from('user_stats').upsert({
-        user_id: user.id,
+      const { error } = await saveUserStatsStrategy(supabase, user.id, {
         state: strategy.state ? strategy.state.toUpperCase().slice(0, 2) : null,
         intended_major: strategy.intended_major || null,
         ap_count: apCount,
