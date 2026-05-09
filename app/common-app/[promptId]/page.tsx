@@ -736,50 +736,50 @@ export default function CommonAppEssayPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1623' }}>
-        <div style={{ color: '#D4AF37' }}>Loading...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1320' }}>
+        <div style={{ color: '#C9A977' }}>Loading...</div>
       </div>
     );
   }
 
   if (!prompt) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1623' }}>
-        <div style={{ color: '#D4AF37' }}>Prompt not found</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1320' }}>
+        <div style={{ color: '#C9A977' }}>Prompt not found</div>
       </div>
     );
   }
 
   if (!hasSubscription) {
     return (
-      <div className="min-h-screen" style={{ background: '#0B1623' }}>
-        <nav style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '24px 32px' }}>
+      <div className="min-h-screen" style={{ background: '#0B1320' }}>
+        <nav style={{ borderBottom: '1px solid rgba(232,221,201,0.1)', padding: '24px 32px' }}>
           <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Link href="/common-app" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-              <span className="font-heading text-2xl font-semibold" style={{ color: 'white' }}>VANTAGE</span>
-              <span className="text-2xl" style={{ color: '#D4AF37' }}>.</span>
+              <span className="font-heading text-2xl font-semibold" style={{ color: '#E8DDC9' }}>VANTAGE</span>
+              <span className="text-2xl" style={{ color: '#C9A977' }}>.</span>
             </Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-              <Link href="/dashboard" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px' }}>Dashboard</Link>
-              <Link href="/colleges" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px' }}>Portfolio</Link>
-              <Link href="/personal-statement" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px' }}>Essays</Link>
-              <Link href="/common-app" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px' }}>Common App</Link>
-              <Link href="/profile" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px' }}>Profile</Link>
-              <Link href="/discovery" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px' }}>Insight Questions</Link>
-              <button onClick={async () => { await supabase.auth.signOut(); router.push('/'); }} style={{ background: 'transparent', color: 'rgba(255,255,255,0.7)', border: 'none', fontFamily: 'var(--font-body)', fontSize: '14px', cursor: 'pointer', padding: 0 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#D4AF37'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}>Logout</button>
+              <Link href="/dashboard" style={{ color: 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px' }}>Dashboard</Link>
+              <Link href="/colleges" style={{ color: 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px' }}>Portfolio</Link>
+              <Link href="/personal-statement" style={{ color: 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px' }}>Essays</Link>
+              <Link href="/common-app" style={{ color: 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px' }}>Common App</Link>
+              <Link href="/profile" style={{ color: 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px' }}>Profile</Link>
+              <Link href="/discovery" style={{ color: 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px' }}>Insight Questions</Link>
+              <button onClick={async () => { await supabase.auth.signOut(); router.push('/'); }} style={{ background: 'transparent', color: 'rgba(232,221,201,0.7)', border: 'none', fontFamily: 'var(--font-body)', fontSize: '14px', cursor: 'pointer', padding: 0 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A977'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(232,221,201,0.7)'; }}>Logout</button>
             </div>
           </div>
         </nav>
         <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '64px 32px' }}>
-          <Link href="/common-app" style={{ color: '#D4AF37', textDecoration: 'none', fontSize: '14px', display: 'inline-block', marginBottom: '16px' }}>← Back to Common App Prompts</Link>
+          <Link href="/common-app" style={{ color: '#C9A977', textDecoration: 'none', fontSize: '14px', display: 'inline-block', marginBottom: '16px' }}>← Back to Common App Prompts</Link>
           <div style={{ marginTop: '24px' }}>
             <Card>
-              <h1 className="font-heading text-3xl mb-4" style={{ color: 'white' }}>Essay writing requires a subscription</h1>
-            <p className="font-body text-lg mb-6" style={{ color: 'rgba(255,255,255,0.9)' }}>
+              <h1 className="font-heading text-3xl mb-4" style={{ color: '#E8DDC9' }}>Essay writing requires a subscription</h1>
+            <p className="font-body text-lg mb-6" style={{ color: 'rgba(232,221,201,0.9)' }}>
               To write, save, and use Strategic Intelligence for Common App essays (Prompt {prompt.number}), subscribe to VANTAGE.
             </p>
             <Link href="/dashboard">
-              <button style={{ background: '#D4AF37', color: '#0B1623', padding: '12px 24px', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, border: 'none', borderRadius: '2px', cursor: 'pointer' }}>Go to Dashboard</button>
+              <button style={{ background: '#C9A977', color: '#0B1320', padding: '12px 24px', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, border: 'none', borderRadius: '2px', cursor: 'pointer' }}>Go to Dashboard</button>
             </Link>
             </Card>
           </div>
@@ -792,21 +792,21 @@ export default function CommonAppEssayPage() {
   const canComment = hasPermission || isOwner;
 
   return (
-    <div className="min-h-screen" style={{ background: '#0B1623' }}>
-      <nav style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '24px 32px' }}>
+    <div className="min-h-screen" style={{ background: '#0B1320' }}>
+      <nav style={{ borderBottom: '1px solid rgba(232,221,201,0.1)', padding: '24px 32px' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/common-app" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-            <span className="font-heading text-2xl font-semibold" style={{ color: 'white' }}>VANTAGE</span>
-            <span className="text-2xl" style={{ color: '#D4AF37' }}>.</span>
+            <span className="font-heading text-2xl font-semibold" style={{ color: '#E8DDC9' }}>VANTAGE</span>
+            <span className="text-2xl" style={{ color: '#C9A977' }}>.</span>
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <Link href="/dashboard" style={{ color: pathname === '/dashboard' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/dashboard' ? 600 : 400 }}>Dashboard</Link>
-            <Link href="/personal-statement" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? 600 : 400 }}>Essays</Link>
-            <Link href="/common-app" style={{ color: pathname.startsWith('/common-app') ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname.startsWith('/common-app') ? 600 : 400 }}>Common App</Link>
-            <Link href="/colleges" style={{ color: pathname.startsWith('/colleges') ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname.startsWith('/colleges') ? 600 : 400 }}>Portfolio</Link>
-            <Link href="/profile" style={{ color: pathname === '/profile' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/profile' ? 600 : 400 }}>Profile</Link>
-            <Link href="/discovery" style={{ color: pathname === '/discovery' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/discovery' ? 600 : 400 }}>Insight Questions</Link>
-            <button onClick={async () => { await supabase.auth.signOut(); router.push('/'); }} style={{ background: 'transparent', color: 'rgba(255,255,255,0.7)', border: 'none', fontFamily: 'var(--font-body)', fontSize: '14px', cursor: 'pointer', padding: 0 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#F3E5AB'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}>Logout</button>
+            <Link href="/dashboard" style={{ color: pathname === '/dashboard' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/dashboard' ? 600 : 400 }}>Dashboard</Link>
+            <Link href="/personal-statement" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? 600 : 400 }}>Essays</Link>
+            <Link href="/common-app" style={{ color: pathname.startsWith('/common-app') ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname.startsWith('/common-app') ? 600 : 400 }}>Common App</Link>
+            <Link href="/colleges" style={{ color: pathname.startsWith('/colleges') ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname.startsWith('/colleges') ? 600 : 400 }}>Portfolio</Link>
+            <Link href="/profile" style={{ color: pathname === '/profile' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/profile' ? 600 : 400 }}>Profile</Link>
+            <Link href="/discovery" style={{ color: pathname === '/discovery' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/discovery' ? 600 : 400 }}>Insight Questions</Link>
+            <button onClick={async () => { await supabase.auth.signOut(); router.push('/'); }} style={{ background: 'transparent', color: 'rgba(232,221,201,0.7)', border: 'none', fontFamily: 'var(--font-body)', fontSize: '14px', cursor: 'pointer', padding: 0 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#E8DDC9'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(232,221,201,0.7)'; }}>Logout</button>
           </div>
         </div>
       </nav>
@@ -815,23 +815,23 @@ export default function CommonAppEssayPage() {
         <div style={{ marginBottom: '32px' }}>
           <Link
             href="/common-app"
-            style={{ color: '#D4AF37', textDecoration: 'none', fontSize: '14px', display: 'inline-block', marginBottom: '16px' }}
+            style={{ color: '#C9A977', textDecoration: 'none', fontSize: '14px', display: 'inline-block', marginBottom: '16px' }}
           >
             ← Back to Common App Prompts
           </Link>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <h1 className="font-heading text-4xl mb-2" style={{ color: 'white' }}>Common Application Essay</h1>
-              <h2 className="font-heading text-xl mb-4" style={{ color: '#D4AF37' }}>Prompt {prompt.number}</h2>
+              <h1 className="font-heading text-4xl mb-2" style={{ color: '#E8DDC9' }}>Common Application Essay</h1>
+              <h2 className="font-heading text-xl mb-4" style={{ color: '#C9A977' }}>Prompt {prompt.number}</h2>
             </div>
             {!isOwner && hasPermission && (
               <div style={{
                 padding: '8px 16px',
-                background: 'rgba(212,175,55,0.1)',
-                border: '1px solid rgba(212,175,55,0.3)',
+                background: 'rgba(201,169,119,0.1)',
+                border: '1px solid rgba(201,169,119,0.3)',
                 borderRadius: '4px',
               }}>
-                <p className="font-body text-sm" style={{ color: '#D4AF37' }}>
+                <p className="font-body text-sm" style={{ color: '#C9A977' }}>
                   View Only - You can comment but cannot edit
                 </p>
               </div>
@@ -844,11 +844,11 @@ export default function CommonAppEssayPage() {
           <div>
             <Card>
               <div style={{ marginBottom: '24px' }}>
-                <p className="font-body" style={{ color: 'rgba(255,255,255,0.9)', lineHeight: '1.6', marginBottom: '12px' }}>
+                <p className="font-body" style={{ color: 'rgba(232,221,201,0.9)', lineHeight: '1.6', marginBottom: '12px' }}>
                   {prompt.prompt}
                 </p>
                 {prompt.word_limit && (
-                  <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
                     Word Limit: {prompt.word_limit} words
                   </p>
                 )}
@@ -858,13 +858,13 @@ export default function CommonAppEssayPage() {
             <div style={{ marginTop: '32px' }}>
               <Card>
                 <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h3 className="font-heading text-lg" style={{ color: '#D4AF37' }}>Your Essay</h3>
+                  <h3 className="font-heading text-lg" style={{ color: '#C9A977' }}>Your Essay</h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <span className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                    <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.7)' }}>
                       {wordCount} {prompt.word_limit ? `/ ${prompt.word_limit}` : ''} words
                     </span>
                     {prompt.word_limit && wordCount > prompt.word_limit && (
-                      <span className="font-body text-sm" style={{ color: '#F87171' }}>Over limit</span>
+                      <span className="font-body text-sm" style={{ color: '#A35A6A' }}>Over limit</span>
                     )}
                   </div>
                 </div>
@@ -877,8 +877,8 @@ export default function CommonAppEssayPage() {
                     width: '100%',
                     minHeight: '400px',
                     background: canEdit ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.1)',
-                    border: '1px solid rgba(212,175,55,0.2)',
-                    color: canEdit ? 'white' : 'rgba(255,255,255,0.7)',
+                    border: '1px solid rgba(201,169,119,0.2)',
+                    color: canEdit ? 'white' : 'rgba(232,221,201,0.7)',
                     padding: '20px',
                     fontFamily: 'var(--font-body)',
                     fontSize: '16px',
@@ -889,10 +889,10 @@ export default function CommonAppEssayPage() {
                     cursor: canEdit ? 'text' : 'not-allowed',
                   }}
                   onFocus={(e) => {
-                    if (canEdit) e.target.style.borderColor = 'rgba(212,175,55,0.5)';
+                    if (canEdit) e.target.style.borderColor = 'rgba(201,169,119,0.5)';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = 'rgba(212,175,55,0.2)';
+                    e.target.style.borderColor = 'rgba(201,169,119,0.2)';
                   }}
                 />
                 {canEdit && (
@@ -901,8 +901,8 @@ export default function CommonAppEssayPage() {
                       onClick={saveNewVersion}
                       disabled={saving}
                       style={{
-                        background: saving ? 'rgba(212,175,55,0.5)' : '#D4AF37',
-                        color: '#0B1623',
+                        background: saving ? 'rgba(201,169,119,0.5)' : '#C9A977',
+                        color: '#0B1320',
                         padding: '12px 24px',
                         fontFamily: 'var(--font-body)',
                         fontSize: '14px',
@@ -918,7 +918,7 @@ export default function CommonAppEssayPage() {
                       {saving ? 'Saving...' : 'Save New Version'}
                     </button>
                     {saveSuccessMessage && (
-                      <span className="font-body text-sm" style={{ color: '#4ADE80' }}>
+                      <span className="font-body text-sm" style={{ color: '#8FB89A' }}>
                         {saveSuccessMessage}
                       </span>
                     )}
@@ -931,21 +931,21 @@ export default function CommonAppEssayPage() {
             {currentVersion && comments.length > 0 && (
               <div style={{ marginTop: '32px' }}>
                 <Card>
-                  <h3 className="font-heading text-lg mb-4" style={{ color: '#D4AF37' }}>Comments</h3>
+                  <h3 className="font-heading text-lg mb-4" style={{ color: '#C9A977' }}>Comments</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     {comments.map((comment) => (
-                      <div key={comment.id} style={{ padding: '16px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px', borderLeft: '3px solid #D4AF37' }}>
+                      <div key={comment.id} style={{ padding: '16px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px', borderLeft: '3px solid #C9A977' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                           <div>
-                            <p className="font-body font-semibold text-sm" style={{ color: '#D4AF37', marginBottom: '4px' }}>
+                            <p className="font-body font-semibold text-sm" style={{ color: '#C9A977', marginBottom: '4px' }}>
                               Comment from {comment.counselor_name}
                             </p>
-                            <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                            <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.5)' }}>
                               {new Date(comment.created_at).toLocaleDateString()} at {new Date(comment.created_at).toLocaleTimeString()}
                             </p>
                           </div>
                           <span className="font-body text-xs" style={{
-                            color: comment.comment_type === 'praise' ? '#10B981' : comment.comment_type === 'concern' ? '#F87171' : '#D4AF37',
+                            color: comment.comment_type === 'praise' ? '#8FB89A' : comment.comment_type === 'concern' ? '#A35A6A' : '#C9A977',
                             textTransform: 'capitalize',
                             padding: '4px 8px',
                             background: 'rgba(0,0,0,0.3)',
@@ -954,7 +954,7 @@ export default function CommonAppEssayPage() {
                             {comment.comment_type}
                           </span>
                         </div>
-                        <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.9)', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                        <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.9)', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
                           {comment.comment_text}
                         </p>
                       </div>
@@ -969,13 +969,13 @@ export default function CommonAppEssayPage() {
               <div style={{ marginTop: '32px' }}>
                 <Card>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                    <h3 className="font-heading text-lg" style={{ color: '#D4AF37' }}>Add Comment</h3>
+                    <h3 className="font-heading text-lg" style={{ color: '#C9A977' }}>Add Comment</h3>
                     <button
                       onClick={() => setShowCommentForm(!showCommentForm)}
                       style={{
                         background: 'transparent',
-                        color: '#D4AF37',
-                        border: '1px solid rgba(212,175,55,0.5)',
+                        color: '#C9A977',
+                        border: '1px solid rgba(201,169,119,0.5)',
                         padding: '8px 16px',
                         fontFamily: 'var(--font-body)',
                         fontSize: '14px',
@@ -994,8 +994,8 @@ export default function CommonAppEssayPage() {
                         style={{
                           height: '40px',
                           background: 'rgba(0,0,0,0.2)',
-                          border: '1px solid rgba(212,175,55,0.2)',
-                          color: 'white',
+                          border: '1px solid rgba(201,169,119,0.2)',
+                          color: '#E8DDC9',
                           padding: '0 12px',
                           fontFamily: 'var(--font-body)',
                           fontSize: '14px',
@@ -1015,8 +1015,8 @@ export default function CommonAppEssayPage() {
                         style={{
                           minHeight: '100px',
                           background: 'rgba(0,0,0,0.2)',
-                          border: '1px solid rgba(212,175,55,0.2)',
-                          color: 'white',
+                          border: '1px solid rgba(201,169,119,0.2)',
+                          color: '#E8DDC9',
                           padding: '12px',
                           fontFamily: 'var(--font-body)',
                           fontSize: '14px',
@@ -1029,8 +1029,8 @@ export default function CommonAppEssayPage() {
                         onClick={handleAddComment}
                         disabled={savingComment}
                         style={{
-                          background: savingComment ? 'rgba(212,175,55,0.5)' : '#D4AF37',
-                          color: '#0B1623',
+                          background: savingComment ? 'rgba(201,169,119,0.5)' : '#C9A977',
+                          color: '#0B1320',
                           padding: '10px 20px',
                           fontFamily: 'var(--font-body)',
                           fontSize: '14px',
@@ -1055,8 +1055,8 @@ export default function CommonAppEssayPage() {
               <Card>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                   <div>
-                    <h3 className="font-heading text-lg" style={{ color: '#D4AF37' }}>Strategic Intelligence</h3>
-                    <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>
+                    <h3 className="font-heading text-lg" style={{ color: '#C9A977' }}>Strategic Intelligence</h3>
+                    <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.5)', marginTop: '4px' }}>
                       AI-powered guidance that evolves with your essay
                     </p>
                   </div>
@@ -1064,8 +1064,8 @@ export default function CommonAppEssayPage() {
                     onClick={loadThinkingPartner}
                     disabled={loadingThinkingPartner}
                     style={{
-                      background: loadingThinkingPartner ? 'rgba(212,175,55,0.5)' : '#D4AF37',
-                      color: '#0B1623',
+                      background: loadingThinkingPartner ? 'rgba(201,169,119,0.5)' : '#C9A977',
+                      color: '#0B1320',
                       padding: '10px 20px',
                       fontFamily: 'var(--font-body)',
                       fontSize: '14px',
@@ -1082,11 +1082,11 @@ export default function CommonAppEssayPage() {
 
                 {/* Insight gate message */}
                 {insightGateMessage && (
-                  <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(212,175,55,0.08)', borderRadius: '4px', borderLeft: '3px solid rgba(212,175,55,0.5)' }}>
-                    <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.85)', lineHeight: '1.7' }}>
+                  <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(201,169,119,0.08)', borderRadius: '4px', borderLeft: '3px solid rgba(201,169,119,0.5)' }}>
+                    <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', lineHeight: '1.7' }}>
                       {insightGateMessage}
                     </p>
-                    <a href="/discovery" style={{ display: 'inline-block', marginTop: '16px', background: 'transparent', color: '#D4AF37', padding: '8px 16px', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, border: '1px solid #D4AF37', borderRadius: '2px', textDecoration: 'none' }}>
+                    <a href="/discovery" style={{ display: 'inline-block', marginTop: '16px', background: 'transparent', color: '#C9A977', padding: '8px 16px', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, border: '1px solid #C9A977', borderRadius: '2px', textDecoration: 'none' }}>
                       Complete Insight Questions
                     </a>
                   </div>
@@ -1094,21 +1094,21 @@ export default function CommonAppEssayPage() {
 
                 {/* Current guidance response */}
                 {thinkingPartnerResponse && (
-                  <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', borderLeft: '3px solid #D4AF37' }}>
+                  <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', borderLeft: '3px solid #C9A977' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                       <div>
-                        <h4 className="font-heading text-md" style={{ color: '#D4AF37' }}>Latest Guidance</h4>
+                        <h4 className="font-heading text-md" style={{ color: '#C9A977' }}>Latest Guidance</h4>
                         {guidanceMode && (
-                          <span className="font-body" style={{ fontSize: '11px', color: 'rgba(212,175,55,0.6)', marginTop: '2px', display: 'block' }}>
+                          <span className="font-body" style={{ fontSize: '11px', color: 'rgba(201,169,119,0.6)', marginTop: '2px', display: 'block' }}>
                             {modeLabel(guidanceMode)} mode
                           </span>
                         )}
                       </div>
-                      <button onClick={() => { setThinkingPartnerResponse(null); setInsightGateMessage(null); }} style={{ background: 'transparent', color: 'rgba(255,255,255,0.5)', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '0', lineHeight: '1' }}>
+                      <button onClick={() => { setThinkingPartnerResponse(null); setInsightGateMessage(null); }} style={{ background: 'transparent', color: 'rgba(232,221,201,0.5)', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '0', lineHeight: '1' }}>
                         ×
                       </button>
                     </div>
-                    <div className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.9)', lineHeight: '1.8', whiteSpace: 'pre-wrap' }}>
+                    <div className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.9)', lineHeight: '1.8', whiteSpace: 'pre-wrap' }}>
                       {renderBoldText(thinkingPartnerResponse)}
                     </div>
                   </div>
@@ -1119,7 +1119,7 @@ export default function CommonAppEssayPage() {
                   <div style={{ marginTop: '16px' }}>
                     <button
                       onClick={() => setShowHistory(!showHistory)}
-                      style={{ background: 'transparent', border: 'none', color: 'rgba(212,175,55,0.7)', fontFamily: 'var(--font-body)', fontSize: '13px', cursor: 'pointer', padding: '4px 0', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      style={{ background: 'transparent', border: 'none', color: 'rgba(201,169,119,0.7)', fontFamily: 'var(--font-body)', fontSize: '13px', cursor: 'pointer', padding: '4px 0', display: 'flex', alignItems: 'center', gap: '6px' }}
                     >
                       <span style={{ transform: showHistory ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'inline-block' }}>▶</span>
                       Past Guidance ({guidanceHistory.length})
@@ -1127,12 +1127,12 @@ export default function CommonAppEssayPage() {
                     {showHistory && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
                         {guidanceHistory.map((entry: any) => (
-                          <details key={entry.id} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                            <summary style={{ padding: '10px 14px', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-body)', fontSize: '12px', display: 'flex', justifyContent: 'space-between', listStyle: 'none' }}>
+                          <details key={entry.id} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '4px', border: '1px solid rgba(232,221,201,0.08)' }}>
+                            <summary style={{ padding: '10px 14px', cursor: 'pointer', color: 'rgba(232,221,201,0.7)', fontFamily: 'var(--font-body)', fontSize: '12px', display: 'flex', justifyContent: 'space-between', listStyle: 'none' }}>
                               <span>{modeLabel(entry.mode)} — {entry.essay_word_count || 0} words</span>
-                              <span style={{ color: 'rgba(255,255,255,0.4)' }}>{new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
+                              <span style={{ color: 'rgba(232,221,201,0.4)' }}>{new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
                             </summary>
-                            <div className="font-body text-sm" style={{ padding: '12px 14px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.7', whiteSpace: 'pre-wrap', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                            <div className="font-body text-sm" style={{ padding: '12px 14px', color: 'rgba(232,221,201,0.8)', lineHeight: '1.7', whiteSpace: 'pre-wrap', borderTop: '1px solid rgba(232,221,201,0.06)' }}>
                               {renderBoldText(entry.guidance_text)}
                             </div>
                           </details>
@@ -1148,9 +1148,9 @@ export default function CommonAppEssayPage() {
           {/* Sidebar */}
           <div>
             <Card>
-              <h3 className="font-heading text-lg mb-4" style={{ color: '#D4AF37' }}>Versions</h3>
+              <h3 className="font-heading text-lg mb-4" style={{ color: '#C9A977' }}>Versions</h3>
               {versions.length === 0 ? (
-                <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
                   No versions saved yet.
                 </p>
               ) : (
@@ -1160,8 +1160,8 @@ export default function CommonAppEssayPage() {
                       key={version.id}
                       style={{
                         padding: '12px',
-                        background: version.is_current ? 'rgba(212,175,55,0.2)' : 'transparent',
-                        border: version.is_current ? '1px solid rgba(212,175,55,0.5)' : '1px solid rgba(255,255,255,0.1)',
+                        background: version.is_current ? 'rgba(201,169,119,0.2)' : 'transparent',
+                        border: version.is_current ? '1px solid rgba(201,169,119,0.5)' : '1px solid rgba(232,221,201,0.1)',
                         borderRadius: '4px',
                         display: 'flex',
                         justifyContent: 'space-between',
@@ -1183,16 +1183,16 @@ export default function CommonAppEssayPage() {
                           fontFamily: 'var(--font-body)',
                         }}
                       >
-                        <span style={{ display: 'block', color: 'white', fontSize: '14px', fontWeight: 600 }}>
+                        <span style={{ display: 'block', color: '#E8DDC9', fontSize: '14px', fontWeight: 600 }}>
                           Version {version.version_number}
                         </span>
-                        <span style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '12px', marginTop: '4px' }}>
+                        <span style={{ display: 'block', color: 'rgba(232,221,201,0.5)', fontSize: '12px', marginTop: '4px' }}>
                           {version.word_count} words · {new Date(version.created_at).toLocaleDateString()}
                         </span>
                       </button>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                         {version.is_current && (
-                          <span className="font-body text-xs" style={{ color: '#D4AF37' }}>Current</span>
+                          <span className="font-body text-xs" style={{ color: '#C9A977' }}>Current</span>
                         )}
                         {isOwner && (
                           <button
@@ -1201,8 +1201,8 @@ export default function CommonAppEssayPage() {
                             disabled={!!deletingVersionId}
                             style={{
                               background: 'transparent',
-                              border: '1px solid rgba(255,255,255,0.25)',
-                              color: 'rgba(255,255,255,0.8)',
+                              border: '1px solid rgba(232,221,201,0.25)',
+                              color: 'rgba(232,221,201,0.8)',
                               cursor: deletingVersionId ? 'not-allowed' : 'pointer',
                               fontSize: '12px',
                               fontFamily: 'var(--font-body)',
@@ -1224,13 +1224,13 @@ export default function CommonAppEssayPage() {
               <div style={{ marginTop: '24px' }}>
                 <Card>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                    <h3 className="font-heading text-lg" style={{ color: '#D4AF37' }}>Invite Commenters</h3>
+                    <h3 className="font-heading text-lg" style={{ color: '#C9A977' }}>Invite Commenters</h3>
                     <button
                       onClick={() => setShowInviteForm(!showInviteForm)}
                       style={{
                         background: 'transparent',
-                        color: '#D4AF37',
-                        border: '1px solid rgba(212,175,55,0.5)',
+                        color: '#C9A977',
+                        border: '1px solid rgba(201,169,119,0.5)',
                         padding: '6px 12px',
                         fontFamily: 'var(--font-body)',
                         fontSize: '12px',
@@ -1252,8 +1252,8 @@ export default function CommonAppEssayPage() {
                         style={{
                           height: '36px',
                           background: 'rgba(0,0,0,0.2)',
-                          border: '1px solid rgba(212,175,55,0.2)',
-                          color: 'white',
+                          border: '1px solid rgba(201,169,119,0.2)',
+                          color: '#E8DDC9',
                           padding: '0 12px',
                           fontFamily: 'var(--font-body)',
                           fontSize: '14px',
@@ -1269,8 +1269,8 @@ export default function CommonAppEssayPage() {
                         style={{
                           height: '36px',
                           background: 'rgba(0,0,0,0.2)',
-                          border: '1px solid rgba(212,175,55,0.2)',
-                          color: 'white',
+                          border: '1px solid rgba(201,169,119,0.2)',
+                          color: '#E8DDC9',
                           padding: '0 12px',
                           fontFamily: 'var(--font-body)',
                           fontSize: '14px',
@@ -1284,8 +1284,8 @@ export default function CommonAppEssayPage() {
                         style={{
                           height: '36px',
                           background: 'rgba(0,0,0,0.2)',
-                          border: '1px solid rgba(212,175,55,0.2)',
-                          color: 'white',
+                          border: '1px solid rgba(201,169,119,0.2)',
+                          color: '#E8DDC9',
                           padding: '0 12px',
                           fontFamily: 'var(--font-body)',
                           fontSize: '14px',
@@ -1302,8 +1302,8 @@ export default function CommonAppEssayPage() {
                         onClick={handleSendInvitation}
                         disabled={sendingInvitation}
                         style={{
-                          background: sendingInvitation ? 'rgba(212,175,55,0.5)' : '#D4AF37',
-                          color: '#0B1623',
+                          background: sendingInvitation ? 'rgba(201,169,119,0.5)' : '#C9A977',
+                          color: '#0B1320',
                           padding: '8px 16px',
                           fontFamily: 'var(--font-body)',
                           fontSize: '14px',
@@ -1317,13 +1317,13 @@ export default function CommonAppEssayPage() {
                       </button>
 
                       {generatedLink && (
-                        <div style={{ marginTop: '12px', padding: '12px', background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: '4px' }}>
+                        <div style={{ marginTop: '12px', padding: '12px', background: 'rgba(201,169,119,0.1)', border: '1px solid rgba(201,169,119,0.3)', borderRadius: '4px' }}>
                           {emailSent && (
-                            <p className="font-body text-xs" style={{ color: '#10B981', marginBottom: '8px', fontWeight: 600 }}>
+                            <p className="font-body text-xs" style={{ color: '#8FB89A', marginBottom: '8px', fontWeight: 600 }}>
                               Email sent successfully
                             </p>
                           )}
-                          <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '8px' }}>
+                          <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.7)', marginBottom: '8px' }}>
                             {emailSent ? 'You can also share this link directly:' : 'Share this link with your reviewer:'}
                           </p>
                           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -1336,8 +1336,8 @@ export default function CommonAppEssayPage() {
                                 flex: 1,
                                 height: '32px',
                                 background: 'rgba(0,0,0,0.3)',
-                                border: '1px solid rgba(212,175,55,0.2)',
-                                color: 'white',
+                                border: '1px solid rgba(201,169,119,0.2)',
+                                color: '#E8DDC9',
                                 padding: '0 10px',
                                 fontFamily: 'var(--font-body)',
                                 fontSize: '11px',
@@ -1348,8 +1348,8 @@ export default function CommonAppEssayPage() {
                             <button
                               onClick={() => copyToClipboard(generatedLink)}
                               style={{
-                                background: linkCopied ? '#10B981' : '#D4AF37',
-                                color: linkCopied ? 'white' : '#0B1623',
+                                background: linkCopied ? '#8FB89A' : '#C9A977',
+                                color: linkCopied ? 'white' : '#0B1320',
                                 padding: '6px 12px',
                                 fontFamily: 'var(--font-body)',
                                 fontSize: '11px',
@@ -1374,15 +1374,15 @@ export default function CommonAppEssayPage() {
                     );
                     return (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '16px' }}>
-                        <p className="font-body text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '4px' }}>
+                        <p className="font-body text-xs font-semibold" style={{ color: 'rgba(232,221,201,0.7)', marginBottom: '4px' }}>
                           Invited Reviewers:
                         </p>
                         {unique.map((inv) => (
                           <div key={inv.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px' }}>
-                            <p className="font-body text-xs" style={{ color: 'white', margin: 0 }}>
+                            <p className="font-body text-xs" style={{ color: '#E8DDC9', margin: 0 }}>
                               {inv.invitee_name || inv.invitee_email}
                             </p>
-                            <span className="font-body text-xs" style={{ color: inv.status === 'accepted' ? '#10B981' : 'rgba(255,255,255,0.4)' }}>
+                            <span className="font-body text-xs" style={{ color: inv.status === 'accepted' ? '#8FB89A' : 'rgba(232,221,201,0.4)' }}>
                               {inv.status === 'accepted' ? 'Accepted' : inv.role}
                             </span>
                           </div>

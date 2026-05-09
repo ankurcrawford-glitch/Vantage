@@ -10,9 +10,9 @@ export default function Footer() {
   return (
     <footer
       style={{
-        borderTop: '1px solid rgba(255,255,255,0.08)',
+        borderTop: '1px solid rgba(232,221,201,0.08)',
         padding: '24px 32px',
-        background: '#0B1623',
+        background: '#0B1320',
         marginTop: 'auto',
       }}
     >
@@ -31,7 +31,7 @@ export default function Footer() {
           style={{
             fontFamily: 'var(--font-body)',
             fontSize: '13px',
-            color: 'rgba(255,255,255,0.4)',
+            color: 'rgba(232,221,201,0.4)',
           }}
         >
           © {year} Vantage. All rights reserved.
@@ -42,7 +42,7 @@ export default function Footer() {
             style={{
               fontFamily: 'var(--font-body)',
               fontSize: '13px',
-              color: 'rgba(255,255,255,0.6)',
+              color: 'rgba(232,221,201,0.6)',
               textDecoration: 'none',
             }}
           >
@@ -53,7 +53,7 @@ export default function Footer() {
             style={{
               fontFamily: 'var(--font-body)',
               fontSize: '13px',
-              color: 'rgba(255,255,255,0.6)',
+              color: 'rgba(232,221,201,0.6)',
               textDecoration: 'none',
             }}
           >

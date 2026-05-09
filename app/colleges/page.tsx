@@ -9,9 +9,10 @@ import Button from '@/components/Button';
 import SchoolCard from '@/components/SchoolCard';
 import EdStrategyPanel from '@/components/EdStrategyPanel';
 import SchoolDetailModal from '@/components/SchoolDetailModal';
+import StrategyHeader from '@/components/StrategyHeader';
+import BalanceDiagnostic, { buildBalanceDiagnostic } from '@/components/BalanceDiagnostic';
 import {
   classify,
-  evaluateBalance,
   profileFromUserStats,
   type College,
   type SchoolClassification,
@@ -24,11 +25,11 @@ import { computeEdStrategy } from '@/lib/edStrategy';
 type Tab = 'strategy' | 'add';
 
 const TIER_COLOR: Record<Tier, string> = {
-  Safety: '#4ADE80',
-  Likely: '#86EFAC',
-  Target: '#D4AF37',
-  Reach: '#FBBF24',
-  'Hard Reach': '#F87171',
+  Safety: '#8FB89A',
+  Likely: '#8FB89A',
+  Target: '#C9A977',
+  Reach: '#C9A977',
+  'Hard Reach': '#A35A6A',
 };
 
 export default function CollegesPage() {
@@ -99,7 +100,16 @@ export default function CollegesPage() {
     return myColleges.map((c) => classify(c, profile, 'RD'));
   }, [colleges, userColleges, profile]);
 
-  const balance = useMemo(() => evaluateBalance(classifications), [classifications]);
+  const tierCounts: Record<Tier, number> = useMemo(() => {
+    const out: Record<Tier, number> = {
+      Safety: 0, Likely: 0, Target: 0, Reach: 0, 'Hard Reach': 0,
+    };
+    for (const c of classifications) out[c.bucket]++;
+    return out;
+  }, [classifications]);
+
+  const diagnostic = useMemo(() => buildBalanceDiagnostic(tierCounts), [tierCounts]);
+
   const edStrategy = useMemo(
     () => (profile ? computeEdStrategy(classifications, profile) : null),
     [classifications, profile]
@@ -149,8 +159,8 @@ export default function CollegesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1623' }}>
-        <div style={{ color: '#D4AF37', fontFamily: 'var(--font-body)' }}>Loading...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1320' }}>
+        <div style={{ color: '#C9A977', fontFamily: 'var(--font-body)' }}>Loading...</div>
       </div>
     );
   }
@@ -167,52 +177,49 @@ export default function CollegesPage() {
   const profileIncomplete = !profile || (profile.unweightedGpa === 3.5 && !profile.sat && !profile.act);
 
   return (
-    <div className="min-h-screen" style={{ background: '#0B1623' }}>
+    <div className="min-h-screen" style={{ background: '#0B1320' }}>
       {/* NAV — preserved verbatim from prior page */}
-      <nav style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '24px 32px' }}>
+      <nav style={{ borderBottom: '1px solid rgba(232,221,201,0.1)', padding: '24px 32px' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-            <span className="font-heading text-2xl font-semibold" style={{ color: 'white' }}>VANTAGE</span>
-            <span className="text-2xl" style={{ color: '#D4AF37' }}>.</span>
+            <span className="font-heading text-2xl font-semibold" style={{ color: '#E8DDC9' }}>VANTAGE</span>
+            <span className="text-2xl" style={{ color: '#C9A977' }}>.</span>
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <Link href="/dashboard" style={{ color: pathname === '/dashboard' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: pathname === '/dashboard' ? 600 : 400 }}>Dashboard</Link>
-            <Link href="/personal-statement" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? 600 : 400 }}>Essays</Link>
-            <Link href="/common-app" style={{ color: pathname.startsWith('/common-app') ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: pathname.startsWith('/common-app') ? 600 : 400 }}>Common App</Link>
-            <Link href="/colleges" style={{ color: pathname.startsWith('/colleges') ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: pathname.startsWith('/colleges') ? 600 : 400 }}>Portfolio</Link>
-            <Link href="/profile" style={{ color: pathname === '/profile' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: pathname === '/profile' ? 600 : 400 }}>Profile</Link>
-            <Link href="/discovery" style={{ color: pathname === '/discovery' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: pathname === '/discovery' ? 600 : 400 }}>Insight Questions</Link>
-            <button onClick={handleLogout} style={{ background: 'transparent', color: 'rgba(255,255,255,0.7)', border: 'none', fontFamily: 'var(--font-body)', fontSize: '14px', cursor: 'pointer', padding: 0 }}>Logout</button>
+            <Link href="/dashboard" style={{ color: pathname === '/dashboard' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: pathname === '/dashboard' ? 600 : 400 }}>Dashboard</Link>
+            <Link href="/personal-statement" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? 600 : 400 }}>Essays</Link>
+            <Link href="/common-app" style={{ color: pathname.startsWith('/common-app') ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: pathname.startsWith('/common-app') ? 600 : 400 }}>Common App</Link>
+            <Link href="/colleges" style={{ color: pathname.startsWith('/colleges') ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: pathname.startsWith('/colleges') ? 600 : 400 }}>Portfolio</Link>
+            <Link href="/profile" style={{ color: pathname === '/profile' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: pathname === '/profile' ? 600 : 400 }}>Profile</Link>
+            <Link href="/discovery" style={{ color: pathname === '/discovery' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: pathname === '/discovery' ? 600 : 400 }}>Insight Questions</Link>
+            <button onClick={handleLogout} style={{ background: 'transparent', color: 'rgba(232,221,201,0.7)', border: 'none', fontFamily: 'var(--font-body)', fontSize: '14px', cursor: 'pointer', padding: 0 }}>Logout</button>
           </div>
         </div>
       </nav>
 
       <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '64px 32px' }}>
-        {/* Header */}
-        <div style={{ marginBottom: '32px' }}>
-          <h1 className="font-heading text-5xl mb-4" style={{ color: 'white' }}>
-            Strategy
-          </h1>
-          <p className="font-body text-lg" style={{ color: '#F3E5AB' }}>
-            Where you stand at every school on your list, and where to spend your binding ED card.
-          </p>
-        </div>
+        {/* Header — title + balance pill */}
+        <StrategyHeader
+          totalSchools={classifications.length}
+          pillLabel={diagnostic.pillLabel}
+          pillVariant={diagnostic.pillVariant}
+        />
 
         {/* Profile-incomplete nudge */}
         {profileIncomplete && (
           <div
             style={{
-              background: 'rgba(212, 175, 55, 0.1)',
-              border: '1px solid rgba(212, 175, 55, 0.3)',
-              borderLeft: '4px solid #D4AF37',
+              background: 'rgba(201,169,119, 0.1)',
+              border: '1px solid rgba(201,169,119, 0.3)',
+              borderLeft: '4px solid #C9A977',
               padding: '16px 24px',
               marginBottom: '24px',
             }}
           >
-            <p className="font-body text-sm" style={{ color: '#F3E5AB', lineHeight: 1.6, margin: 0 }}>
-              <strong style={{ color: '#D4AF37' }}>Add your stats to unlock real classifications.</strong>{' '}
+            <p className="font-body text-sm" style={{ color: '#E8DDC9', lineHeight: 1.6, margin: 0 }}>
+              <strong style={{ color: '#C9A977' }}>Add your stats to unlock real classifications.</strong>{' '}
               We need GPA, SAT/ACT, intended major, and a few other inputs.{' '}
-              <Link href="/profile" style={{ color: '#D4AF37', textDecoration: 'underline' }}>
+              <Link href="/profile" style={{ color: '#C9A977', textDecoration: 'underline' }}>
                 Complete your profile →
               </Link>
             </p>
@@ -220,7 +227,7 @@ export default function CollegesPage() {
         )}
 
         {/* Tab switcher */}
-        <div style={{ display: 'flex', gap: '4px', marginBottom: '32px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '32px', borderBottom: '1px solid rgba(232,221,201,0.1)' }}>
           {(
             [
               { k: 'strategy' as Tab, label: 'Strategy' },
@@ -241,8 +248,8 @@ export default function CollegesPage() {
                   fontWeight: 600,
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  color: active ? '#D4AF37' : 'rgba(255,255,255,0.55)',
-                  borderBottom: active ? '2px solid #D4AF37' : '2px solid transparent',
+                  color: active ? '#C9A977' : 'rgba(232,221,201,0.55)',
+                  borderBottom: active ? '2px solid #C9A977' : '2px solid transparent',
                   marginBottom: '-1px',
                   cursor: 'pointer',
                 }}
@@ -259,10 +266,10 @@ export default function CollegesPage() {
             {classifications.length === 0 ? (
               <Card>
                 <div style={{ padding: '32px', textAlign: 'center' }}>
-                  <h3 className="font-heading" style={{ color: 'white', fontSize: '22px', marginBottom: '8px' }}>
+                  <h3 className="font-heading" style={{ color: '#E8DDC9', fontSize: '22px', marginBottom: '8px' }}>
                     Your portfolio is empty.
                   </h3>
-                  <p className="font-body" style={{ color: 'rgba(255,255,255,0.65)', fontSize: '14px', marginBottom: '20px' }}>
+                  <p className="font-body" style={{ color: 'rgba(232,221,201,0.65)', fontSize: '14px', marginBottom: '20px' }}>
                     Add schools you're considering and we'll show you exactly where each one falls.
                   </p>
                   <Button variant="primary" onClick={() => setTab('add')}>
@@ -272,15 +279,15 @@ export default function CollegesPage() {
               </Card>
             ) : (
               <>
+                {/* Balance diagnostic card */}
+                <BalanceDiagnostic data={diagnostic} />
+
                 {/* ED Strategy panel */}
                 {edStrategy && profile && (
                   <div style={{ marginBottom: '32px' }}>
                     <EdStrategyPanel strategy={edStrategy} profile={profile} />
                   </div>
                 )}
-
-                {/* Balance summary */}
-                <BalanceSummary balance={balance} />
 
                 {/* Tier columns */}
                 <div
@@ -320,8 +327,8 @@ export default function CollegesPage() {
                   width: '100%',
                   maxWidth: '500px',
                   background: 'rgba(0,0,0,0.2)',
-                  border: '1px solid rgba(212,175,55,0.2)',
-                  color: 'white',
+                  border: '1px solid rgba(201,169,119,0.2)',
+                  color: '#E8DDC9',
                   padding: '14px 18px',
                   fontFamily: 'var(--font-body)',
                   fontSize: '15px',
@@ -332,7 +339,7 @@ export default function CollegesPage() {
 
             {availableColleges.length === 0 ? (
               <Card>
-                <p className="font-body text-center" style={{ color: 'rgba(255,255,255,0.65)', padding: '24px' }}>
+                <p className="font-body text-center" style={{ color: 'rgba(232,221,201,0.65)', padding: '24px' }}>
                   {searchTerm ? 'No colleges found matching your search.' : 'No additional colleges available.'}
                 </p>
               </Card>
@@ -346,20 +353,20 @@ export default function CollegesPage() {
               >
                 {availableColleges.map((college) => (
                   <Card key={college.id}>
-                    <h3 className="font-heading" style={{ color: '#D4AF37', fontSize: '22px', marginBottom: '6px' }}>
+                    <h3 className="font-heading" style={{ color: '#C9A977', fontSize: '22px', marginBottom: '6px' }}>
                       {college.name}
                     </h3>
-                    <p className="font-body" style={{ color: 'rgba(255,255,255,0.65)', fontSize: '13px', marginBottom: '14px' }}>
+                    <p className="font-body" style={{ color: 'rgba(232,221,201,0.65)', fontSize: '13px', marginBottom: '14px' }}>
                       {college.location}
                     </p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '16px' }}>
                       {college.acceptance_rate != null && (
-                        <span className="font-body" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>
+                        <span className="font-body" style={{ color: 'rgba(232,221,201,0.7)', fontSize: '13px' }}>
                           Acceptance: {(college.acceptance_rate * 100).toFixed(1)}%
                         </span>
                       )}
                       {college.sat_range_low != null && college.sat_range_high != null && (
-                        <span className="font-body" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>
+                        <span className="font-body" style={{ color: 'rgba(232,221,201,0.7)', fontSize: '13px' }}>
                           SAT: {college.sat_range_low} – {college.sat_range_high}
                         </span>
                       )}
@@ -389,66 +396,6 @@ export default function CollegesPage() {
 
 /* ------------------------------ subviews ------------------------------ */
 
-function BalanceSummary({ balance }: { balance: ReturnType<typeof evaluateBalance> }) {
-  if (balance.totalSchools === 0) return null;
-  const headlineColor = balance.isBalanced ? '#4ADE80' : '#FBBF24';
-  return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(180px, auto) 1fr',
-        gap: '24px',
-        alignItems: 'center',
-        background: 'rgba(11,22,35,0.6)',
-        border: '1px solid rgba(212,175,55,0.18)',
-        padding: '20px 24px',
-      }}
-    >
-      <div>
-        <div
-          className="font-body"
-          style={{
-            fontSize: '10.5px',
-            fontWeight: 600,
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            color: 'rgba(255,255,255,0.55)',
-          }}
-        >
-          List Balance
-        </div>
-        <div
-          className="font-heading"
-          style={{ fontSize: '20px', fontWeight: 600, color: headlineColor, marginTop: '4px', lineHeight: 1.2 }}
-        >
-          {balance.headline ?? 'Your list looks balanced.'}
-        </div>
-      </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px' }}>
-        {(TIERS as Tier[]).map((t) => (
-          <div
-            key={t}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '2px',
-              padding: '6px 12px',
-              borderLeft: `3px solid ${TIER_COLOR[t]}`,
-            }}
-          >
-            <span className="font-body" style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.14em', color: 'rgba(255,255,255,0.55)' }}>
-              {t}
-            </span>
-            <span className="font-heading" style={{ fontSize: '20px', color: 'white', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
-              {balance.counts[t]}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function TierColumn({
   tier,
   schools,
@@ -473,14 +420,14 @@ function TierColumn({
           borderBottom: `2px solid ${TIER_COLOR[tier]}`,
         }}
       >
-        <span className="font-heading" style={{ color: 'white', fontSize: '17px', fontWeight: 600 }}>
+        <span className="font-heading" style={{ color: '#E8DDC9', fontSize: '17px', fontWeight: 600 }}>
           {tier}
         </span>
         <span
           className="font-body"
           style={{
             fontSize: '12px',
-            color: 'rgba(255,255,255,0.6)',
+            color: 'rgba(232,221,201,0.6)',
             fontVariantNumeric: 'tabular-nums',
           }}
         >
@@ -493,11 +440,11 @@ function TierColumn({
             className="font-body"
             style={{
               fontSize: '12px',
-              color: 'rgba(255,255,255,0.35)',
+              color: 'rgba(232,221,201,0.35)',
               fontStyle: 'italic',
               padding: '20px 8px',
               textAlign: 'center',
-              border: '1px dashed rgba(255,255,255,0.08)',
+              border: '1px dashed rgba(232,221,201,0.08)',
             }}
           >
             None yet

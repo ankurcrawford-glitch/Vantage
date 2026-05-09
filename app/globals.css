@@ -5,38 +5,50 @@
   --font-heading: "Cormorant Garamond", serif;
   --font-body: "Montserrat", sans-serif;
 
-  /* Colors */
-  --midnight: #0B1623;
-  --royal-blue: #152C45;
-  --gold-leaf: #D4AF37;
-  --gold-light: #F3E5AB;
-  --marble: #F9F9F9;
-  --text-dark: #1A1A1A;
-  --text-grey: #4A4A4A;
-  
+  /* Colors — Strategy palette (cream / muted gold / dusty rose / deep navy) */
+  --midnight: #0B1320;            /* page background — deep navy near-black */
+  --royal-blue: #0F1828;          /* card / elevation fill */
+  --hairline: #1B2740;            /* subtle card border */
+  --cream: #E8DDC9;               /* primary text — warm parchment */
+  --cream-muted: #C9BFA9;         /* secondary text */
+  --cream-dim: #8C8473;           /* tertiary / hint text */
+  --gold-leaf: #C9A977;           /* eyebrow / small-caps / accent gold (muted) */
+  --gold-light: #E8DDC9;          /* aliased to cream — used for emphasis text */
+  --rose: #A35A6A;                /* dusty rose — IMBALANCED status */
+  --rose-light: #C98E99;          /* lighter rose for pill text */
+  --marble: #F9F9F9;              /* legacy — kept for any light surfaces */
+  --text-dark: #1A1A1A;           /* legacy */
+  --text-grey: #4A4A4A;           /* legacy */
+
   /* Status Colors */
-  --success: #4ADE80;
-  --warning: #FBBF24;
-  --danger: #F87171;
+  --success: #8FB89A;             /* muted sage — fits palette */
+  --warning: #C9A977;             /* aliased to gold */
+  --danger: #A35A6A;              /* aliased to rose */
 }
 
 @theme inline {
   /* Color System */
   --color-midnight: var(--midnight);
   --color-royal-blue: var(--royal-blue);
+  --color-hairline: var(--hairline);
+  --color-cream: var(--cream);
+  --color-cream-muted: var(--cream-muted);
+  --color-cream-dim: var(--cream-dim);
   --color-gold-leaf: var(--gold-leaf);
   --color-gold-light: var(--gold-light);
+  --color-rose: var(--rose);
+  --color-rose-light: var(--rose-light);
   --color-marble: var(--marble);
   --color-text-dark: var(--text-dark);
   --color-text-grey: var(--text-grey);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
-  
+
   /* Font System */
   --font-heading: var(--font-heading);
   --font-body: var(--font-body);
-  
+
   /* Spacing (4px base unit) */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
@@ -50,7 +62,7 @@
 
 body {
   background: var(--midnight);
-  color: rgba(255, 255, 255, 1);
+  color: var(--cream);
   font-family: var(--font-body);
   font-size: 16px;
   font-weight: 300;
@@ -62,6 +74,7 @@ body {
   font-family: var(--font-heading);
   font-weight: 600;
   letter-spacing: -0.02em;
+  color: var(--cream);
 }
 
 .font-body {
@@ -75,6 +88,7 @@ h1 {
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.2;
+  color: var(--cream);
 }
 
 h2 {
@@ -83,6 +97,7 @@ h2 {
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.2;
+  color: var(--cream);
 }
 
 h3 {
@@ -90,6 +105,7 @@ h3 {
   font-size: 24px;
   font-weight: 600;
   line-height: 1.3;
+  color: var(--cream);
 }
 
 h4 {
@@ -97,6 +113,7 @@ h4 {
   font-size: 20px;
   font-weight: 600;
   line-height: 1.3;
+  color: var(--cream);
 }
 
 /* Container */

@@ -66,7 +66,7 @@ export default function Navigation() {
   const getLinkStyle = (path: string) => {
     const active = isActive(path);
     return {
-      color: active ? '#F3E5AB' : 'rgba(255,255,255,0.7)',
+      color: active ? '#E8DDC9' : 'rgba(232,221,201,0.7)',
       textDecoration: 'none',
       fontSize: '14px',
       fontFamily: 'var(--font-body)',
@@ -75,15 +75,15 @@ export default function Navigation() {
   };
 
   return (
-    <nav style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '24px 32px' }}>
+    <nav style={{ borderBottom: '1px solid rgba(232,221,201,0.1)', padding: '24px 32px' }}>
       <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href={user ? "/dashboard" : "/"} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-          <span className="font-heading text-2xl font-semibold" style={{ color: 'white' }}>VANTAGE</span>
-          <span className="text-2xl" style={{ color: '#D4AF37' }}>.</span>
+          <span className="font-heading text-2xl font-semibold" style={{ color: '#E8DDC9' }}>VANTAGE</span>
+          <span className="text-2xl" style={{ color: '#C9A977' }}>.</span>
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
           {loading ? (
-            <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>Loading...</span>
+            <span style={{ color: 'rgba(232,221,201,0.5)', fontSize: '14px' }}>Loading...</span>
           ) : user ? (
             <>
               <Link href="/dashboard" style={getLinkStyle('/dashboard')}>Dashboard</Link>
@@ -96,7 +96,7 @@ export default function Navigation() {
                 onClick={handleLogout}
                 style={{
                   background: 'transparent',
-                  color: 'rgba(255,255,255,0.7)',
+                  color: 'rgba(232,221,201,0.7)',
                   border: 'none',
                   fontFamily: 'var(--font-body)',
                   fontSize: '14px',
@@ -104,10 +104,10 @@ export default function Navigation() {
                   padding: 0,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#F3E5AB';
+                  e.currentTarget.style.color = '#E8DDC9';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
+                  e.currentTarget.style.color = 'rgba(232,221,201,0.7)';
                 }}
               >
                 Logout

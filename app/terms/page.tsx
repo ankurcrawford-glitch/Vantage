@@ -19,25 +19,25 @@ const EFFECTIVE_DATE = 'April 18, 2026';
 export default function TermsPage() {
   const pathname = usePathname();
   return (
-    <div className="min-h-screen" style={{ background: '#0B1623' }}>
-      <nav style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '24px 32px' }}>
+    <div className="min-h-screen" style={{ background: '#0B1320' }}>
+      <nav style={{ borderBottom: '1px solid rgba(232,221,201,0.1)', padding: '24px 32px' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-            <span className="font-heading text-2xl font-semibold" style={{ color: 'white' }}>VANTAGE</span>
-            <span className="text-2xl" style={{ color: '#D4AF37' }}>.</span>
+            <span className="font-heading text-2xl font-semibold" style={{ color: '#E8DDC9' }}>VANTAGE</span>
+            <span className="text-2xl" style={{ color: '#C9A977' }}>.</span>
           </Link>
           <div style={{ display: 'flex', gap: '24px' }}>
-            <Link href="/privacy" style={{ color: pathname === '/privacy' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px' }}>Privacy</Link>
-            <Link href="/terms" style={{ color: pathname === '/terms' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px' }}>Terms</Link>
+            <Link href="/privacy" style={{ color: pathname === '/privacy' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px' }}>Privacy</Link>
+            <Link href="/terms" style={{ color: pathname === '/terms' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px' }}>Terms</Link>
           </div>
         </div>
       </nav>
 
-      <article style={{ maxWidth: '760px', margin: '0 auto', padding: '64px 32px', color: 'rgba(255,255,255,0.9)', fontFamily: 'var(--font-body)', lineHeight: '1.7' }}>
-        <h1 className="font-heading" style={{ color: 'white', fontSize: '42px', marginBottom: '12px' }}>
+      <article style={{ maxWidth: '760px', margin: '0 auto', padding: '64px 32px', color: 'rgba(232,221,201,0.9)', fontFamily: 'var(--font-body)', lineHeight: '1.7' }}>
+        <h1 className="font-heading" style={{ color: '#E8DDC9', fontSize: '42px', marginBottom: '12px' }}>
           Terms of Service
         </h1>
-        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', marginBottom: '40px' }}>
+        <p style={{ color: 'rgba(232,221,201,0.5)', fontSize: '14px', marginBottom: '40px' }}>
           Effective: {EFFECTIVE_DATE}
         </p>
 
@@ -68,7 +68,7 @@ export default function TermsPage() {
             We do not knowingly collect personal information from children under 13. If we
             learn we have collected such information, we will delete it. If you believe a
             child under 13 has provided us information, contact us at{' '}
-            <span style={{ color: '#D4AF37' }}>privacy@my-vantage.app</span>.
+            <span style={{ color: '#C9A977' }}>privacy@my-vantage.app</span>.
           </p>
         </Section>
 
@@ -81,7 +81,7 @@ export default function TermsPage() {
           </p>
           <p>
             Notify us immediately at{' '}
-            <span style={{ color: '#D4AF37' }}>support@my-vantage.app</span> if you suspect
+            <span style={{ color: '#C9A977' }}>support@my-vantage.app</span> if you suspect
             unauthorized access.
           </p>
         </Section>
@@ -260,14 +260,14 @@ export default function TermsPage() {
         <Section title="14. Governing law and disputes">
           <p>
             These Terms are governed by the laws of the State of{' '}
-            <em style={{ color: 'rgba(255,255,255,0.5)' }}>[specify state — consult lawyer]</em>,
+            <em style={{ color: 'rgba(232,221,201,0.5)' }}>[specify state — consult lawyer]</em>,
             without regard to conflict-of-laws principles. Any dispute that cannot be
             resolved informally will be brought in the state or federal courts located in{' '}
-            <em style={{ color: 'rgba(255,255,255,0.5)' }}>[specify venue]</em>, and you
+            <em style={{ color: 'rgba(232,221,201,0.5)' }}>[specify venue]</em>, and you
             consent to that jurisdiction and venue.
           </p>
           <p>
-            <em style={{ color: 'rgba(255,255,255,0.5)' }}>
+            <em style={{ color: 'rgba(232,221,201,0.5)' }}>
               [Reserved for arbitration and class-action-waiver clauses if applicable
               — consult your attorney.]
             </em>
@@ -277,15 +277,15 @@ export default function TermsPage() {
         <Section title="15. Contact">
           <p>
             Questions about these Terms? Reach us at{' '}
-            <span style={{ color: '#D4AF37' }}>support@my-vantage.app</span>. For privacy
+            <span style={{ color: '#C9A977' }}>support@my-vantage.app</span>. For privacy
             requests specifically, see our{' '}
             <Link href="/privacy" style={linkStyle}>Privacy Policy</Link>.
           </p>
         </Section>
 
-        <div style={{ marginTop: '48px', padding: '16px', background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: '4px' }}>
-          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', lineHeight: '1.6' }}>
-            <strong style={{ color: '#D4AF37' }}>Note:</strong> This document is a
+        <div style={{ marginTop: '48px', padding: '16px', background: 'rgba(201,169,119,0.08)', border: '1px solid rgba(201,169,119,0.3)', borderRadius: '4px' }}>
+          <p style={{ color: 'rgba(232,221,201,0.7)', fontSize: '13px', lineHeight: '1.6' }}>
+            <strong style={{ color: '#C9A977' }}>Note:</strong> This document is a
             starter template and not a substitute for legal advice. Vantage has had it
             reviewed by a qualified attorney before publication. If you notice anything
             unclear, please contact us.
@@ -299,7 +299,7 @@ export default function TermsPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section style={{ marginBottom: '36px' }}>
-      <h2 className="font-heading" style={{ color: '#D4AF37', fontSize: '22px', marginBottom: '12px' }}>
+      <h2 className="font-heading" style={{ color: '#C9A977', fontSize: '22px', marginBottom: '12px' }}>
         {title}
       </h2>
       {children}
@@ -308,7 +308,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 const linkStyle: React.CSSProperties = {
-  color: '#D4AF37',
+  color: '#C9A977',
   textDecoration: 'underline',
 };
 

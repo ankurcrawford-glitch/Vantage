@@ -224,23 +224,23 @@ export default function AcceptInvitationPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1623' }}>
-        <div style={{ color: '#D4AF37' }}>Loading invitation...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1320' }}>
+        <div style={{ color: '#C9A977' }}>Loading invitation...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1623' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1320' }}>
         <div style={{ maxWidth: '500px', textAlign: 'center' }}>
           <Card>
-            <h1 className="font-heading text-2xl mb-4" style={{ color: '#D4AF37' }}>Invitation Error</h1>
-            <p className="font-body" style={{ color: 'rgba(255,255,255,0.9)', marginBottom: '24px' }}>{error}</p>
+            <h1 className="font-heading text-2xl mb-4" style={{ color: '#C9A977' }}>Invitation Error</h1>
+            <p className="font-body" style={{ color: 'rgba(232,221,201,0.9)', marginBottom: '24px' }}>{error}</p>
             <Link href="/">
               <button style={{
-                background: '#D4AF37',
-                color: '#0B1623',
+                background: '#C9A977',
+                color: '#0B1320',
                 padding: '12px 24px',
                 fontFamily: 'var(--font-body)',
                 fontSize: '14px',
@@ -269,21 +269,21 @@ export default function AcceptInvitationPage() {
   const roleLabel = invitation.role === 'parent' ? 'Parent' : invitation.role === 'counselor' ? 'Counselor' : invitation.role === 'mentor' ? 'Mentor' : 'Reviewer';
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1623' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1320' }}>
       <div style={{ maxWidth: '550px', width: '100%', padding: '32px' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-            <span className="font-heading text-3xl font-semibold" style={{ color: 'white' }}>VANTAGE</span>
-            <span className="text-3xl" style={{ color: '#D4AF37' }}>.</span>
+            <span className="font-heading text-3xl font-semibold" style={{ color: '#E8DDC9' }}>VANTAGE</span>
+            <span className="text-3xl" style={{ color: '#C9A977' }}>.</span>
           </Link>
         </div>
 
         <Card>
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <h1 className="font-heading text-2xl mb-2" style={{ color: '#D4AF37' }}>
+            <h1 className="font-heading text-2xl mb-2" style={{ color: '#C9A977' }}>
               You&apos;re Invited to Review
             </h1>
-            <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
+            <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.7)' }}>
               {invitation.invitee_name
                 ? `${invitation.invitee_name}, you've been invited as a ${roleLabel}`
                 : `You've been invited as a ${roleLabel}`}
@@ -294,25 +294,25 @@ export default function AcceptInvitationPage() {
             padding: '20px',
             background: 'rgba(0,0,0,0.2)',
             borderRadius: '4px',
-            borderLeft: '3px solid #D4AF37',
+            borderLeft: '3px solid #C9A977',
             marginBottom: '24px',
           }}>
-            <p className="font-heading text-lg" style={{ color: 'white', marginBottom: '8px' }}>
+            <p className="font-heading text-lg" style={{ color: '#E8DDC9', marginBottom: '8px' }}>
               {isCommonApp ? 'Common Application Essay' : collegeName}
             </p>
             {promptPreview && (
-              <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.6)', lineHeight: '1.5' }}>
+              <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.6)', lineHeight: '1.5' }}>
                 {promptPreview}
               </p>
             )}
           </div>
 
-          <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '24px', lineHeight: '1.6' }}>
+          <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.7)', marginBottom: '24px', lineHeight: '1.6' }}>
             As a {roleLabel}, you&apos;ll be able to read the essay and leave comments with feedback, suggestions, and encouragement.
           </p>
 
           {invitation.status === 'revoked' ? (
-            <p className="font-body text-sm" style={{ color: '#F87171', textAlign: 'center' }}>
+            <p className="font-body text-sm" style={{ color: '#A35A6A', textAlign: 'center' }}>
               This invitation has been revoked.
             </p>
           ) : currentUser ? (
@@ -323,8 +323,8 @@ export default function AcceptInvitationPage() {
                 disabled={accepting}
                 style={{
                   width: '100%',
-                  background: accepting ? 'rgba(212,175,55,0.5)' : '#D4AF37',
-                  color: '#0B1623',
+                  background: accepting ? 'rgba(201,169,119,0.5)' : '#C9A977',
+                  color: '#0B1320',
                   padding: '14px 24px',
                   fontFamily: 'var(--font-body)',
                   fontSize: '16px',
@@ -347,13 +347,13 @@ export default function AcceptInvitationPage() {
             /* User is NOT logged in — show auth form */
             <div>
               <div style={{
-                borderTop: '1px solid rgba(255,255,255,0.1)',
+                borderTop: '1px solid rgba(232,221,201,0.1)',
                 paddingTop: '24px',
               }}>
-                <h3 className="font-heading text-lg" style={{ color: 'white', textAlign: 'center', marginBottom: '4px' }}>
+                <h3 className="font-heading text-lg" style={{ color: '#E8DDC9', textAlign: 'center', marginBottom: '4px' }}>
                   {authMode === 'signup' ? 'Create Your Reviewer Account' : 'Sign In'}
                 </h3>
-                <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: '20px' }}>
+                <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.5)', textAlign: 'center', marginBottom: '20px' }}>
                   {authMode === 'signup'
                     ? 'Quick sign-up to start reviewing — no student account needed'
                     : 'Already have an account? Sign in below'}
@@ -369,8 +369,8 @@ export default function AcceptInvitationPage() {
                       style={{
                         height: '44px',
                         background: 'rgba(0,0,0,0.2)',
-                        border: '1px solid rgba(212,175,55,0.2)',
-                        color: 'white',
+                        border: '1px solid rgba(201,169,119,0.2)',
+                        color: '#E8DDC9',
                         padding: '0 14px',
                         fontFamily: 'var(--font-body)',
                         fontSize: '14px',
@@ -388,8 +388,8 @@ export default function AcceptInvitationPage() {
                     style={{
                       height: '44px',
                       background: 'rgba(0,0,0,0.2)',
-                      border: '1px solid rgba(212,175,55,0.2)',
-                      color: 'white',
+                      border: '1px solid rgba(201,169,119,0.2)',
+                      color: '#E8DDC9',
                       padding: '0 14px',
                       fontFamily: 'var(--font-body)',
                       fontSize: '14px',
@@ -406,8 +406,8 @@ export default function AcceptInvitationPage() {
                     style={{
                       height: '44px',
                       background: 'rgba(0,0,0,0.2)',
-                      border: '1px solid rgba(212,175,55,0.2)',
-                      color: 'white',
+                      border: '1px solid rgba(201,169,119,0.2)',
+                      color: '#E8DDC9',
                       padding: '0 14px',
                       fontFamily: 'var(--font-body)',
                       fontSize: '14px',
@@ -417,7 +417,7 @@ export default function AcceptInvitationPage() {
                   />
 
                   {authError && (
-                    <p className="font-body text-xs" style={{ color: '#F87171' }}>{authError}</p>
+                    <p className="font-body text-xs" style={{ color: '#A35A6A' }}>{authError}</p>
                   )}
 
                   <button
@@ -425,8 +425,8 @@ export default function AcceptInvitationPage() {
                     disabled={authLoading || accepting}
                     style={{
                       width: '100%',
-                      background: (authLoading || accepting) ? 'rgba(212,175,55,0.5)' : '#D4AF37',
-                      color: '#0B1623',
+                      background: (authLoading || accepting) ? 'rgba(201,169,119,0.5)' : '#C9A977',
+                      color: '#0B1320',
                       padding: '14px 24px',
                       fontFamily: 'var(--font-body)',
                       fontSize: '16px',
@@ -446,12 +446,12 @@ export default function AcceptInvitationPage() {
                   </button>
                 </form>
 
-                <p className="font-body text-xs" style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: '16px' }}>
+                <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.5)', textAlign: 'center', marginTop: '16px' }}>
                   {authMode === 'signup' ? (
                     <>Already have an account?{' '}
                       <button
                         onClick={() => { setAuthMode('signin'); setAuthError(''); }}
-                        style={{ background: 'none', border: 'none', color: '#D4AF37', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '12px', padding: 0 }}
+                        style={{ background: 'none', border: 'none', color: '#C9A977', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '12px', padding: 0 }}
                       >
                         Sign in
                       </button>
@@ -460,7 +460,7 @@ export default function AcceptInvitationPage() {
                     <>Need an account?{' '}
                       <button
                         onClick={() => { setAuthMode('signup'); setAuthError(''); }}
-                        style={{ background: 'none', border: 'none', color: '#D4AF37', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '12px', padding: 0 }}
+                        style={{ background: 'none', border: 'none', color: '#C9A977', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '12px', padding: 0 }}
                       >
                         Create one
                       </button>

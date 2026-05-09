@@ -9,37 +9,29 @@ interface Props {
 }
 
 export default function EdStrategyPanel({ strategy, profile }: Props) {
-  const { recommended, recommendedShiftedBucket, recommendedRatio, alternatives, donts, hookNotes, noEdSchools, scored } = strategy;
+  const {
+    recommended,
+    recommendedShiftedBucket,
+    recommendedRatio,
+    alternatives,
+    donts,
+    hookNotes,
+    noEdSchools,
+    scored,
+  } = strategy;
   const hasAnyEdEligible = scored.length > 0;
   const athleteFirst = profile.hooks.recruitedAthlete;
 
   return (
     <div
       style={{
-        position: 'relative',
-        background: '#152C45',
-        borderLeft: '3px solid #D4AF37',
-        borderTop: '1px solid rgba(212,175,55,0.25)',
-        borderRight: '1px solid rgba(212,175,55,0.15)',
-        borderBottom: '1px solid rgba(212,175,55,0.15)',
+        background: 'rgba(11,19,32, 0.55)',
+        border: '1px solid rgba(232,221,201, 0.18)',
+        borderRadius: '6px',
         padding: '32px',
-        boxShadow: '0 8px 24px -8px rgba(212,175,55,0.18)',
-        overflow: 'hidden',
       }}
     >
-      {/* radial gold accent */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          opacity: 0.05,
-          pointerEvents: 'none',
-          background: 'radial-gradient(circle at 12% 0%, #D4AF37 0%, transparent 55%)',
-        }}
-      />
-
-      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         {/* Header */}
         <div>
           <div
@@ -49,7 +41,7 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
               fontWeight: 600,
               textTransform: 'uppercase',
               letterSpacing: '0.22em',
-              color: '#D4AF37',
+              color: '#C9A977',
             }}
           >
             Your ED Strategy
@@ -57,22 +49,21 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
           <h2
             className="font-heading"
             style={{
-              color: 'white',
-              fontSize: '32px',
+              color: '#E8DDC9',
+              fontSize: '34px',
               fontWeight: 600,
               letterSpacing: '-0.02em',
-              marginTop: '8px',
               lineHeight: 1.2,
-              margin: '8px 0 0 0',
+              margin: '10px 0 0 0',
             }}
           >
             Where to play your one binding card.
           </h2>
           <div
             style={{
-              width: '80px',
-              height: '2px',
-              background: '#D4AF37',
+              width: '90px',
+              height: '1px',
+              background: 'rgba(232,221,201, 0.35)',
               marginTop: '14px',
             }}
           />
@@ -80,9 +71,17 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
 
         {/* Athlete-first lead */}
         {athleteFirst && hookNotes[0] && (
-          <Block borderColor="#D4AF37" tinted>
+          <Block tinted>
             <Eyebrow>Coach's call first</Eyebrow>
-            <p className="font-body" style={{ color: 'rgba(255,255,255,0.92)', fontSize: '14px', lineHeight: 1.6, margin: '6px 0 0 0' }}>
+            <p
+              className="font-body"
+              style={{
+                color: 'rgba(232,221,201, 0.88)',
+                fontSize: '14px',
+                lineHeight: 1.6,
+                margin: '6px 0 0 0',
+              }}
+            >
               {hookNotes[0]}
             </p>
           </Block>
@@ -91,11 +90,23 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
         {/* No ED-eligible at all */}
         {!hasAnyEdEligible && (
           <Block>
-            <h4 className="font-heading" style={{ color: 'white', fontSize: '18px', fontWeight: 600, margin: 0 }}>
+            <h4
+              className="font-heading"
+              style={{ color: '#E8DDC9', fontSize: '20px', fontWeight: 600, margin: 0 }}
+            >
               No ED-eligible schools in your current list.
             </h4>
-            <p className="font-body" style={{ color: 'rgba(255,255,255,0.65)', fontSize: '14px', marginTop: '8px', lineHeight: 1.6, margin: '8px 0 0 0' }}>
-              ED requires a binding commitment to one specific school. Consider adding an ED-binding school you'd be excited to attend — it's the single biggest lever you have in this process.
+            <p
+              className="font-body"
+              style={{
+                color: 'rgba(232,221,201, 0.6)',
+                fontSize: '14px',
+                lineHeight: 1.6,
+                margin: '8px 0 0 0',
+              }}
+            >
+              ED requires a binding commitment to one specific school. Consider adding an ED-binding
+              school you'd be excited to attend — it's the single biggest lever you have in this process.
             </p>
           </Block>
         )}
@@ -112,11 +123,24 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
         {/* No clear pick */}
         {hasAnyEdEligible && !recommended && (
           <Block>
-            <h4 className="font-heading" style={{ color: 'white', fontSize: '18px', fontWeight: 600, margin: 0 }}>
+            <h4
+              className="font-heading"
+              style={{ color: '#E8DDC9', fontSize: '20px', fontWeight: 600, margin: 0 }}
+            >
               No clear ED play in your current list.
             </h4>
-            <p className="font-body" style={{ color: 'rgba(255,255,255,0.65)', fontSize: '14px', marginTop: '8px', lineHeight: 1.6, margin: '8px 0 0 0' }}>
-              The ED-eligible schools on your list either remain Hard Reaches even with the ED bump, or are tiers where you don't need binding leverage. Adding a Reach-tier school where you'd commit wholeheartedly is the smartest next move.
+            <p
+              className="font-body"
+              style={{
+                color: 'rgba(232,221,201, 0.6)',
+                fontSize: '14px',
+                lineHeight: 1.6,
+                margin: '8px 0 0 0',
+              }}
+            >
+              The ED-eligible schools on your list either remain Hard Reaches even with the ED bump,
+              or are tiers where you don't need binding leverage. Adding a Reach-tier school where
+              you'd commit wholeheartedly is the smartest next move.
             </p>
           </Block>
         )}
@@ -125,11 +149,21 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
         {alternatives.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <Eyebrow muted>Alternatives</Eyebrow>
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <ul
+              style={{
+                listStyle: 'none',
+                margin: 0,
+                padding: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+              }}
+            >
               {alternatives.map((alt) => {
-                const ratio = alt.college.ed_admit_rate && alt.college.acceptance_rate
-                  ? alt.college.ed_admit_rate / Math.max(0.001, alt.college.acceptance_rate)
-                  : 1;
+                const ratio =
+                  alt.college.ed_admit_rate && alt.college.acceptance_rate
+                    ? alt.college.ed_admit_rate / Math.max(0.001, alt.college.acceptance_rate)
+                    : 1;
                 return (
                   <li
                     key={alt.college.id}
@@ -138,19 +172,37 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
                       alignItems: 'flex-start',
                       justifyContent: 'space-between',
                       gap: '16px',
-                      background: 'rgba(11, 22, 35, 0.4)',
-                      border: '1px solid rgba(212,175,55,0.18)',
-                      padding: '12px 16px',
+                      background: 'rgba(11,19,32, 0.5)',
+                      border: '1px solid rgba(232,221,201, 0.14)',
+                      borderRadius: '4px',
+                      padding: '14px 18px',
                     }}
                   >
                     <div style={{ minWidth: 0 }}>
-                      <div className="font-heading" style={{ color: 'white', fontSize: '17px', fontWeight: 600, letterSpacing: '-0.01em' }}>
+                      <div
+                        className="font-heading"
+                        style={{
+                          color: '#E8DDC9',
+                          fontSize: '20px',
+                          fontWeight: 600,
+                          letterSpacing: '-0.01em',
+                        }}
+                      >
                         {alt.college.name}
                       </div>
-                      <p className="font-body" style={{ color: 'rgba(255,255,255,0.65)', fontSize: '12.5px', marginTop: '4px', lineHeight: 1.5, margin: '4px 0 0 0' }}>
+                      <p
+                        className="font-body"
+                        style={{
+                          color: 'rgba(232,221,201, 0.6)',
+                          fontSize: '13px',
+                          lineHeight: 1.55,
+                          margin: '4px 0 0 0',
+                        }}
+                      >
                         ED here is roughly{' '}
-                        <span style={{ color: '#F3E5AB' }}>{ratio.toFixed(1)}× your odds</span>
-                        {' '}({((alt.college.ed_admit_rate ?? 0) * 100).toFixed(0)}% ED vs {((alt.college.acceptance_rate ?? 0) * 100).toFixed(0)}% RD).
+                        <span style={{ color: '#C9A977' }}>{ratio.toFixed(1)}× your odds</span>{' '}(
+                        {((alt.college.ed_admit_rate ?? 0) * 100).toFixed(0)}% ED vs{' '}
+                        {((alt.college.acceptance_rate ?? 0) * 100).toFixed(0)}% RD).
                       </p>
                     </div>
                     <span
@@ -159,8 +211,8 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
                         fontSize: '10px',
                         fontWeight: 600,
                         textTransform: 'uppercase',
-                        letterSpacing: '0.1em',
-                        color: 'rgba(255,255,255,0.55)',
+                        letterSpacing: '0.14em',
+                        color: 'rgba(232,221,201, 0.55)',
                         whiteSpace: 'nowrap',
                       }}
                     >
@@ -177,15 +229,24 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
         {donts.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <Eyebrow muted>Don't ED to</Eyebrow>
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <ul
+              style={{
+                listStyle: 'none',
+                margin: 0,
+                padding: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px',
+              }}
+            >
               {donts.map((d) => (
                 <li
                   key={d.school.college.id}
                   className="font-body"
                   style={{
                     fontSize: '13px',
-                    color: 'rgba(255,255,255,0.65)',
-                    lineHeight: 1.5,
+                    color: 'rgba(232,221,201, 0.65)',
+                    lineHeight: 1.55,
                     display: 'flex',
                     alignItems: 'flex-start',
                     gap: '10px',
@@ -193,11 +254,19 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
                 >
                   <span
                     aria-hidden="true"
-                    style={{ marginTop: '7px', width: '4px', height: '4px', borderRadius: '999px', background: 'rgba(255,255,255,0.35)', flexShrink: 0 }}
+                    style={{
+                      marginTop: '7px',
+                      width: '4px',
+                      height: '4px',
+                      borderRadius: '999px',
+                      background: 'rgba(232,221,201, 0.4)',
+                      flexShrink: 0,
+                    }}
                   />
                   <span>
-                    <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>{d.school.college.name}</span>
-                    {' — '}{d.reason}
+                    <span style={{ color: '#E8DDC9', fontWeight: 600 }}>{d.school.college.name}</span>
+                    {' — '}
+                    {d.reason}
                   </span>
                 </li>
               ))}
@@ -209,15 +278,24 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
         {hookNotes.length > (athleteFirst ? 1 : 0) && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <Eyebrow muted>Notes for your profile</Eyebrow>
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <ul
+              style={{
+                listStyle: 'none',
+                margin: 0,
+                padding: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px',
+              }}
+            >
               {hookNotes.slice(athleteFirst ? 1 : 0).map((note, i) => (
                 <li
                   key={i}
                   className="font-body"
                   style={{
                     fontSize: '13px',
-                    color: 'rgba(255,255,255,0.85)',
-                    lineHeight: 1.5,
+                    color: 'rgba(232,221,201, 0.85)',
+                    lineHeight: 1.55,
                     display: 'flex',
                     alignItems: 'flex-start',
                     gap: '10px',
@@ -225,7 +303,14 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
                 >
                   <span
                     aria-hidden="true"
-                    style={{ marginTop: '6px', width: '6px', height: '6px', borderRadius: '999px', background: '#D4AF37', flexShrink: 0 }}
+                    style={{
+                      marginTop: '6px',
+                      width: '6px',
+                      height: '6px',
+                      borderRadius: '999px',
+                      background: '#C9A977',
+                      flexShrink: 0,
+                    }}
                   />
                   <span>{note}</span>
                 </li>
@@ -238,9 +323,24 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
         {noEdSchools.length > 0 && (
           <div
             className="font-body"
-            style={{ paddingTop: '4px', fontSize: '11.5px', color: 'rgba(255,255,255,0.55)', fontStyle: 'italic' }}
+            style={{
+              paddingTop: '4px',
+              fontSize: '12px',
+              color: 'rgba(232,221,201, 0.5)',
+              fontStyle: 'italic',
+              lineHeight: 1.55,
+            }}
           >
-            <span style={{ fontStyle: 'normal', textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: '10px', color: 'rgba(255,255,255,0.45)', marginRight: '8px' }}>
+            <span
+              style={{
+                fontStyle: 'normal',
+                textTransform: 'uppercase',
+                letterSpacing: '0.14em',
+                fontSize: '10px',
+                color: 'rgba(232,221,201, 0.45)',
+                marginRight: '8px',
+              }}
+            >
               No ED option:
             </span>
             {noEdSchools
@@ -257,13 +357,14 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
   );
 }
 
-function Block({ children, borderColor, tinted }: { children: React.ReactNode; borderColor?: string; tinted?: boolean }) {
+function Block({ children, tinted }: { children: React.ReactNode; tinted?: boolean }) {
   return (
     <div
       style={{
-        background: tinted ? 'rgba(212,175,55,0.05)' : 'rgba(11,22,35,0.4)',
-        border: `1px solid ${borderColor ? 'rgba(212,175,55,0.4)' : 'rgba(212,175,55,0.18)'}`,
-        padding: '16px 20px',
+        background: tinted ? 'rgba(201,169,119, 0.05)' : 'rgba(11,19,32, 0.5)',
+        border: '1px solid rgba(232,221,201, 0.16)',
+        borderRadius: '4px',
+        padding: '18px 22px',
       }}
     >
       {children}
@@ -276,11 +377,11 @@ function Eyebrow({ children, muted }: { children: React.ReactNode; muted?: boole
     <div
       className="font-body"
       style={{
-        fontSize: '10.5px',
+        fontSize: '11px',
         fontWeight: 600,
         textTransform: 'uppercase',
         letterSpacing: muted ? '0.18em' : '0.22em',
-        color: muted ? 'rgba(255,255,255,0.55)' : '#D4AF37',
+        color: muted ? 'rgba(232,221,201, 0.55)' : '#C9A977',
       }}
     >
       {children}
@@ -301,36 +402,46 @@ function RecommendedBlock({
   const edPct = ((college.ed_admit_rate ?? 0) * 100).toFixed(0);
   const rdPct = ((college.acceptance_rate ?? 0) * 100).toFixed(0);
 
-  const taglineMain = ratio >= 2.5
-    ? `ED here roughly ${ratio.toFixed(1)}× your odds`
-    : `ED here lifts your odds ~${ratio.toFixed(1)}×`;
+  const taglineMain =
+    ratio >= 2.5
+      ? `ED here roughly ${ratio.toFixed(1)}× your odds`
+      : `ED here lifts your odds ~${ratio.toFixed(1)}×`;
 
-  const shiftLine = shiftedBucket && shiftedBucket !== bucket
-    ? `Under ED, the bump moves this from ${bucket} into ${shiftedBucket} territory.`
-    : `It stays a ${bucket}, but the ED admit rate is materially higher than RD.`;
+  const shiftLine =
+    shiftedBucket && shiftedBucket !== bucket
+      ? `Under ED, the bump moves this from ${bucket} into ${shiftedBucket} territory.`
+      : `It stays a ${bucket}, but the ED admit rate is materially higher than RD.`;
   const ratioLine = `${edPct}% ED vs ${rdPct}% RD — that gap is the leverage you're cashing in.`;
-  const commitLine = "Only ED here if you'd genuinely enroll without seeing other offers — ED is binding.";
+  const commitLine =
+    "Only ED here if you'd genuinely enroll without seeing other offers — ED is binding.";
 
   return (
     <div
       style={{
-        position: 'relative',
-        background: 'rgba(212,175,55,0.04)',
-        border: '1px solid rgba(212,175,55,0.3)',
-        boxShadow: '0 0 0 1px rgba(212,175,55,0.10) inset',
-        padding: '24px',
+        background: 'rgba(11,19,32, 0.45)',
+        border: '1px solid rgba(232,221,201, 0.18)',
+        borderRadius: '4px',
+        padding: '28px 30px',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: '12px',
+        }}
+      >
         <Eyebrow>Recommended ED</Eyebrow>
         <span
           className="font-body"
           style={{
             fontSize: '11px',
             fontWeight: 600,
-            color: '#FBBF24',
-            background: 'rgba(251, 191, 36, 0.15)',
-            padding: '4px 10px',
+            color: '#C98E99',
+            background: 'rgba(163, 90, 106, 0.14)',
+            border: '1px solid rgba(163, 90, 106, 0.45)',
+            padding: '4px 12px',
             borderRadius: '999px',
             whiteSpace: 'nowrap',
           }}
@@ -342,44 +453,69 @@ function RecommendedBlock({
       <h3
         className="font-heading"
         style={{
-          color: 'white',
-          fontSize: '36px',
+          color: '#E8DDC9',
+          fontSize: '40px',
           fontWeight: 600,
           letterSpacing: '-0.02em',
-          marginTop: '8px',
           lineHeight: 1.15,
-          margin: '8px 0 0 0',
+          margin: '12px 0 0 0',
         }}
       >
         {college.name}
       </h3>
-      <p className="font-body" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginTop: '4px', margin: '4px 0 0 0' }}>
+      <p
+        className="font-body"
+        style={{
+          color: 'rgba(232,221,201, 0.55)',
+          fontSize: '13px',
+          margin: '6px 0 0 0',
+        }}
+      >
         {college.location}
       </p>
 
       <div
         style={{
-          marginTop: '16px',
+          marginTop: '20px',
           display: 'inline-flex',
           alignItems: 'baseline',
           gap: '8px',
-          background: 'rgba(11,22,35,0.4)',
-          border: '1px solid rgba(212,175,55,0.3)',
-          padding: '8px 14px',
+          background: 'transparent',
+          border: '1px solid rgba(201,169,119, 0.45)',
+          borderRadius: '4px',
+          padding: '10px 18px',
         }}
       >
         <span
           className="font-heading"
-          style={{ color: '#D4AF37', fontSize: '17px', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}
+          style={{
+            color: '#C9A977',
+            fontSize: '17px',
+            fontWeight: 600,
+            fontVariantNumeric: 'tabular-nums',
+          }}
         >
           {taglineMain}
         </span>
       </div>
 
-      <div className="font-body" style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', color: 'rgba(255,255,255,0.85)', lineHeight: 1.6 }}>
+      <div
+        className="font-body"
+        style={{
+          marginTop: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          fontSize: '14px',
+          color: 'rgba(232,221,201, 0.82)',
+          lineHeight: 1.65,
+        }}
+      >
         <p style={{ margin: 0 }}>{shiftLine}</p>
         <p style={{ margin: 0 }}>{ratioLine}</p>
-        <p style={{ margin: 0, color: 'rgba(255,255,255,0.6)', fontStyle: 'italic' }}>{commitLine}</p>
+        <p style={{ margin: 0, color: 'rgba(232,221,201, 0.55)', fontStyle: 'italic' }}>
+          {commitLine}
+        </p>
       </div>
     </div>
   );

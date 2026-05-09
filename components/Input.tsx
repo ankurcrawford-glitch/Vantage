@@ -13,7 +13,7 @@ export default function Input({ label, className = '', ...props }: InputProps) {
           fontFamily: 'var(--font-body)', 
           fontSize: '14px', 
           fontWeight: 500, 
-          color: 'rgba(255,255,255,0.7)', 
+          color: 'rgba(232,221,201,0.7)', 
           marginBottom: '8px' 
         }}>
           {label}
@@ -24,8 +24,8 @@ export default function Input({ label, className = '', ...props }: InputProps) {
           width: '100%',
           height: '48px',
           background: 'rgba(0,0,0,0.2)',
-          border: '1px solid rgba(212,175,55,0.2)',
-          color: 'white',
+          border: '1px solid rgba(201,169,119,0.2)',
+          color: '#E8DDC9',
           padding: '0 20px',
           fontFamily: 'var(--font-body)',
           fontSize: '16px',
@@ -34,10 +34,10 @@ export default function Input({ label, className = '', ...props }: InputProps) {
           boxSizing: 'border-box',
         }}
         onFocus={(e) => {
-          e.target.style.borderColor = 'rgba(212,175,55,0.5)';
+          e.target.style.borderColor = 'rgba(201,169,119,0.5)';
         }}
         onBlur={(e) => {
-          e.target.style.borderColor = 'rgba(212,175,55,0.2)';
+          e.target.style.borderColor = 'rgba(201,169,119,0.2)';
         }}
         className={className}
         {...props}

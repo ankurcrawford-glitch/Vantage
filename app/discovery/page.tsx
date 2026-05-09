@@ -158,28 +158,28 @@ export default function DiscoveryPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1623' }}>
-        <div style={{ color: '#D4AF37' }}>Loading...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1320' }}>
+        <div style={{ color: '#C9A977' }}>Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#0B1623' }}>
-      <nav style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '24px 32px' }}>
+    <div className="min-h-screen" style={{ background: '#0B1320' }}>
+      <nav style={{ borderBottom: '1px solid rgba(232,221,201,0.1)', padding: '24px 32px' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-            <span className="font-heading text-2xl font-semibold" style={{ color: 'white' }}>VANTAGE</span>
-            <span className="text-2xl" style={{ color: '#D4AF37' }}>.</span>
+            <span className="font-heading text-2xl font-semibold" style={{ color: '#E8DDC9' }}>VANTAGE</span>
+            <span className="text-2xl" style={{ color: '#C9A977' }}>.</span>
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <Link href="/dashboard" style={{ color: pathname === '/dashboard' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/dashboard' ? 600 : 400 }}>Dashboard</Link>
-            <Link href="/personal-statement" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? 600 : 400 }}>Essays</Link>
-            <Link href="/common-app" style={{ color: pathname.startsWith('/common-app') ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname.startsWith('/common-app') ? 600 : 400 }}>Common App</Link>
-            <Link href="/colleges" style={{ color: pathname.startsWith('/colleges') ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname.startsWith('/colleges') ? 600 : 400 }}>Portfolio</Link>
-            <Link href="/profile" style={{ color: pathname === '/profile' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/profile' ? 600 : 400 }}>Profile</Link>
-            <Link href="/discovery" style={{ color: pathname === '/discovery' ? '#F3E5AB' : 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/discovery' ? 600 : 400 }}>Insight Questions</Link>
-            <button onClick={async () => { await supabase.auth.signOut(); router.push('/'); }} style={{ background: 'transparent', color: 'rgba(255,255,255,0.7)', border: 'none', fontFamily: 'var(--font-body)', fontSize: '14px', cursor: 'pointer', padding: 0 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#F3E5AB'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}>Logout</button>
+            <Link href="/dashboard" style={{ color: pathname === '/dashboard' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/dashboard' ? 600 : 400 }}>Dashboard</Link>
+            <Link href="/personal-statement" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? 600 : 400 }}>Essays</Link>
+            <Link href="/common-app" style={{ color: pathname.startsWith('/common-app') ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname.startsWith('/common-app') ? 600 : 400 }}>Common App</Link>
+            <Link href="/colleges" style={{ color: pathname.startsWith('/colleges') ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname.startsWith('/colleges') ? 600 : 400 }}>Portfolio</Link>
+            <Link href="/profile" style={{ color: pathname === '/profile' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/profile' ? 600 : 400 }}>Profile</Link>
+            <Link href="/discovery" style={{ color: pathname === '/discovery' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontWeight: pathname === '/discovery' ? 600 : 400 }}>Insight Questions</Link>
+            <button onClick={async () => { await supabase.auth.signOut(); router.push('/'); }} style={{ background: 'transparent', color: 'rgba(232,221,201,0.7)', border: 'none', fontFamily: 'var(--font-body)', fontSize: '14px', cursor: 'pointer', padding: 0 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#E8DDC9'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(232,221,201,0.7)'; }}>Logout</button>
           </div>
         </div>
       </nav>
@@ -187,10 +187,10 @@ export default function DiscoveryPage() {
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '64px 32px' }}>
         {!hasSubscription ? (
           <Card>
-            <h1 className="font-heading text-3xl mb-4" style={{ color: 'white' }}>Insight Questions</h1>
-            <p className="font-body text-lg mb-6" style={{ color: 'rgba(255,255,255,0.9)' }}>
+            <h1 className="font-heading text-3xl mb-4" style={{ color: '#E8DDC9' }}>Insight Questions</h1>
+            <p className="font-body text-lg mb-6" style={{ color: 'rgba(232,221,201,0.9)' }}>
               The 12 reflective questions unlock after a one-time purchase—
-              <strong style={{ color: '#F3E5AB', fontWeight: 600 }}>
+              <strong style={{ color: '#E8DDC9', fontWeight: 600 }}>
                 {' '}or use an access code if you were given one
               </strong>
               . They help us understand your story and power Strategic Intelligence for your essays.
@@ -199,8 +199,8 @@ export default function DiscoveryPage() {
               onClick={handleCheckout}
               disabled={checkoutLoading}
               style={{
-                background: '#D4AF37',
-                color: '#0B1623',
+                background: '#C9A977',
+                color: '#0B1320',
                 padding: '12px 24px',
                 fontFamily: 'var(--font-body)',
                 fontSize: '14px',
@@ -213,7 +213,7 @@ export default function DiscoveryPage() {
             >
               {checkoutLoading ? 'Redirecting...' : 'Unlock for $100'}
             </button>
-            <p className="font-body text-sm mt-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
+            <p className="font-body text-sm mt-4" style={{ color: 'rgba(232,221,201,0.5)' }}>
               One-time payment. Full access to Insight Questions and Strategic Intelligence.
             </p>
 
@@ -221,10 +221,10 @@ export default function DiscoveryPage() {
               style={{
                 marginTop: '28px',
                 paddingTop: '24px',
-                borderTop: '1px solid rgba(255,255,255,0.12)',
+                borderTop: '1px solid rgba(232,221,201,0.12)',
               }}
             >
-              <p className="font-body text-sm mb-3" style={{ color: 'rgba(255,255,255,0.75)' }}>
+              <p className="font-body text-sm mb-3" style={{ color: 'rgba(232,221,201,0.75)' }}>
                 Have an access code? Redeem it here to unlock without paying.
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', maxWidth: '440px' }}>
@@ -242,8 +242,8 @@ export default function DiscoveryPage() {
                     flex: '1 1 200px',
                     minWidth: '180px',
                     background: 'rgba(0,0,0,0.35)',
-                    border: '1px solid rgba(212,175,55,0.35)',
-                    color: 'white',
+                    border: '1px solid rgba(201,169,119,0.35)',
+                    color: '#E8DDC9',
                     padding: '12px 14px',
                     fontFamily: 'var(--font-body)',
                     fontSize: '14px',
@@ -260,8 +260,8 @@ export default function DiscoveryPage() {
                   disabled={codeLoading || !accessCode.trim()}
                   style={{
                     background: 'transparent',
-                    color: '#D4AF37',
-                    border: '1px solid rgba(212,175,55,0.55)',
+                    color: '#C9A977',
+                    border: '1px solid rgba(201,169,119,0.55)',
                     padding: '12px 22px',
                     fontFamily: 'var(--font-body)',
                     fontSize: '14px',
@@ -275,7 +275,7 @@ export default function DiscoveryPage() {
                 </button>
               </div>
               {codeError ? (
-                <p className="font-body text-sm mt-3" style={{ color: '#ff8a8a' }}>
+                <p className="font-body text-sm mt-3" style={{ color: '#C98E99' }}>
                   {codeError}
                 </p>
               ) : null}
@@ -284,8 +284,8 @@ export default function DiscoveryPage() {
         ) : (
           <>
             <div style={{ marginBottom: '32px' }}>
-              <h1 className="font-heading text-4xl mb-2" style={{ color: 'white' }}>Insight Questions</h1>
-              <p className="font-body text-lg" style={{ color: '#F3E5AB' }}>
+              <h1 className="font-heading text-4xl mb-2" style={{ color: '#E8DDC9' }}>Insight Questions</h1>
+              <p className="font-body text-lg" style={{ color: '#E8DDC9' }}>
                 12 reflective questions that help us understand your story and power Strategic Intelligence for your essays.
               </p>
             </div>
@@ -297,10 +297,10 @@ export default function DiscoveryPage() {
 
                 return (
                   <Card key={question.id}>
-                    <div style={{ padding: '20px', borderLeft: '3px solid #D4AF37' }}>
+                    <div style={{ padding: '20px', borderLeft: '3px solid #C9A977' }}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '12px' }}>
-                        <span className="font-heading text-lg" style={{ color: '#D4AF37', minWidth: '32px' }}>{index + 1}.</span>
-                        <h3 className="font-heading text-lg" style={{ color: 'white', flex: 1 }}>{question.question}</h3>
+                        <span className="font-heading text-lg" style={{ color: '#C9A977', minWidth: '32px' }}>{index + 1}.</span>
+                        <h3 className="font-heading text-lg" style={{ color: '#E8DDC9', flex: 1 }}>{question.question}</h3>
                       </div>
                       <div style={{ marginLeft: '44px' }}>
                         {isEditing ? (
@@ -312,8 +312,8 @@ export default function DiscoveryPage() {
                                 width: '100%',
                                 minHeight: '150px',
                                 background: 'rgba(0,0,0,0.3)',
-                                border: '1px solid rgba(212,175,55,0.5)',
-                                color: 'white',
+                                border: '1px solid rgba(201,169,119,0.5)',
+                                color: '#E8DDC9',
                                 padding: '12px',
                                 fontFamily: 'var(--font-body)',
                                 fontSize: '14px',
@@ -327,8 +327,8 @@ export default function DiscoveryPage() {
                                 onClick={() => handleSaveAnswer(question.id)}
                                 disabled={saving}
                                 style={{
-                                  background: '#D4AF37',
-                                  color: '#0B1623',
+                                  background: '#C9A977',
+                                  color: '#0B1320',
                                   padding: '8px 16px',
                                   fontFamily: 'var(--font-body)',
                                   fontSize: '14px',
@@ -344,8 +344,8 @@ export default function DiscoveryPage() {
                                 onClick={handleCancelEditAnswer}
                                 style={{
                                   background: 'transparent',
-                                  color: 'rgba(255,255,255,0.7)',
-                                  border: '1px solid rgba(255,255,255,0.3)',
+                                  color: 'rgba(232,221,201,0.7)',
+                                  border: '1px solid rgba(232,221,201,0.3)',
                                   padding: '8px 16px',
                                   fontFamily: 'var(--font-body)',
                                   fontSize: '14px',
@@ -362,13 +362,13 @@ export default function DiscoveryPage() {
                           <div>
                             {answer ? (
                               <>
-                                <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.9)', lineHeight: '1.8', whiteSpace: 'pre-wrap', marginBottom: '12px' }}>{answer}</p>
+                                <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.9)', lineHeight: '1.8', whiteSpace: 'pre-wrap', marginBottom: '12px' }}>{answer}</p>
                                 <button
                                   onClick={() => handleEditAnswer(question.id)}
                                   style={{
                                     background: 'transparent',
-                                    color: '#D4AF37',
-                                    border: '1px solid rgba(212,175,55,0.5)',
+                                    color: '#C9A977',
+                                    border: '1px solid rgba(201,169,119,0.5)',
                                     padding: '6px 12px',
                                     fontFamily: 'var(--font-body)',
                                     fontSize: '12px',
@@ -382,12 +382,12 @@ export default function DiscoveryPage() {
                               </>
                             ) : (
                               <>
-                                <p className="font-body text-sm" style={{ color: 'rgba(255,255,255,0.5)', fontStyle: 'italic', marginBottom: '12px' }}>Not answered yet</p>
+                                <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)', fontStyle: 'italic', marginBottom: '12px' }}>Not answered yet</p>
                                 <button
                                   onClick={() => handleEditAnswer(question.id)}
                                   style={{
-                                    background: '#D4AF37',
-                                    color: '#0B1623',
+                                    background: '#C9A977',
+                                    color: '#0B1320',
                                     padding: '6px 12px',
                                     fontFamily: 'var(--font-body)',
                                     fontSize: '12px',

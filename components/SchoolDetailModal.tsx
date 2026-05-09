@@ -5,16 +5,16 @@ import { type SchoolClassification, type Tier } from '@/lib/classifier';
 const TIER_PILL_BG: Record<Tier, string> = {
   Safety: 'rgba(74, 222, 128, 0.15)',
   Likely: 'rgba(134, 239, 172, 0.15)',
-  Target: 'rgba(212, 175, 55, 0.18)',
+  Target: 'rgba(201,169,119, 0.18)',
   Reach: 'rgba(251, 191, 36, 0.18)',
   'Hard Reach': 'rgba(248, 113, 113, 0.18)',
 };
 const TIER_PILL_TEXT: Record<Tier, string> = {
-  Safety: '#4ADE80',
-  Likely: '#86EFAC',
-  Target: '#F3E5AB',
-  Reach: '#FBBF24',
-  'Hard Reach': '#F87171',
+  Safety: '#8FB89A',
+  Likely: '#8FB89A',
+  Target: '#E8DDC9',
+  Reach: '#C9A977',
+  'Hard Reach': '#A35A6A',
 };
 
 interface Props {
@@ -33,7 +33,7 @@ export default function SchoolDetailModal({ classification, onClose, onRemove }:
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(11, 22, 35, 0.85)',
+        background: 'rgba(11,19,32, 0.85)',
         backdropFilter: 'blur(4px)',
         zIndex: 100,
         display: 'flex',
@@ -45,8 +45,8 @@ export default function SchoolDetailModal({ classification, onClose, onRemove }:
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: '#152C45',
-          borderTop: '4px solid #D4AF37',
+          background: '#0F1828',
+          borderTop: '4px solid #C9A977',
           maxWidth: '720px',
           width: '100%',
           maxHeight: '90vh',
@@ -64,24 +64,24 @@ export default function SchoolDetailModal({ classification, onClose, onRemove }:
             right: '16px',
             background: 'none',
             border: 'none',
-            color: 'rgba(255,255,255,0.5)',
+            color: 'rgba(232,221,201,0.5)',
             fontSize: '24px',
             cursor: 'pointer',
             padding: '4px 12px',
             lineHeight: 1,
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = '#D4AF37'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A977'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(232,221,201,0.5)'; }}
         >
           ×
         </button>
 
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '8px' }}>
           <div style={{ minWidth: 0 }}>
-            <h2 className="font-heading" style={{ color: '#D4AF37', fontSize: '32px', fontWeight: 600, lineHeight: 1.15, letterSpacing: '-0.02em', margin: 0 }}>
+            <h2 className="font-heading" style={{ color: '#C9A977', fontSize: '32px', fontWeight: 600, lineHeight: 1.15, letterSpacing: '-0.02em', margin: 0 }}>
               {college.name}
             </h2>
-            <p className="font-body" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', marginTop: '6px', margin: '6px 0 0 0' }}>
+            <p className="font-body" style={{ color: 'rgba(232,221,201,0.6)', fontSize: '13px', marginTop: '6px', margin: '6px 0 0 0' }}>
               {college.location}
             </p>
           </div>
@@ -109,8 +109,8 @@ export default function SchoolDetailModal({ classification, onClose, onRemove }:
             gap: '12px',
             margin: '24px 0',
             padding: '16px',
-            background: 'rgba(11,22,35,0.4)',
-            border: '1px solid rgba(212,175,55,0.18)',
+            background: 'rgba(11,19,32,0.4)',
+            border: '1px solid rgba(201,169,119,0.18)',
           }}
         >
           <Stat label="Admit Probability" value={probabilityRange} />
@@ -127,7 +127,7 @@ export default function SchoolDetailModal({ classification, onClose, onRemove }:
 
         {/* Why this bucket */}
         <Section title="Why this bucket">
-          <p className="font-body" style={{ color: 'rgba(255,255,255,0.85)', fontSize: '14px', lineHeight: 1.7, margin: 0 }}>
+          <p className="font-body" style={{ color: 'rgba(232,221,201,0.85)', fontSize: '14px', lineHeight: 1.7, margin: 0 }}>
             {whyThisBucket}
           </p>
         </Section>
@@ -142,14 +142,14 @@ export default function SchoolDetailModal({ classification, onClose, onRemove }:
                   className="font-body"
                   style={{
                     fontSize: '13px',
-                    color: 'rgba(255,255,255,0.78)',
+                    color: 'rgba(232,221,201,0.78)',
                     lineHeight: 1.5,
                     display: 'flex',
                     alignItems: 'flex-start',
                     gap: '10px',
                   }}
                 >
-                  <span aria-hidden="true" style={{ marginTop: '6px', width: '6px', height: '6px', borderRadius: '999px', background: '#D4AF37', flexShrink: 0 }} />
+                  <span aria-hidden="true" style={{ marginTop: '6px', width: '6px', height: '6px', borderRadius: '999px', background: '#C9A977', flexShrink: 0 }} />
                   <span>{a}</span>
                 </li>
               ))}
@@ -166,14 +166,14 @@ export default function SchoolDetailModal({ classification, onClose, onRemove }:
                 className="font-body"
                 style={{
                   fontSize: '13px',
-                  color: 'rgba(255,255,255,0.85)',
+                  color: 'rgba(232,221,201,0.85)',
                   lineHeight: 1.6,
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: '10px',
                 }}
               >
-                <span aria-hidden="true" style={{ marginTop: '8px', width: '4px', height: '4px', borderRadius: '999px', background: 'rgba(255,255,255,0.45)', flexShrink: 0 }} />
+                <span aria-hidden="true" style={{ marginTop: '8px', width: '4px', height: '4px', borderRadius: '999px', background: 'rgba(232,221,201,0.45)', flexShrink: 0 }} />
                 <span>{tip}</span>
               </li>
             ))}
@@ -187,7 +187,7 @@ export default function SchoolDetailModal({ classification, onClose, onRemove }:
               className="font-body"
               style={{
                 background: 'transparent',
-                color: '#F87171',
+                color: '#A35A6A',
                 border: '1px solid rgba(248, 113, 113, 0.4)',
                 padding: '10px 20px',
                 fontSize: '12px',
@@ -216,7 +216,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
           fontWeight: 600,
           textTransform: 'uppercase',
           letterSpacing: '0.22em',
-          color: '#D4AF37',
+          color: '#C9A977',
           marginBottom: '10px',
         }}
       >
@@ -236,7 +236,7 @@ function Stat({ label, value, highlight }: { label: string; value: string; highl
           fontSize: '9.5px',
           textTransform: 'uppercase',
           letterSpacing: '0.14em',
-          color: 'rgba(255,255,255,0.5)',
+          color: 'rgba(232,221,201,0.5)',
         }}
       >
         {label}
@@ -245,7 +245,7 @@ function Stat({ label, value, highlight }: { label: string; value: string; highl
         className="font-body"
         style={{
           fontSize: '15px',
-          color: highlight ? '#D4AF37' : 'rgba(255,255,255,0.95)',
+          color: highlight ? '#C9A977' : 'rgba(232,221,201,0.95)',
           fontWeight: highlight ? 600 : 500,
           fontVariantNumeric: 'tabular-nums',
         }}
