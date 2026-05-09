@@ -430,8 +430,8 @@ begin
            is_public               = r.is_pub,
            state                   = r.st,
            available_rounds        = r.rounds,
-           program_admit_rate      = r.prog_rate,
-           program_override_majors = r.prog_majors
+           program_admit_rate      = r.prog_rate::numeric,
+           program_override_majors = r.prog_majors::text[]
      where lower(c.name) = lower(r.name);
   end loop;
 end$$;
