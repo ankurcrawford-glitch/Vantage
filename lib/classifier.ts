@@ -396,7 +396,8 @@ export function classify(
   if (
     applicationRound === 'ED' &&
     rounds.includes('ED') &&
-    college.ed_admit_rate
+    college.ed_admit_rate &&
+    college.ed_admit_rate >= (college.acceptance_rate ?? 0) * 1.15
   ) {
     bucket = bumpUp(bucket, 1, 'Likely');
     adjustments.push('Early Decision: +1 tier (capped at Likely)');
@@ -407,7 +408,8 @@ export function classify(
     adjustments.push(`${profile.major} program selectivity: −1 tier`);
   }
 
-  const isInState = !!profile.state && profile.state === college.state;
+  const isInState = !!profile.state && !!college.state &&
+    profile.state.toUpperCase() === college.state.toUpperCase();
   const isPublic = !!college.is_public;
   if (isInState && isPublic) {
     bucket = bumpUp(bucket, 1);

@@ -125,6 +125,18 @@ export function buildBalanceDiagnostic(counts: Record<Tier, number>): BalanceDia
   const targets = counts.Target;
   const reaches = counts.Reach;
   const hardReaches = counts['Hard Reach'];
+  const total = safeties + likelies + targets + reaches + hardReaches;
+
+  if (total === 0) {
+    return {
+      headline: '',
+      pillLabel: '',
+      pillVariant: 'balanced',
+      counts,
+      recommendations: [],
+    };
+  }
+
   const reachy = reaches + hardReaches;
   const easy = safeties + likelies + targets;
 
