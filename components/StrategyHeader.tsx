@@ -10,7 +10,9 @@ export default function StrategyHeader({ totalSchools, pillLabel, pillVariant }:
   const subtitle =
     totalSchools === 0
       ? 'No schools yet — add a few to see your tier breakdown.'
-      : `${totalSchools} ${totalSchools === 1 ? 'school' : 'schools'}, classified across five tiers.`;
+      : totalSchools === 1
+        ? '1 school in your list.'
+        : `${totalSchools} schools, classified across five tiers.`;
 
   const isBalanced = pillVariant === 'balanced';
   const pillBg = isBalanced ? 'rgba(143, 184, 154, 0.10)' : 'rgba(163, 90, 106, 0.12)';
@@ -64,36 +66,38 @@ export default function StrategyHeader({ totalSchools, pillLabel, pillVariant }:
         </p>
       </div>
 
-      <div style={{ flexShrink: 0, paddingTop: '12px' }}>
-        <span
-          className="font-body"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: pillBg,
-            border: `1px solid ${pillBorder}`,
-            borderRadius: '999px',
-            padding: '7px 16px',
-            fontSize: '11px',
-            fontWeight: 600,
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            color: pillColor,
-          }}
-        >
+      {pillLabel && (
+        <div style={{ flexShrink: 0, paddingTop: '12px' }}>
           <span
-            aria-hidden="true"
+            className="font-body"
             style={{
-              width: '6px',
-              height: '6px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: pillBg,
+              border: `1px solid ${pillBorder}`,
               borderRadius: '999px',
-              background: dotColor,
+              padding: '7px 16px',
+              fontSize: '11px',
+              fontWeight: 600,
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: pillColor,
             }}
-          />
-          {pillLabel}
-        </span>
-      </div>
+          >
+            <span
+              aria-hidden="true"
+              style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '999px',
+                background: dotColor,
+              }}
+            />
+            {pillLabel}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

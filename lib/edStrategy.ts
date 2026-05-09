@@ -43,6 +43,7 @@ function scoreLeverage(
   }
 
   const ratio = college.ed_admit_rate / Math.max(0.001, college.acceptance_rate);
+  if (ratio < 1.15) return null;
   let bonus = 0;
 
   // What would this school become under ED?
@@ -131,8 +132,11 @@ export function computeEdStrategy(
     }
   }
 
+  const dontIds = new Set(donts.map((d) => d.school.college.id));
   const noEdSchools = classifications.filter(
-    (c) => !((c.college.available_rounds ?? ['RD']).includes('ED'))
+    (c) =>
+      !((c.college.available_rounds ?? ['RD']).includes('ED')) &&
+      !dontIds.has(c.college.id)
   );
 
   /* ----- hook notes ----- */

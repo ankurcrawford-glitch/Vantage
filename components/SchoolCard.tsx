@@ -58,10 +58,10 @@ export default function SchoolCard({ classification, onOpen, onRemove, hasPrompt
       }}
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '14px' }}>
-        <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
           <h3
             className="font-heading"
-            style={{ color: '#C9A977', fontSize: '22px', fontWeight: 600, lineHeight: 1.2, margin: 0 }}
+            style={{ color: '#C9A977', fontSize: '22px', fontWeight: 600, lineHeight: 1.2, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}
           >
             {college.name}
           </h3>

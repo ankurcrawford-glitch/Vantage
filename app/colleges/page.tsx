@@ -167,12 +167,20 @@ export default function CollegesPage() {
 
   const availableColleges = colleges
     .filter((c) => !userColleges.includes(c.id))
-    .filter((c) =>
-      searchTerm
-        ? c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (c.location ?? '').toLowerCase().includes(searchTerm.toLowerCase())
-        : true
-    );
+    .filter((c) => {
+      if (!searchTerm) return true;
+      const q = searchTerm.toLowerCase();
+      const name = c.name.toLowerCase();
+      const loc = (c.location ?? '').toLowerCase();
+      if (name.includes(q) || loc.includes(q)) return true;
+      const initials = c.name
+        .split(/[\s\-–]+/)
+        .filter((w) => w[0] && w[0] === w[0].toUpperCase())
+        .map((w) => w[0])
+        .join('')
+        .toLowerCase();
+      return initials === q;
+    });
 
   const profileIncomplete = !profile || (profile.unweightedGpa === 3.5 && !profile.sat && !profile.act);
 
@@ -238,7 +246,7 @@ export default function CollegesPage() {
           }}
         >
           <p className="font-body text-sm" style={{ color: '#E8DDC9', lineHeight: 1.6, margin: 0 }}>
-            <strong style={{ color: '#C9A977' }}>Important:</strong> Essay prompts are from the <strong>2025 application cycle</strong>. These may not match the current year. Use them for practice; when new prompts ship, outdated-question essays may be removed.
+            <strong style={{ color: '#C9A977' }}>Important:</strong> Essay prompts are from a <strong>prior application cycle</strong> and may not match the current year. Use them for practice; when new prompts ship, outdated-question essays may be removed.
           </p>
         </div>
 
