@@ -317,7 +317,7 @@ export default function ReviewEssayPage() {
         <div style={{ maxWidth: '500px', textAlign: 'center' }}>
           <Card>
             <h1 className="font-heading text-2xl mb-4" style={{ color: '#C9A977' }}>Error</h1>
-            <p className="font-body" style={{ color: 'rgba(232,221,201,0.9)', marginBottom: '24px' }}>{error}</p>
+            <p className="font-body" style={{ color: 'rgba(232,221,201,0.85)', marginBottom: '24px' }}>{error}</p>
           </Card>
         </div>
       </div>
@@ -435,7 +435,7 @@ export default function ReviewEssayPage() {
               <div
                 className="font-body"
                 style={{
-                  color: 'rgba(232,221,201,0.9)',
+                  color: 'rgba(232,221,201,0.85)',
                   lineHeight: '1.8',
                   fontSize: '15px',
                   whiteSpace: 'pre-wrap',
@@ -548,13 +548,8 @@ export default function ReviewEssayPage() {
                   <div key={comment.id} style={{
                     padding: '16px',
                     background: 'rgba(0,0,0,0.2)',
-                    borderRadius: '4px',
-                    borderLeft: `3px solid ${
-                      comment.comment_type === 'praise' ? '#8FB89A' :
-                      comment.comment_type === 'concern' ? '#A35A6A' :
-                      comment.comment_type === 'suggestion' ? '#C9A977' :
-                      '#C9A977'
-                    }`,
+                    borderRadius: '6px',
+                    border: '1px solid rgba(232,221,201,0.18)',
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                       <div>
@@ -578,7 +573,7 @@ export default function ReviewEssayPage() {
                         {comment.comment_type}
                       </span>
                     </div>
-                    <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.9)', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                    <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
                       {comment.comment_text}
                     </p>
                   </div>

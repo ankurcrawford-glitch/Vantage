@@ -7,7 +7,15 @@ interface CardProps {
 
 export default function Card({ children, className = '' }: CardProps) {
   return (
-    <div className={`bg-royal-blue border-t-4 border-gold-leaf p-8 ${className}`}>
+    <div
+      className={className}
+      style={{
+        background: 'rgba(11,19,32,0.55)',
+        border: '1px solid rgba(232,221,201,0.18)',
+        borderRadius: '6px',
+        padding: '28px',
+      }}
+    >
       {children}
     </div>
   );

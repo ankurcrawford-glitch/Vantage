@@ -5,6 +5,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Card from '@/components/Card';
+import PageHeader from '@/components/PageHeader';
+import Eyebrow from '@/components/Eyebrow';
 import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
 
 export default function DiscoveryPage() {
@@ -188,7 +190,7 @@ export default function DiscoveryPage() {
         {!hasSubscription ? (
           <Card>
             <h1 className="font-heading text-3xl mb-4" style={{ color: '#E8DDC9' }}>Insight Questions</h1>
-            <p className="font-body text-lg mb-6" style={{ color: 'rgba(232,221,201,0.9)' }}>
+            <p className="font-body text-lg mb-6" style={{ color: 'rgba(232,221,201,0.85)' }}>
               The 12 reflective questions unlock after a one-time purchase—
               <strong style={{ color: '#E8DDC9', fontWeight: 600 }}>
                 {' '}or use an access code if you were given one
@@ -283,12 +285,10 @@ export default function DiscoveryPage() {
           </Card>
         ) : (
           <>
-            <div style={{ marginBottom: '32px' }}>
-              <h1 className="font-heading text-4xl mb-2" style={{ color: '#E8DDC9' }}>Insight Questions</h1>
-              <p className="font-body text-lg" style={{ color: '#E8DDC9' }}>
-                12 reflective questions that help us understand your story and power Strategic Intelligence for your essays.
-              </p>
-            </div>
+            <PageHeader
+              title="Insight Questions"
+              subtitle="12 reflective questions that help us understand your story and power Strategic Intelligence for your essays."
+            />
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               {DISCOVERY_QUESTIONS.map((question, index) => {
@@ -297,12 +297,10 @@ export default function DiscoveryPage() {
 
                 return (
                   <Card key={question.id}>
-                    <div style={{ padding: '20px', borderLeft: '3px solid #C9A977' }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '12px' }}>
-                        <span className="font-heading text-lg" style={{ color: '#C9A977', minWidth: '32px' }}>{index + 1}.</span>
-                        <h3 className="font-heading text-lg" style={{ color: '#E8DDC9', flex: 1 }}>{question.question}</h3>
-                      </div>
-                      <div style={{ marginLeft: '44px' }}>
+                    <div>
+                      <Eyebrow>Question {index + 1}</Eyebrow>
+                      <h3 className="font-heading text-lg mt-2 mb-3" style={{ color: '#E8DDC9' }}>{question.question}</h3>
+                      <div>
                         {isEditing ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             <textarea
@@ -362,7 +360,7 @@ export default function DiscoveryPage() {
                           <div>
                             {answer ? (
                               <>
-                                <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.9)', lineHeight: '1.8', whiteSpace: 'pre-wrap', marginBottom: '12px' }}>{answer}</p>
+                                <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', lineHeight: '1.8', whiteSpace: 'pre-wrap', marginBottom: '12px' }}>{answer}</p>
                                 <button
                                   onClick={() => handleEditAnswer(question.id)}
                                   style={{

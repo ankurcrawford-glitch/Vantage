@@ -53,7 +53,7 @@ export default function Home() {
               <h3 className="font-heading text-2xl font-semibold mb-4" style={{ color: '#C9A977' }}>
                 Intelligent Analysis
               </h3>
-              <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.9)' }}>
+              <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.85)' }}>
                 Our platform learns from your academic history, achievements, and aspirations to create a personalized admissions strategy.
               </p>
             </Card>
@@ -62,7 +62,7 @@ export default function Home() {
               <h3 className="font-heading text-2xl font-semibold mb-4" style={{ color: '#C9A977' }}>
                 Secure & Private
               </h3>
-              <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.9)' }}>
+              <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.85)' }}>
                 Your data is encrypted and protected with bank-level security. Your journey remains completely confidential.
               </p>
             </Card>
@@ -71,7 +71,7 @@ export default function Home() {
               <h3 className="font-heading text-2xl font-semibold mb-4" style={{ color: '#C9A977' }}>
                 Strategic Guidance
               </h3>
-              <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.9)' }}>
+              <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.85)' }}>
                 Receive expert insights and recommendations tailored to maximize your chances of admission to top institutions.
               </p>
             </Card>

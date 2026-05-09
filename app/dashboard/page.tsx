@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
+import PageHeader from '@/components/PageHeader';
+import Eyebrow from '@/components/Eyebrow';
 
 interface UserStats {
   gpa_weighted: number | null;
@@ -237,44 +239,31 @@ function DashboardContent() {
         )}
 
         {/* Welcome Section */}
-        <div className="mb-12">
-          <h1 className="font-heading text-5xl text-cream mb-4">
-            Welcome back{user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : ''}
-          </h1>
-          <p className="font-body text-gold-light text-lg">
-            Your admissions command center
-          </p>
-        </div>
+        <PageHeader
+          title={`Welcome back${user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : ''}`}
+          subtitle="Your admissions command center."
+        />
 
         {/* Stats Overview */}
         <div className="grid md:grid-cols-3 gap-8 mb-12">
           <Card>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-heading text-xl text-gold-leaf">Colleges</h3>
-              <span className="text-3xl">◆</span>
-            </div>
-            <p className="font-heading text-4xl text-cream mb-2">{collegeCount}</p>
-            <p className="font-body text-sm text-cream/70">In your portfolio</p>
+            <Eyebrow>Colleges</Eyebrow>
+            <p className="font-heading text-4xl text-cream mt-3 mb-2">{collegeCount}</p>
+            <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.62)' }}>In your portfolio</p>
           </Card>
 
           <Card>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-heading text-xl text-gold-leaf">Essays</h3>
-              <span className="text-3xl">▲</span>
-            </div>
-            <p className="font-heading text-4xl text-cream mb-2">{essayCount}</p>
-            <p className="font-body text-sm text-cream/70">In progress</p>
+            <Eyebrow>Essays</Eyebrow>
+            <p className="font-heading text-4xl text-cream mt-3 mb-2">{essayCount}</p>
+            <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.62)' }}>In progress</p>
           </Card>
 
           <Card>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-heading text-xl text-gold-leaf">Progress</h3>
-              <span className="text-3xl">■</span>
-            </div>
-            <p className="font-heading text-4xl text-cream mb-2">
+            <Eyebrow>Progress</Eyebrow>
+            <p className="font-heading text-4xl text-cream mt-3 mb-2">
               {collegeCount > 0 ? Math.round((essayCount / (collegeCount * 2)) * 100) : 0}%
             </p>
-            <p className="font-body text-sm text-cream/70">Complete</p>
+            <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.62)' }}>Complete</p>
           </Card>
         </div>
 
@@ -286,26 +275,26 @@ function DashboardContent() {
               <div className="grid md:grid-cols-4 gap-6">
                 {stats.gpa_weighted && (
                   <div>
-                    <p className="font-body text-sm text-cream/70 mb-1">Weighted GPA</p>
-                    <p className="font-heading text-2xl text-gold-leaf">{stats.gpa_weighted}</p>
+                    <Eyebrow muted>Weighted GPA</Eyebrow>
+                    <p className="font-heading text-2xl text-cream mt-2">{stats.gpa_weighted}</p>
                   </div>
                 )}
                 {stats.gpa_unweighted && (
                   <div>
-                    <p className="font-body text-sm text-cream/70 mb-1">Unweighted GPA</p>
-                    <p className="font-heading text-2xl text-gold-leaf">{stats.gpa_unweighted}</p>
+                    <Eyebrow muted>Unweighted GPA</Eyebrow>
+                    <p className="font-heading text-2xl text-cream mt-2">{stats.gpa_unweighted}</p>
                   </div>
                 )}
                 {stats.sat_score && (
                   <div>
-                    <p className="font-body text-sm text-cream/70 mb-1">SAT Score</p>
-                    <p className="font-heading text-2xl text-gold-leaf">{stats.sat_score}</p>
+                    <Eyebrow muted>SAT Score</Eyebrow>
+                    <p className="font-heading text-2xl text-cream mt-2">{stats.sat_score}</p>
                   </div>
                 )}
                 {stats.act_score && (
                   <div>
-                    <p className="font-body text-sm text-cream/70 mb-1">ACT Score</p>
-                    <p className="font-heading text-2xl text-gold-leaf">{stats.act_score}</p>
+                    <Eyebrow muted>ACT Score</Eyebrow>
+                    <p className="font-heading text-2xl text-cream mt-2">{stats.act_score}</p>
                   </div>
                 )}
               </div>
@@ -321,27 +310,27 @@ function DashboardContent() {
           <h2 className="font-heading text-3xl text-cream mb-6">Quick Actions</h2>
           <div className="grid md:grid-cols-3 gap-6">
             <Link href="/colleges">
-              <Card className="cursor-pointer hover:bg-royal-blue/80 transition-colors">
-                <h3 className="font-heading text-xl text-gold-leaf mb-3">Add Colleges</h3>
-                <p className="font-body text-cream/70 text-sm">
+              <Card className="cursor-pointer transition-colors">
+                <h3 className="font-heading text-xl text-cream mb-3">Add Colleges</h3>
+                <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.62)' }}>
                   Build your portfolio of target schools
                 </p>
               </Card>
             </Link>
 
             <Link href="/common-app">
-              <Card className="cursor-pointer hover:bg-royal-blue/80 transition-colors">
-                <h3 className="font-heading text-xl text-gold-leaf mb-3">Start Common App Essay</h3>
-                <p className="font-body text-cream/70 text-sm">
-                  Choose a prompt and begin writing 
+              <Card className="cursor-pointer transition-colors">
+                <h3 className="font-heading text-xl text-cream mb-3">Start Common App Essay</h3>
+                <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.62)' }}>
+                  Choose a prompt and begin writing
                 </p>
               </Card>
             </Link>
 
             <Link href="/profile">
-              <Card className="cursor-pointer hover:bg-royal-blue/80 transition-colors">
-                <h3 className="font-heading text-xl text-gold-leaf mb-3">Update Profile</h3>
-                <p className="font-body text-cream/70 text-sm">
+              <Card className="cursor-pointer transition-colors">
+                <h3 className="font-heading text-xl text-cream mb-3">Update Profile</h3>
+                <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.62)' }}>
                   Edit your stats and activities
                 </p>
               </Card>

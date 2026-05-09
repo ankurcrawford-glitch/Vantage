@@ -25,6 +25,7 @@ export default function Input({ label, className = '', ...props }: InputProps) {
           height: '48px',
           background: 'rgba(0,0,0,0.2)',
           border: '1px solid rgba(201,169,119,0.2)',
+          borderRadius: '6px',
           color: '#E8DDC9',
           padding: '0 20px',
           fontFamily: 'var(--font-body)',

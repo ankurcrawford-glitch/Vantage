@@ -5,6 +5,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Card from '@/components/Card';
+import PageHeader from '@/components/PageHeader';
+import Eyebrow from '@/components/Eyebrow';
 
 interface Essay {
   // Present only for started essays
@@ -167,12 +169,10 @@ export default function PersonalStatementPage() {
       </nav>
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '64px 32px' }}>
-        <div style={{ marginBottom: '48px' }}>
-          <h1 className="font-heading text-5xl mb-4" style={{ color: '#E8DDC9' }}>My Essays</h1>
-          <p className="font-body text-lg" style={{ color: '#E8DDC9' }}>
-            Manage and continue writing your college application essays
-          </p>
-        </div>
+        <PageHeader
+          title="My Essays"
+          subtitle="Manage and continue writing your college application essays."
+        />
 
         {essays.length === 0 ? (
           <Card>
@@ -331,9 +331,7 @@ export default function PersonalStatementPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                      <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
-                        Prompt {essay.prompt_sort_order}
-                      </p>
+                      <Eyebrow>Prompt {essay.prompt_sort_order}</Eyebrow>
                       {essay.word_limit && (
                         <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.35)' }}>
                           · {essay.word_limit} word limit
@@ -357,7 +355,7 @@ export default function PersonalStatementPage() {
                         </span>
                       )}
                     </div>
-                    <p className="font-body mb-4" style={{ color: 'rgba(232,221,201,0.9)', lineHeight: '1.6' }}>
+                    <p className="font-body mb-4" style={{ color: 'rgba(232,221,201,0.85)', lineHeight: '1.6' }}>
                       {essay.prompt_text.length > 200
                         ? `${essay.prompt_text.substring(0, 200)}...`
                         : essay.prompt_text}

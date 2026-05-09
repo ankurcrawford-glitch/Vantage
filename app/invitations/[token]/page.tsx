@@ -236,7 +236,7 @@ export default function AcceptInvitationPage() {
         <div style={{ maxWidth: '500px', textAlign: 'center' }}>
           <Card>
             <h1 className="font-heading text-2xl mb-4" style={{ color: '#C9A977' }}>Invitation Error</h1>
-            <p className="font-body" style={{ color: 'rgba(232,221,201,0.9)', marginBottom: '24px' }}>{error}</p>
+            <p className="font-body" style={{ color: 'rgba(232,221,201,0.85)', marginBottom: '24px' }}>{error}</p>
             <Link href="/">
               <button style={{
                 background: '#C9A977',
@@ -294,7 +294,7 @@ export default function AcceptInvitationPage() {
             padding: '20px',
             background: 'rgba(0,0,0,0.2)',
             borderRadius: '4px',
-            borderLeft: '3px solid #C9A977',
+            border: '1px solid rgba(232,221,201,0.18)',
             marginBottom: '24px',
           }}>
             <p className="font-heading text-lg" style={{ color: '#E8DDC9', marginBottom: '8px' }}>

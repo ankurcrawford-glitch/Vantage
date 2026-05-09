@@ -5,6 +5,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Card from '@/components/Card';
+import PageHeader from '@/components/PageHeader';
+import Eyebrow from '@/components/Eyebrow';
 
 const COMMON_APP_PROMPTS = [
   {
@@ -98,17 +100,10 @@ export default function CommonAppPage() {
       </nav>
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '64px 32px' }}>
-        <div style={{ marginBottom: '48px' }}>
-          <h1 className="font-heading text-5xl mb-4" style={{ color: '#E8DDC9' }}>
-            Common Application Essay
-            <span className="font-body" style={{ color: 'rgba(232,221,201,0.5)', fontSize: '20px', fontWeight: 400, marginLeft: '16px', letterSpacing: '0.05em' }}>
-              2026–27
-            </span>
-          </h1>
-          <p className="font-body text-lg" style={{ color: '#E8DDC9' }}>
-            Choose one of the seven prompts below. You only need to answer one prompt for your Common App essay.
-          </p>
-        </div>
+        <PageHeader
+          title="Common Application Essay"
+          subtitle="Choose one of the seven prompts below. You only need to answer one prompt for your Common App essay."
+        />
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {COMMON_APP_PROMPTS.map((prompt) => (
@@ -116,12 +111,12 @@ export default function CommonAppPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '24px' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                    <span className="font-heading text-2xl" style={{ color: '#C9A977' }}>Prompt {prompt.number}</span>
-                    <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
-                      {prompt.word_limit} words
+                    <Eyebrow>Prompt {prompt.number}</Eyebrow>
+                    <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)' }}>
+                      · {prompt.word_limit} words
                     </span>
                   </div>
-                  <p className="font-body" style={{ color: 'rgba(232,221,201,0.9)', lineHeight: '1.6', marginBottom: '16px' }}>
+                  <p className="font-body" style={{ color: 'rgba(232,221,201,0.85)', lineHeight: '1.6', marginBottom: '16px' }}>
                     {prompt.prompt}
                   </p>
                 </div>

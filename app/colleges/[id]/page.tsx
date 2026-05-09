@@ -195,8 +195,9 @@ export default function CollegeDetailPage() {
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '64px 32px' }}>
         <div style={{ marginBottom: '48px' }}>
           <Link href="/colleges" style={{ color: '#C9A977', textDecoration: 'none', fontSize: '14px', display: 'inline-block', marginBottom: '16px' }}>← Back to Portfolio</Link>
-          <h1 className="font-heading text-5xl mb-4" style={{ color: '#E8DDC9' }}>{college.name}</h1>
-          <p className="font-body text-lg" style={{ color: '#E8DDC9' }}>{college.location}</p>
+          <h1 className="font-heading" style={{ color: '#E8DDC9', fontSize: '54px', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.1, margin: 0 }}>{college.name}</h1>
+          <div style={{ width: '180px', height: '1px', background: 'rgba(232,221,201,0.35)', marginTop: '14px' }} />
+          <p className="font-body" style={{ color: 'rgba(232,221,201,0.65)', fontSize: '14px', fontStyle: 'italic', margin: '14px 0 0 0' }}>{college.location}</p>
           {(college.motto || college.website_url) && (
             <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {college.motto && (
@@ -251,10 +252,10 @@ export default function CollegeDetailPage() {
               {prompts.map((prompt) => (
                 <Card key={prompt.id}>
                   <div style={{ marginBottom: '16px' }}>
-                    <h3 className="font-heading text-lg mb-2" style={{ color: '#C9A977' }}>
+                    <div className="font-body" style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.22em', color: '#C9A977', marginBottom: '10px' }}>
                       Prompt {prompt.sort_order}
-                    </h3>
-                    <p className="font-body" style={{ color: 'rgba(232,221,201,0.9)', lineHeight: '1.6' }}>
+                    </div>
+                    <p className="font-body" style={{ color: 'rgba(232,221,201,0.85)', lineHeight: '1.6' }}>
                       {prompt.prompt_text}
                     </p>
                     {prompt.word_limit && (
@@ -310,7 +311,8 @@ export default function CollegeDetailPage() {
             <Card>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: '280px' }}>
-                  <h3 className="font-heading text-xl" style={{ color: '#C9A977', marginBottom: '6px' }}>The Round Table</h3>
+                  <div className="font-body" style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.22em', color: '#C9A977', marginBottom: '8px' }}>The Round Table</div>
+                  <h3 className="font-heading text-xl" style={{ color: '#E8DDC9', marginBottom: '6px' }}>Holistic application review</h3>
                   <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.75)', lineHeight: '1.6', marginBottom: '8px' }}>
                     A panel-style review of your full {college.name} application package — your Common App essay read alongside all of your {college.name} supplemental essays — by a simulated admissions committee.
                   </p>
@@ -342,18 +344,18 @@ export default function CollegeDetailPage() {
               </div>
 
               {roundTableGateMessage && (
-                <div style={{ marginTop: '16px', padding: '16px', background: 'rgba(201,169,119,0.08)', borderRadius: '4px', borderLeft: '3px solid rgba(201,169,119,0.5)' }}>
+                <div style={{ marginTop: '16px', padding: '16px', background: 'rgba(201,169,119,0.08)', borderRadius: '4px', border: '1px solid rgba(232,221,201,0.18)' }}>
                   <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', lineHeight: '1.7' }}>{roundTableGateMessage}</p>
                 </div>
               )}
 
               {roundTableResponse && (
-                <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', borderLeft: '3px solid #C9A977' }}>
+                <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', border: '1px solid rgba(232,221,201,0.18)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                     <h4 className="font-heading text-md" style={{ color: '#C9A977' }}>Holistic Application Review — {college.name}</h4>
                     <button onClick={() => { setRoundTableResponse(null); setRoundTableGateMessage(null); }} style={{ background: 'transparent', color: 'rgba(232,221,201,0.5)', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '0', lineHeight: '1' }}>×</button>
                   </div>
-                  <div className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.9)', lineHeight: '1.8', whiteSpace: 'pre-wrap' }}>
+                  <div className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', lineHeight: '1.8', whiteSpace: 'pre-wrap' }}>
                     {renderBoldText(roundTableResponse)}
                   </div>
                 </div>

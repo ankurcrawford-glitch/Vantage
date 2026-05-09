@@ -33,7 +33,7 @@ export default function TermsPage() {
         </div>
       </nav>
 
-      <article style={{ maxWidth: '760px', margin: '0 auto', padding: '64px 32px', color: 'rgba(232,221,201,0.9)', fontFamily: 'var(--font-body)', lineHeight: '1.7' }}>
+      <article style={{ maxWidth: '760px', margin: '0 auto', padding: '64px 32px', color: 'rgba(232,221,201,0.85)', fontFamily: 'var(--font-body)', lineHeight: '1.7' }}>
         <h1 className="font-heading" style={{ color: '#E8DDC9', fontSize: '42px', marginBottom: '12px' }}>
           Terms of Service
         </h1>
@@ -299,7 +299,7 @@ export default function TermsPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section style={{ marginBottom: '36px' }}>
-      <h2 className="font-heading" style={{ color: '#C9A977', fontSize: '22px', marginBottom: '12px' }}>
+      <h2 className="font-heading" style={{ color: '#E8DDC9', fontSize: '22px', marginBottom: '12px', fontWeight: 600 }}>
         {title}
       </h2>
       {children}

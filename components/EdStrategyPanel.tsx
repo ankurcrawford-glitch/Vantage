@@ -2,6 +2,7 @@
 
 import { type EdRecommendation } from '@/lib/edStrategy';
 import { type StudentProfile } from '@/lib/classifier';
+import Eyebrow from './Eyebrow';
 
 interface Props {
   strategy: EdRecommendation;
@@ -34,18 +35,7 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         {/* Header */}
         <div>
-          <div
-            className="font-body"
-            style={{
-              fontSize: '11px',
-              fontWeight: 600,
-              textTransform: 'uppercase',
-              letterSpacing: '0.22em',
-              color: '#C9A977',
-            }}
-          >
-            Your ED Strategy
-          </div>
+          <Eyebrow>Your ED Strategy</Eyebrow>
           <h2
             className="font-heading"
             style={{
@@ -365,23 +355,6 @@ function Block({ children, tinted }: { children: React.ReactNode; tinted?: boole
         border: '1px solid rgba(232,221,201, 0.16)',
         borderRadius: '4px',
         padding: '18px 22px',
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-function Eyebrow({ children, muted }: { children: React.ReactNode; muted?: boolean }) {
-  return (
-    <div
-      className="font-body"
-      style={{
-        fontSize: '11px',
-        fontWeight: 600,
-        textTransform: 'uppercase',
-        letterSpacing: muted ? '0.18em' : '0.22em',
-        color: muted ? 'rgba(232,221,201, 0.55)' : '#C9A977',
       }}
     >
       {children}

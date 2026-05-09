@@ -823,7 +823,7 @@ export default function EssayWritingPage() {
           <div style={{ marginTop: '24px' }}>
             <Card>
               <h1 className="font-heading text-3xl mb-4" style={{ color: '#E8DDC9' }}>Essay writing requires a subscription</h1>
-            <p className="font-body text-lg mb-6" style={{ color: 'rgba(232,221,201,0.9)' }}>
+            <p className="font-body text-lg mb-6" style={{ color: 'rgba(232,221,201,0.85)' }}>
               To write, save, and use Strategic Intelligence for essays (including {college.name} – Prompt {prompt.sort_order}), subscribe to VANTAGE.
             </p>
             <Link href="/dashboard">
@@ -904,7 +904,7 @@ export default function EssayWritingPage() {
                   )}
                 </div>
               )}
-              <h2 className="font-heading text-xl mb-4" style={{ color: '#C9A977' }}>Prompt {prompt.sort_order}</h2>
+              <div className="font-body" style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.22em', color: '#C9A977', marginBottom: '14px' }}>Prompt {prompt.sort_order}</div>
             </div>
             {!isOwner && hasPermission && (
               <div style={{ 
@@ -927,7 +927,7 @@ export default function EssayWritingPage() {
             {/* Prompt Card */}
             <Card>
               <div style={{ marginBottom: '24px' }}>
-                <p className="font-body" style={{ color: 'rgba(232,221,201,0.9)', lineHeight: '1.6', marginBottom: '12px' }}>
+                <p className="font-body" style={{ color: 'rgba(232,221,201,0.85)', lineHeight: '1.6', marginBottom: '12px' }}>
                   {prompt.prompt_text}
                 </p>
                 {prompt.word_limit && (
@@ -942,7 +942,7 @@ export default function EssayWritingPage() {
             <div style={{ marginTop: '32px' }}>
               <Card>
                 <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h3 className="font-heading text-lg" style={{ color: '#C9A977' }}>Your Essay</h3>
+                  <div className="font-body" style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.22em', color: '#C9A977' }}>Your Essay</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.7)' }}>
                       {wordCount} {prompt.word_limit ? `/ ${prompt.word_limit}` : ''} words
@@ -1019,10 +1019,10 @@ export default function EssayWritingPage() {
             {currentVersion && comments.length > 0 && (
               <div style={{ marginTop: '32px' }}>
                 <Card>
-                  <h3 className="font-heading text-lg mb-4" style={{ color: '#C9A977' }}>Comments</h3>
+                  <div className="font-body" style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.22em', color: '#C9A977', marginBottom: '14px' }}>Comments</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     {comments.map((comment) => (
-                      <div key={comment.id} style={{ padding: '16px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px', borderLeft: '3px solid #C9A977' }}>
+                      <div key={comment.id} style={{ padding: '16px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px', border: '1px solid rgba(232,221,201,0.18)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                           <div>
                             <p className="font-body font-semibold text-sm" style={{ color: '#C9A977', marginBottom: '4px' }}>
@@ -1044,7 +1044,7 @@ export default function EssayWritingPage() {
                             {comment.comment_type}
                           </span>
                         </div>
-                        <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.9)', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                        <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
                           {comment.comment_text}
                         </p>
                       </div>
@@ -1059,7 +1059,7 @@ export default function EssayWritingPage() {
               <div style={{ marginTop: '32px' }}>
                 <Card>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                    <h3 className="font-heading text-lg" style={{ color: '#C9A977' }}>Add Comment</h3>
+                    <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#C9A977' }}>Add Comment</div>
                     <button
                       onClick={() => setShowCommentForm(!showCommentForm)}
                       style={{
@@ -1145,7 +1145,7 @@ export default function EssayWritingPage() {
               <Card>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                   <div>
-                    <h3 className="font-heading text-lg" style={{ color: '#C9A977' }}>Strategic Intelligence</h3>
+                    <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#C9A977' }}>Strategic Intelligence</div>
                     <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.5)', marginTop: '4px' }}>
                       AI-powered guidance that evolves with your essay
                     </p>
@@ -1172,7 +1172,7 @@ export default function EssayWritingPage() {
 
                 {/* Insight gate message */}
                 {insightGateMessage && (
-                  <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(201,169,119,0.08)', borderRadius: '4px', borderLeft: '3px solid rgba(201,169,119,0.5)' }}>
+                  <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(201,169,119,0.08)', borderRadius: '4px', border: '1px solid rgba(232,221,201,0.18)' }}>
                     <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', lineHeight: '1.7' }}>
                       {insightGateMessage}
                     </p>
@@ -1184,7 +1184,7 @@ export default function EssayWritingPage() {
 
                 {/* Current guidance response */}
                 {thinkingPartnerResponse && (
-                  <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', borderLeft: '3px solid #C9A977' }}>
+                  <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', border: '1px solid rgba(232,221,201,0.18)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                       <div>
                         <h4 className="font-heading text-md" style={{ color: '#C9A977' }}>Latest Guidance</h4>
@@ -1198,7 +1198,7 @@ export default function EssayWritingPage() {
                         ×
                       </button>
                     </div>
-                    <div className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.9)', lineHeight: '1.8', whiteSpace: 'pre-wrap' }}>
+                    <div className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', lineHeight: '1.8', whiteSpace: 'pre-wrap' }}>
                       {renderBoldText(thinkingPartnerResponse)}
                     </div>
                   </div>
@@ -1242,7 +1242,7 @@ export default function EssayWritingPage() {
           <div>
             {/* Versions */}
             <Card>
-              <h3 className="font-heading text-lg mb-4" style={{ color: '#C9A977' }}>Versions</h3>
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#C9A977', marginBottom: '16px' }}>Versions</div>
               {versions.length === 0 ? (
                 <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
                   No versions saved yet.
@@ -1319,7 +1319,7 @@ export default function EssayWritingPage() {
               <div style={{ marginTop: '24px' }}>
                 <Card>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                    <h3 className="font-heading text-lg" style={{ color: '#C9A977' }}>Invite Commenters</h3>
+                    <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#C9A977' }}>Invite Commenters</div>
                     <button
                       onClick={() => setShowInviteForm(!showInviteForm)}
                       style={{

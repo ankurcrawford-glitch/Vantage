@@ -5,6 +5,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Card from '@/components/Card';
+import PageHeader from '@/components/PageHeader';
+import Eyebrow from '@/components/Eyebrow';
 
 interface UserStats {
   gpa_weighted: number | null;
@@ -524,16 +526,15 @@ export default function ProfilePage() {
       </nav>
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '64px 32px' }}>
-        <div style={{ marginBottom: '48px' }}>
-          <h1 className="font-heading text-5xl mb-4" style={{ color: '#E8DDC9' }}>Academic Profile</h1>
-          <p className="font-body text-lg" style={{ color: '#E8DDC9' }}>
-            Manage your academic statistics, AP classes, extracurriculars, and awards
-          </p>
-        </div>
+        <PageHeader
+          title="Academic Profile"
+          subtitle="Manage your academic statistics, AP classes, extracurriculars, and awards."
+        />
 
         {/* Academic Stats */}
         <Card>
-          <h2 className="font-heading text-2xl mb-6" style={{ color: '#C9A977' }}>Academic Statistics</h2>
+          <Eyebrow>Academic Statistics</Eyebrow>
+          <div style={{ marginBottom: '24px' }} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
             <div>
               <label style={{ 
@@ -694,7 +695,8 @@ export default function ProfilePage() {
         {/* Strategy Profile (drives Safety/Target/Reach classifier) */}
         <div style={{ marginTop: '32px' }}>
           <Card>
-            <h2 className="font-heading text-2xl mb-2" style={{ color: '#C9A977' }}>Strategy Profile</h2>
+            <Eyebrow>Strategy Profile</Eyebrow>
+            <div style={{ marginBottom: '8px' }} />
             <p className="font-body" style={{ color: 'rgba(232,221,201,0.7)', fontSize: '13px', marginBottom: '24px', lineHeight: 1.6 }}>
               These power your Strategy view in Portfolio. We use them to classify each school as Safety / Likely / Target / Reach / Hard Reach and to recommend an ED play.
             </p>
@@ -827,7 +829,8 @@ export default function ProfilePage() {
         {/* AP Classes */}
         <div style={{ marginTop: '32px' }}>
           <Card>
-            <h2 className="font-heading text-2xl mb-6" style={{ color: '#C9A977' }}>AP Classes</h2>
+            <Eyebrow>AP Classes</Eyebrow>
+            <div style={{ marginBottom: '24px' }} />
             <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
               <input
                 type="text"
@@ -973,7 +976,8 @@ export default function ProfilePage() {
         {/* Extracurriculars */}
         <div style={{ marginTop: '32px' }}>
           <Card>
-            <h2 className="font-heading text-2xl mb-6" style={{ color: '#C9A977' }}>Extracurriculars</h2>
+            <Eyebrow>Extracurriculars</Eyebrow>
+            <div style={{ marginBottom: '24px' }} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
               <input
                 type="text"
@@ -1257,7 +1261,8 @@ export default function ProfilePage() {
         {/* Awards */}
         <div style={{ marginTop: '32px' }}>
           <Card>
-            <h2 className="font-heading text-2xl mb-6" style={{ color: '#C9A977' }}>Awards & Honors</h2>
+            <Eyebrow>Awards & Honors</Eyebrow>
+            <div style={{ marginBottom: '24px' }} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
               <input
                 type="text"
@@ -1425,6 +1430,7 @@ export default function ProfilePage() {
           <div style={{ marginTop: '32px' }}>
           <Card>
             <h2 className="font-heading text-2xl mb-4" style={{ color: '#A35A6A' }}>Delete Account</h2>
+
             <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.7)', marginBottom: '16px', lineHeight: '1.6' }}>
               Permanently delete your Vantage account and all associated data: your essays, essay versions, Insight Question responses, college list, activities, awards, AI guidance history, and subscription record. This action cannot be undone.
             </p>
