@@ -9,9 +9,10 @@ import Button from '@/components/Button';
 import SchoolCard from '@/components/SchoolCard';
 import EdStrategyPanel from '@/components/EdStrategyPanel';
 import SchoolDetailModal from '@/components/SchoolDetailModal';
+import StrategyHeader from '@/components/StrategyHeader';
+import BalanceDiagnostic, { buildBalanceDiagnostic } from '@/components/BalanceDiagnostic';
 import {
   classify,
-  evaluateBalance,
   profileFromUserStats,
   type College,
   type SchoolClassification,
@@ -99,7 +100,16 @@ export default function CollegesPage() {
     return myColleges.map((c) => classify(c, profile, 'RD'));
   }, [colleges, userColleges, profile]);
 
-  const balance = useMemo(() => evaluateBalance(classifications), [classifications]);
+  const tierCounts: Record<Tier, number> = useMemo(() => {
+    const out: Record<Tier, number> = {
+      Safety: 0, Likely: 0, Target: 0, Reach: 0, 'Hard Reach': 0,
+    };
+    for (const c of classifications) out[c.bucket]++;
+    return out;
+  }, [classifications]);
+
+  const diagnostic = useMemo(() => buildBalanceDiagnostic(tierCounts), [tierCounts]);
+
   const edStrategy = useMemo(
     () => (profile ? computeEdStrategy(classifications, profile) : null),
     [classifications, profile]
@@ -188,15 +198,12 @@ export default function CollegesPage() {
       </nav>
 
       <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '64px 32px' }}>
-        {/* Header */}
-        <div style={{ marginBottom: '32px' }}>
-          <h1 className="font-heading text-5xl mb-4" style={{ color: 'white' }}>
-            Strategy
-          </h1>
-          <p className="font-body text-lg" style={{ color: '#F3E5AB' }}>
-            Where you stand at every school on your list, and where to spend your binding ED card.
-          </p>
-        </div>
+        {/* Header — title + balance pill */}
+        <StrategyHeader
+          totalSchools={classifications.length}
+          pillLabel={diagnostic.pillLabel}
+          pillVariant={diagnostic.pillVariant}
+        />
 
         {/* Profile-incomplete nudge */}
         {profileIncomplete && (
@@ -272,15 +279,15 @@ export default function CollegesPage() {
               </Card>
             ) : (
               <>
+                {/* Balance diagnostic card */}
+                <BalanceDiagnostic data={diagnostic} />
+
                 {/* ED Strategy panel */}
                 {edStrategy && profile && (
                   <div style={{ marginBottom: '32px' }}>
                     <EdStrategyPanel strategy={edStrategy} profile={profile} />
                   </div>
                 )}
-
-                {/* Balance summary */}
-                <BalanceSummary balance={balance} />
 
                 {/* Tier columns */}
                 <div
@@ -388,66 +395,6 @@ export default function CollegesPage() {
 }
 
 /* ------------------------------ subviews ------------------------------ */
-
-function BalanceSummary({ balance }: { balance: ReturnType<typeof evaluateBalance> }) {
-  if (balance.totalSchools === 0) return null;
-  const headlineColor = balance.isBalanced ? '#4ADE80' : '#FBBF24';
-  return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(180px, auto) 1fr',
-        gap: '24px',
-        alignItems: 'center',
-        background: 'rgba(11,22,35,0.6)',
-        border: '1px solid rgba(212,175,55,0.18)',
-        padding: '20px 24px',
-      }}
-    >
-      <div>
-        <div
-          className="font-body"
-          style={{
-            fontSize: '10.5px',
-            fontWeight: 600,
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            color: 'rgba(255,255,255,0.55)',
-          }}
-        >
-          List Balance
-        </div>
-        <div
-          className="font-heading"
-          style={{ fontSize: '20px', fontWeight: 600, color: headlineColor, marginTop: '4px', lineHeight: 1.2 }}
-        >
-          {balance.headline ?? 'Your list looks balanced.'}
-        </div>
-      </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px' }}>
-        {(TIERS as Tier[]).map((t) => (
-          <div
-            key={t}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '2px',
-              padding: '6px 12px',
-              borderLeft: `3px solid ${TIER_COLOR[t]}`,
-            }}
-          >
-            <span className="font-body" style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.14em', color: 'rgba(255,255,255,0.55)' }}>
-              {t}
-            </span>
-            <span className="font-heading" style={{ fontSize: '20px', color: 'white', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
-              {balance.counts[t]}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function TierColumn({
   tier,
