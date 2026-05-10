@@ -16,7 +16,12 @@ export interface EdDont {
 
 export interface EarlyNonBindingOption {
   school: SchoolClassification;
-  kind: 'REA' | 'EA';
+  /**
+   *  REA       — Restrictive Early Action (only one early app allowed)
+   *  EA        — Early Action only, no ED option
+   *  EA-with-ED — School offers BOTH ED and EA; EA is the non-binding choice
+   */
+  kind: 'REA' | 'EA' | 'EA-with-ED';
   /** EA-rate ÷ RD-rate when both are present, otherwise undefined. */
   ratio?: number;
   note: string;
@@ -131,44 +136,49 @@ export function computeEdStrategy(
     .slice(0, 2)
     .map((s) => s.c);
 
-  /* ----- early non-binding options (REA + EA-only) ----- */
-  // These are NOT don'ts — they're legitimate early plays that just aren't
-  // bindable. Surfaced separately so users can apply early without confusion.
+  /* ----- early non-binding options (REA + EA-only + EA-at-ED-schools) ----- */
+  // Three kinds:
+  //  REA       — Restrictive EA (e.g. Stanford, Harvard)
+  //  EA        — EA-only (e.g. MIT, Georgetown)
+  //  EA-with-ED — School offers BOTH; EA is the non-binding alternative
+  // These are NOT don'ts — they're legitimate early plays that aren't bindable.
   const earlyNonBinding: EarlyNonBindingOption[] = [];
   for (const c of classifications) {
     const rounds = c.college.available_rounds ?? ['RD'];
-    if (rounds.includes('ED')) continue;
-    const isRea = rounds.includes('REA');
-    const isEaOnly = rounds.includes('EA') && !rounds.includes('ED') && !isRea;
-    if (!isRea && !isEaOnly) continue;
+    const hasEd = rounds.includes('ED');
+    const hasRea = rounds.includes('REA');
+    const hasEa = rounds.includes('EA');
+
+    let kind: EarlyNonBindingOption['kind'] | null = null;
+    if (hasRea) kind = 'REA';
+    else if (hasEa && !hasEd) kind = 'EA';
+    else if (hasEa && hasEd) kind = 'EA-with-ED';
+    if (!kind) continue;
 
     const eaRate = c.college.ea_admit_rate ?? null;
     const rdRate = c.college.acceptance_rate ?? null;
     const ratio = eaRate && rdRate ? eaRate / Math.max(0.001, rdRate) : undefined;
+    const ratioText = ratio
+      ? ` Early admit ~${(eaRate! * 100).toFixed(0)}% vs ~${(rdRate! * 100).toFixed(0)}% RD (${ratio.toFixed(1)}× lift).`
+      : '';
 
     let note: string;
-    if (isRea) {
-      const ratioText = ratio
-        ? ` REA admit ~${(eaRate! * 100).toFixed(0)}% vs ~${(rdRate! * 100).toFixed(0)}% RD (${ratio.toFixed(1)}× lift).`
-        : '';
+    if (kind === 'REA') {
       note = `Restrictive Early Action — non-binding, but it's your one early signal and a real lift over RD.${ratioText} Use it on the REA school you'd attend without seeing other offers.`;
-    } else {
-      const ratioText = ratio
-        ? ` EA admit ~${(eaRate! * 100).toFixed(0)}% vs ~${(rdRate! * 100).toFixed(0)}% RD.`
-        : '';
+    } else if (kind === 'EA') {
       note = `Early Action — non-binding, no ED option here.${ratioText} Apply early; there's nothing to commit to.`;
+    } else {
+      note = `EA available — apply early without committing.${ratioText} Use this if you ED somewhere else but still want an early read here.`;
     }
 
-    earlyNonBinding.push({
-      school: c,
-      kind: isRea ? 'REA' : 'EA',
-      ratio,
-      note,
-    });
+    earlyNonBinding.push({ school: c, kind, ratio, note });
   }
-  // Sort: REA before plain EA, then by selectivity (ascending acceptance rate).
+  // Sort: REA → EA-only → EA-with-ED, then by selectivity (most-selective first).
+  const KIND_ORDER: Record<EarlyNonBindingOption['kind'], number> = {
+    REA: 0, EA: 1, 'EA-with-ED': 2,
+  };
   earlyNonBinding.sort((a, b) => {
-    if (a.kind !== b.kind) return a.kind === 'REA' ? -1 : 1;
+    if (a.kind !== b.kind) return KIND_ORDER[a.kind] - KIND_ORDER[b.kind];
     return (a.school.college.acceptance_rate ?? 1) - (b.school.college.acceptance_rate ?? 1);
   });
 

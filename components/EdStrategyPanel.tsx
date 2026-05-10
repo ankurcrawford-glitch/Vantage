@@ -320,10 +320,10 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
           </div>
         )}
 
-        {/* Early non-binding options (REA / EA-only) */}
+        {/* Early non-binding options (REA / EA-only / EA at ED schools) */}
         {earlyNonBinding.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <Eyebrow muted>Early non-binding options</Eyebrow>
+            <Eyebrow muted>Other early options (non-binding)</Eyebrow>
             <p
               className="font-body"
               style={{
@@ -333,7 +333,7 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
                 margin: 0,
               }}
             >
-              You can't ED at these schools, but REA / EA is a real early play — non-binding, with a meaningful lift over RD.
+              ED is for one school you'd commit to. These are early plays you can stack alongside or instead — REA, EA, or the EA option at schools that also offer ED. Non-binding, with a real lift over RD.
             </p>
             <ul
               style={{
@@ -398,7 +398,7 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {opt.kind}
+                    {opt.kind === 'EA-with-ED' ? 'EA' : opt.kind}
                   </span>
                 </li>
               ))}
