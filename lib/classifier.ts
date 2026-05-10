@@ -64,6 +64,8 @@ export interface College {
  * Profile shape used by the classifier. Built from user_stats in the
  * colleges page; not stored as a separate table.
  */
+export type GeoPreference = 'in-state' | 'regional' | 'no-preference' | 'out-of-state';
+
 export interface StudentProfile {
   unweightedGpa: number;
   weightedGpa?: number;
@@ -73,6 +75,7 @@ export interface StudentProfile {
   apCount: number;
   state: string;
   major: Major;
+  geoPreference?: GeoPreference;
   hooks: {
     legacy: { active: boolean; collegeIds: string[] };
     recruitedAthlete: boolean;
@@ -530,6 +533,15 @@ export function normalizeMajor(input?: string | null): Major {
   return MAJOR_MAP[k] ?? 'Undecided';
 }
 
+export function normalizeGeoPreference(input?: string | null): GeoPreference | undefined {
+  if (!input) return undefined;
+  const k = input.trim().toLowerCase();
+  if (k === 'in-state' || k === 'regional' || k === 'no-preference' || k === 'out-of-state') {
+    return k;
+  }
+  return undefined;
+}
+
 /**
  * Convert a user_stats row + hook fields into a StudentProfile.
  * Tolerant of nulls — fills sensible defaults so classify() can still run.
@@ -549,6 +561,7 @@ export function profileFromUserStats(stats: {
   hook_low_income: boolean | null;
   hook_legacy_active: boolean | null;
   hook_legacy_college_ids: string[] | null;
+  geo_preference?: string | null;
 }): StudentProfile {
   return {
     unweightedGpa: stats.gpa_unweighted ?? 3.5,
@@ -559,6 +572,7 @@ export function profileFromUserStats(stats: {
     apCount: stats.ap_count ?? 0,
     state: (stats.state ?? '').toUpperCase(),
     major: normalizeMajor(stats.intended_major),
+    geoPreference: normalizeGeoPreference(stats.geo_preference),
     hooks: {
       legacy: {
         active: !!stats.hook_legacy_active,

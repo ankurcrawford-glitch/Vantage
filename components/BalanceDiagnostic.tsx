@@ -1,6 +1,7 @@
 'use client';
 
 import type { Tier } from '@/lib/classifier';
+import type { SchoolSuggestion } from '@/lib/geoRecommendations';
 
 export interface BalanceDiagnosticData {
   headline: string;
@@ -12,9 +13,12 @@ export interface BalanceDiagnosticData {
 
 interface Props {
   data: BalanceDiagnosticData;
+  suggestions?: SchoolSuggestion[];
+  neededTier?: Tier | null;
+  onAddSchool?: (collegeId: string) => void;
 }
 
-export default function BalanceDiagnostic({ data }: Props) {
+export default function BalanceDiagnostic({ data, suggestions, neededTier, onAddSchool }: Props) {
   const { headline, counts, recommendations } = data;
   const total =
     counts.Safety + counts.Likely + counts.Target + counts.Reach + counts['Hard Reach'];
@@ -112,6 +116,98 @@ export default function BalanceDiagnostic({ data }: Props) {
             </li>
           ))}
         </ul>
+      )}
+
+      {suggestions && suggestions.length > 0 && neededTier && (
+        <div style={{ marginTop: '22px', paddingTop: '18px', borderTop: '1px solid rgba(232,221,201, 0.1)' }}>
+          <p
+            className="font-body"
+            style={{
+              color: '#C9A977',
+              fontSize: '12px',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              margin: '0 0 12px 0',
+            }}
+          >
+            We also recommend adding {neededTier === 'Hard Reach' ? 'a hard reach' : `a ${neededTier.toLowerCase()}`} to balance your list
+          </p>
+          <ul
+            style={{
+              listStyle: 'none',
+              margin: 0,
+              padding: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px',
+            }}
+          >
+            {suggestions.map((s) => (
+              <li
+                key={s.classification.college.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '14px',
+                  padding: '10px 14px',
+                  background: 'rgba(15, 24, 40, 0.6)',
+                  border: '1px solid rgba(201,169,119, 0.18)',
+                  borderRadius: '4px',
+                }}
+              >
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div
+                    className="font-body"
+                    style={{
+                      color: '#E8DDC9',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {s.classification.college.name}
+                  </div>
+                  <div
+                    className="font-body"
+                    style={{
+                      color: 'rgba(232,221,201, 0.6)',
+                      fontSize: '12px',
+                      marginTop: '2px',
+                    }}
+                  >
+                    {s.reason}
+                  </div>
+                </div>
+                {onAddSchool && (
+                  <button
+                    onClick={() => onAddSchool(s.classification.college.id)}
+                    className="font-body"
+                    style={{
+                      background: 'transparent',
+                      color: '#C9A977',
+                      border: '1px solid rgba(201,169,119, 0.5)',
+                      padding: '6px 12px',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      borderRadius: '2px',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(201,169,119, 0.12)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    + Add
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );

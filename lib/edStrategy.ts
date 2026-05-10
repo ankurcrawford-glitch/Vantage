@@ -14,12 +14,31 @@ export interface EdDont {
   reason: string;
 }
 
+export interface EarlyNonBindingOption {
+  school: SchoolClassification;
+  kind: 'REA' | 'EA';
+  /** EA-rate ÷ RD-rate when both are present, otherwise undefined. */
+  ratio?: number;
+  note: string;
+}
+
+export interface LegacyEdOption {
+  school: SchoolClassification;
+  /** ED-rate ÷ RD-rate when both are present. */
+  ratio: number;
+}
+
 export interface EdRecommendation {
   recommended: SchoolClassification | null;
   recommendedShiftedBucket?: Tier;
   recommendedRatio?: number;
+  recommendedIsLegacy?: boolean;
   alternatives: SchoolClassification[];
+  /** Legacy-eligible ED schools other than the recommended pick. */
+  legacyEdAlternatives: LegacyEdOption[];
   donts: EdDont[];
+  /** REA / non-binding-EA schools — legitimate early plays that are not bindable. */
+  earlyNonBinding: EarlyNonBindingOption[];
   hookNotes: string[];
   noEdSchools: SchoolClassification[];
   scored: { c: SchoolClassification; leverage: number; ratio: number }[];
@@ -30,6 +49,7 @@ interface ScoredEdCandidate {
   leverage: number;
   ratio: number;
   shiftedBucket: Tier;
+  isLegacy: boolean;
 }
 
 function scoreLeverage(
@@ -53,12 +73,18 @@ function scoreLeverage(
   if (c.bucket === 'Reach') bonus += 2.0;
   else if (c.bucket === 'Hard Reach' && shifted === 'Reach') bonus += 0.5;
 
+  // Legacy stacks on top of ED — historical legacy ED admit rates run
+  // ~2× the standard ED rate. Push these to the top of the recommendation list.
+  const isLegacy =
+    profile.hooks.legacy.active && profile.hooks.legacy.collegeIds.includes(college.id);
+  if (isLegacy) bonus += 3.0;
+
   let penalty = 0;
   if (c.bucket === 'Target' || c.bucket === 'Likely' || c.bucket === 'Safety') {
     penalty = 3.0;
   }
 
-  return { c, leverage: ratio + bonus - penalty, ratio, shiftedBucket: shifted };
+  return { c, leverage: ratio + bonus - penalty, ratio, shiftedBucket: shifted, isLegacy };
 }
 
 export function computeEdStrategy(
@@ -70,10 +96,15 @@ export function computeEdStrategy(
     .filter((x): x is ScoredEdCandidate => x !== null)
     .sort((a, b) => b.leverage - a.leverage);
 
-  // Pick recommended: Reach, OR Hard Reach with strong ED rate ≥ 18%
+  // Pick recommended: Reach, OR Hard Reach with strong ED rate ≥ 18%,
+  // OR a legacy school where ED is available (legacy ED runs ~2× standard ED).
   let recommended: ScoredEdCandidate | null = null;
   for (const cand of scored) {
     if (cand.c.bucket === 'Reach') {
+      recommended = cand;
+      break;
+    }
+    if (cand.isLegacy && cand.c.bucket === 'Hard Reach') {
       recommended = cand;
       break;
     }
@@ -87,56 +118,84 @@ export function computeEdStrategy(
     }
   }
 
+  // All other legacy ED schools — surfaced separately with legacy framing,
+  // so the user sees every legacy stack-bet they could play.
+  const legacyEdAlternatives: LegacyEdOption[] = scored
+    .filter((s) => s !== recommended && s.isLegacy)
+    .map((s) => ({ school: s.c, ratio: s.ratio }));
+
+  const legacyAltIds = new Set(legacyEdAlternatives.map((l) => l.school.college.id));
+
   const alternatives: SchoolClassification[] = scored
-    .filter((s) => s !== recommended && s.leverage > 1.5)
+    .filter((s) => s !== recommended && s.leverage > 1.5 && !legacyAltIds.has(s.c.college.id))
     .slice(0, 2)
     .map((s) => s.c);
 
-  /* ----- don'ts ----- */
-  const donts: EdDont[] = [];
-
-  // 1. Hard Reach with no ED (REA-only / EA-only ultra-selectives)
+  /* ----- early non-binding options (REA + EA-only) ----- */
+  // These are NOT don'ts — they're legitimate early plays that just aren't
+  // bindable. Surfaced separately so users can apply early without confusion.
+  const earlyNonBinding: EarlyNonBindingOption[] = [];
   for (const c of classifications) {
-    if (c.bucket !== 'Hard Reach') continue;
     const rounds = c.college.available_rounds ?? ['RD'];
     if (rounds.includes('ED')) continue;
     const isRea = rounds.includes('REA');
-    const isEaOnly = rounds.includes('EA') && !rounds.includes('ED');
+    const isEaOnly = rounds.includes('EA') && !rounds.includes('ED') && !isRea;
+    if (!isRea && !isEaOnly) continue;
+
+    const eaRate = c.college.ea_admit_rate ?? null;
+    const rdRate = c.college.acceptance_rate ?? null;
+    const ratio = eaRate && rdRate ? eaRate / Math.max(0.001, rdRate) : undefined;
+
+    let note: string;
     if (isRea) {
-      donts.push({
-        school: c,
-        reason:
-          'Restrictive Early Action only — you cannot bind here, and the boost vs RD is minimal.',
-      });
-    } else if (isEaOnly) {
-      donts.push({
-        school: c,
-        reason: "EA only — no binding option exists, so ED leverage isn't available here.",
-      });
+      const ratioText = ratio
+        ? ` REA admit ~${(eaRate! * 100).toFixed(0)}% vs ~${(rdRate! * 100).toFixed(0)}% RD (${ratio.toFixed(1)}× lift).`
+        : '';
+      note = `Restrictive Early Action — non-binding, but it's your one early signal and a real lift over RD.${ratioText} Use it on the REA school you'd attend without seeing other offers.`;
+    } else {
+      const ratioText = ratio
+        ? ` EA admit ~${(eaRate! * 100).toFixed(0)}% vs ~${(rdRate! * 100).toFixed(0)}% RD.`
+        : '';
+      note = `Early Action — non-binding, no ED option here.${ratioText} Apply early; there's nothing to commit to.`;
     }
+
+    earlyNonBinding.push({
+      school: c,
+      kind: isRea ? 'REA' : 'EA',
+      ratio,
+      note,
+    });
+  }
+  // Sort: REA before plain EA, then by selectivity (ascending acceptance rate).
+  earlyNonBinding.sort((a, b) => {
+    if (a.kind !== b.kind) return a.kind === 'REA' ? -1 : 1;
+    return (a.school.college.acceptance_rate ?? 1) - (b.school.college.acceptance_rate ?? 1);
+  });
+
+  /* ----- don'ts (real ones only) ----- */
+  const donts: EdDont[] = [];
+
+  // Safeties / Likelies that look tempting to lock in via ED.
+  for (const c of classifications) {
+    if (c.bucket !== 'Safety' && c.bucket !== 'Likely') continue;
+    const rounds = c.college.available_rounds ?? ['RD'];
+    if (!rounds.includes('ED')) continue;
+    donts.push({
+      school: c,
+      reason:
+        "You're already likely to be admitted RD — binding here means giving up flexibility for nothing.",
+    });
     if (donts.length >= 3) break;
   }
 
-  // 2. Safeties / Likelies that look tempting to lock in
-  if (donts.length < 3) {
-    for (const c of classifications) {
-      if (c.bucket !== 'Safety' && c.bucket !== 'Likely') continue;
-      const rounds = c.college.available_rounds ?? ['RD'];
-      if (!rounds.includes('ED')) continue;
-      donts.push({
-        school: c,
-        reason:
-          "You're already likely to be admitted RD — binding here means giving up flexibility for nothing.",
-      });
-      if (donts.length >= 3) break;
-    }
-  }
-
-  const dontIds = new Set(donts.map((d) => d.school.college.id));
+  const handledIds = new Set([
+    ...donts.map((d) => d.school.college.id),
+    ...earlyNonBinding.map((e) => e.school.college.id),
+  ]);
   const noEdSchools = classifications.filter(
     (c) =>
       !((c.college.available_rounds ?? ['RD']).includes('ED')) &&
-      !dontIds.has(c.college.id)
+      !handledIds.has(c.college.id)
   );
 
   /* ----- hook notes ----- */
@@ -146,17 +205,8 @@ export function computeEdStrategy(
       "As a recruited athlete, your ED choice is typically determined by your coach's offer — talk to them before committing your ED card here."
     );
   }
-  if (profile.hooks.legacy.active && profile.hooks.legacy.collegeIds.length > 0) {
-    for (const sid of profile.hooks.legacy.collegeIds) {
-      const c = classifications.find((cc) => cc.college.id === sid);
-      if (!c) continue;
-      const rounds = c.college.available_rounds ?? ['RD'];
-      if (!rounds.includes('ED')) continue;
-      hookNotes.push(
-        `You're a legacy at ${c.college.name}. Legacy ED admit rates often run 25–35% — this materially increases your odds beyond the standard ED bump.`
-      );
-    }
-  }
+  // Legacy ED schools are surfaced in their own panel section (recommended +
+  // legacyEdAlternatives), so we don't duplicate them here as hook notes.
   const anyEdEligibleSelective = scored.some(
     (s) => (s.c.college.acceptance_rate ?? 1) < 0.4
   );
@@ -175,8 +225,11 @@ export function computeEdStrategy(
     recommended: recommended ? recommended.c : null,
     recommendedShiftedBucket: recommended ? recommended.shiftedBucket : undefined,
     recommendedRatio: recommended ? recommended.ratio : undefined,
+    recommendedIsLegacy: recommended ? recommended.isLegacy : undefined,
     alternatives,
+    legacyEdAlternatives,
     donts,
+    earlyNonBinding,
     hookNotes,
     noEdSchools,
     scored: scored.map((s) => ({ c: s.c, leverage: s.leverage, ratio: s.ratio })),
