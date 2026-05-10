@@ -26,6 +26,7 @@ interface StrategyProfile {
   hook_low_income: boolean;
   hook_legacy_active: boolean;
   hook_legacy_college_ids: string[];
+  geo_preference: '' | 'in-state' | 'regional' | 'no-preference' | 'out-of-state';
 }
 
 interface APClass {
@@ -85,6 +86,7 @@ export default function ProfilePage() {
     hook_low_income: false,
     hook_legacy_active: false,
     hook_legacy_college_ids: [],
+    geo_preference: '',
   });
   const [savingStrategy, setSavingStrategy] = useState(false);
   const [legacyColleges, setLegacyColleges] = useState<{ id: string; name: string }[]>([]);
@@ -135,6 +137,7 @@ export default function ProfilePage() {
           hook_low_income: !!statsData.hook_low_income,
           hook_legacy_active: !!statsData.hook_legacy_active,
           hook_legacy_college_ids: statsData.hook_legacy_college_ids ?? [],
+          geo_preference: (statsData.geo_preference as StrategyProfile['geo_preference']) ?? '',
         });
       }
 
@@ -216,6 +219,7 @@ export default function ProfilePage() {
         hook_low_income: strategy.hook_low_income,
         hook_legacy_active: strategy.hook_legacy_active,
         hook_legacy_college_ids: strategy.hook_legacy_college_ids,
+        geo_preference: strategy.geo_preference || null,
       });
       if (error) {
         console.error('Error saving strategy profile:', error);
@@ -736,6 +740,23 @@ export default function ProfilePage() {
                   placeholder="0"
                   style={{ width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(201,169,119,0.2)', color: '#E8DDC9', padding: '12px 14px', fontFamily: 'var(--font-body)', fontSize: '15px', outline: 'none' }}
                 />
+              </div>
+              <div>
+                <label className="font-body" style={{ display: 'block', color: 'rgba(232,221,201,0.85)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Geographic Preference</label>
+                <select
+                  value={strategy.geo_preference}
+                  onChange={(e) => setStrategy({ ...strategy, geo_preference: e.target.value as StrategyProfile['geo_preference'] })}
+                  style={{ width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(201,169,119,0.2)', color: '#E8DDC9', padding: '12px 14px', fontFamily: 'var(--font-body)', fontSize: '15px', outline: 'none', cursor: 'pointer' }}
+                >
+                  <option value="">— select —</option>
+                  <option value="in-state">Stay in-state</option>
+                  <option value="regional">Stay in my region</option>
+                  <option value="no-preference">No preference</option>
+                  <option value="out-of-state">Prefer out-of-state</option>
+                </select>
+                <p className="font-body" style={{ color: 'rgba(232,221,201,0.5)', fontSize: '11.5px', marginTop: '6px', lineHeight: 1.4 }}>
+                  Used when we suggest schools to balance your list.
+                </p>
               </div>
             </div>
 

@@ -21,6 +21,7 @@ import {
   TIERS,
 } from '@/lib/classifier';
 import { computeEdStrategy } from '@/lib/edStrategy';
+import { buildSchoolSuggestions } from '@/lib/geoRecommendations';
 
 type Tab = 'strategy' | 'add';
 
@@ -109,6 +110,20 @@ export default function CollegesPage() {
   }, [classifications]);
 
   const diagnostic = useMemo(() => buildBalanceDiagnostic(tierCounts), [tierCounts]);
+
+  const { neededTier, suggestions } = useMemo(() => {
+    if (!profile || classifications.length === 0) {
+      return { neededTier: null, suggestions: [] };
+    }
+    return buildSchoolSuggestions({
+      profile,
+      classifications,
+      allColleges: colleges,
+      userCollegeIds: userColleges,
+      counts: tierCounts,
+      max: 3,
+    });
+  }, [profile, classifications, colleges, userColleges, tierCounts]);
 
   const edStrategy = useMemo(
     () => (profile ? computeEdStrategy(classifications, profile) : null),
@@ -304,7 +319,12 @@ export default function CollegesPage() {
             ) : (
               <>
                 {/* Balance diagnostic card */}
-                <BalanceDiagnostic data={diagnostic} />
+                <BalanceDiagnostic
+                  data={diagnostic}
+                  suggestions={suggestions}
+                  neededTier={neededTier}
+                  onAddSchool={handleAddCollege}
+                />
 
                 {/* ED Strategy panel */}
                 {edStrategy && profile && (

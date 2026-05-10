@@ -13,8 +13,11 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
     recommended,
     recommendedShiftedBucket,
     recommendedRatio,
+    recommendedIsLegacy,
     alternatives,
+    legacyEdAlternatives,
     donts,
+    earlyNonBinding,
     hookNotes,
     noEdSchools,
     scored,
@@ -117,6 +120,7 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
             classification={recommended}
             ratio={recommendedRatio ?? 1}
             shiftedBucket={recommendedShiftedBucket}
+            isLegacy={!!recommendedIsLegacy}
           />
         )}
 
@@ -143,6 +147,97 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
               you'd commit wholeheartedly is the smartest next move.
             </p>
           </Block>
+        )}
+
+        {/* Other legacy ED options */}
+        {legacyEdAlternatives.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <Eyebrow muted>Your other legacy ED options</Eyebrow>
+            <p
+              className="font-body"
+              style={{
+                color: 'rgba(232,221,201, 0.6)',
+                fontSize: '13px',
+                lineHeight: 1.55,
+                margin: 0,
+              }}
+            >
+              You can only ED to one school, but every legacy school here stacks the same 25–35% legacy ED odds. Any of these would be a strong play if you'd commit.
+            </p>
+            <ul
+              style={{
+                listStyle: 'none',
+                margin: 0,
+                padding: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+              }}
+            >
+              {legacyEdAlternatives.map(({ school, ratio }) => {
+                const edPct = ((school.college.ed_admit_rate ?? 0) * 100).toFixed(0);
+                const rdPct = ((school.college.acceptance_rate ?? 0) * 100).toFixed(0);
+                return (
+                  <li
+                    key={school.college.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      justifyContent: 'space-between',
+                      gap: '16px',
+                      background: 'rgba(11,19,32, 0.5)',
+                      border: '1px solid rgba(201,169,119, 0.32)',
+                      borderRadius: '4px',
+                      padding: '14px 18px',
+                    }}
+                  >
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div
+                        className="font-heading"
+                        style={{
+                          color: '#E8DDC9',
+                          fontSize: '20px',
+                          fontWeight: 600,
+                          letterSpacing: '-0.01em',
+                        }}
+                      >
+                        {school.college.name}
+                      </div>
+                      <p
+                        className="font-body"
+                        style={{
+                          color: 'rgba(232,221,201, 0.6)',
+                          fontSize: '13px',
+                          lineHeight: 1.55,
+                          margin: '4px 0 0 0',
+                        }}
+                      >
+                        Legacy + ED stacks well above the standard {edPct}% ED rate (vs {rdPct}% RD,{' '}
+                        <span style={{ color: '#C9A977' }}>{ratio.toFixed(1)}× before legacy</span>).
+                      </p>
+                    </div>
+                    <span
+                      className="font-body"
+                      style={{
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.14em',
+                        color: '#C9A977',
+                        background: 'rgba(201,169,119, 0.10)',
+                        border: '1px solid rgba(201,169,119, 0.45)',
+                        padding: '4px 10px',
+                        borderRadius: '999px',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Legacy
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         )}
 
         {/* Alternatives */}
@@ -221,6 +316,92 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
                   </li>
                 );
               })}
+            </ul>
+          </div>
+        )}
+
+        {/* Early non-binding options (REA / EA-only) */}
+        {earlyNonBinding.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <Eyebrow muted>Early non-binding options</Eyebrow>
+            <p
+              className="font-body"
+              style={{
+                color: 'rgba(232,221,201, 0.6)',
+                fontSize: '13px',
+                lineHeight: 1.55,
+                margin: 0,
+              }}
+            >
+              You can't ED at these schools, but REA / EA is a real early play — non-binding, with a meaningful lift over RD.
+            </p>
+            <ul
+              style={{
+                listStyle: 'none',
+                margin: 0,
+                padding: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+              }}
+            >
+              {earlyNonBinding.map((opt) => (
+                <li
+                  key={opt.school.college.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    gap: '16px',
+                    background: 'rgba(11,19,32, 0.5)',
+                    border: '1px solid rgba(232,221,201, 0.14)',
+                    borderRadius: '4px',
+                    padding: '14px 18px',
+                  }}
+                >
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div
+                      className="font-heading"
+                      style={{
+                        color: '#E8DDC9',
+                        fontSize: '18px',
+                        fontWeight: 600,
+                        letterSpacing: '-0.01em',
+                      }}
+                    >
+                      {opt.school.college.name}
+                    </div>
+                    <p
+                      className="font-body"
+                      style={{
+                        color: 'rgba(232,221,201, 0.6)',
+                        fontSize: '13px',
+                        lineHeight: 1.55,
+                        margin: '4px 0 0 0',
+                      }}
+                    >
+                      {opt.note}
+                    </p>
+                  </div>
+                  <span
+                    className="font-body"
+                    style={{
+                      fontSize: '10px',
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.14em',
+                      color: '#C9A977',
+                      background: 'rgba(201,169,119, 0.10)',
+                      border: '1px solid rgba(201,169,119, 0.35)',
+                      padding: '4px 10px',
+                      borderRadius: '999px',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {opt.kind}
+                  </span>
+                </li>
+              ))}
             </ul>
           </div>
         )}
@@ -393,22 +574,26 @@ function RecommendedBlock({
   classification,
   ratio,
   shiftedBucket,
+  isLegacy,
 }: {
   classification: import('@/lib/classifier').SchoolClassification;
   ratio: number;
   shiftedBucket?: import('@/lib/classifier').Tier;
+  isLegacy?: boolean;
 }) {
   const { college, bucket } = classification;
   const edPct = ((college.ed_admit_rate ?? 0) * 100).toFixed(0);
   const rdPct = ((college.acceptance_rate ?? 0) * 100).toFixed(0);
 
-  const taglineMain =
-    ratio >= 2.5
+  const taglineMain = isLegacy
+    ? `Legacy + ED stacks your odds well above ${ratio.toFixed(1)}×`
+    : ratio >= 2.5
       ? `ED here roughly ${ratio.toFixed(1)}× your odds`
       : `ED here lifts your odds ~${ratio.toFixed(1)}×`;
 
-  const shiftLine =
-    shiftedBucket && shiftedBucket !== bucket
+  const shiftLine = isLegacy
+    ? `Legacy ED admit rates historically run 25–35% — well above the standard ${edPct}% ED rate. This is your single highest-leverage card.`
+    : shiftedBucket && shiftedBucket !== bucket
       ? `Under ED, the bump moves this from ${bucket} into ${shiftedBucket} territory.`
       : `It stays a ${bucket}, but the ED admit rate is materially higher than RD.`;
   const ratioLine = `${edPct}% ED vs ${rdPct}% RD — that gap is the leverage you're cashing in.`;
