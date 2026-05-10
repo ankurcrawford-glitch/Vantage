@@ -150,3 +150,69 @@ export function buildSchoolSuggestions(args: {
 
   return { neededTier, suggestions: matching.slice(0, max) };
 }
+
+export interface TierSuggestion {
+  tier: Tier;
+  deficit: number;
+  suggestions: SchoolSuggestion[];
+}
+
+/**
+ * Like {@link buildSchoolSuggestions}, but returns suggestions for EVERY
+ * under-filled tier — Safety, Likely, Target, Reach. Each block has up to
+ * `perTier` schools sorted by fit. Used to fill out the rest of the list,
+ * not just the most-deficient tier.
+ */
+export function buildAllTierSuggestions(args: {
+  profile: StudentProfile;
+  allColleges: College[];
+  userCollegeIds: string[];
+  counts: Record<Tier, number>;
+  perTier?: number;
+}): TierSuggestion[] {
+  const { profile, allColleges, userCollegeIds, counts } = args;
+  const perTier = args.perTier ?? 3;
+
+  const owned = new Set(userCollegeIds);
+  const baseCandidates = allColleges.filter(
+    (c) => !owned.has(c.id) && c.acceptance_rate != null && passesGeoFilter(c, profile)
+  );
+  const widenedCandidates =
+    profile.geoPreference && profile.geoPreference !== 'no-preference'
+      ? allColleges.filter((c) => !owned.has(c.id) && c.acceptance_rate != null)
+      : null;
+
+  // Classify each candidate ONCE per pass.
+  const baseClassified = baseCandidates.map((c) => classify(c, profile, 'RD'));
+  const widenedClassified = widenedCandidates
+    ? widenedCandidates.map((c) => classify(c, profile, 'RD'))
+    : null;
+
+  const results: TierSuggestion[] = [];
+  for (const tier of TIER_PRIORITY) {
+    const deficit = TARGET_MIN[tier] - counts[tier];
+    if (deficit <= 0) continue;
+
+    let matching = baseClassified
+      .filter((cls) => cls.bucket === tier)
+      .sort((a, b) => b.score - a.score);
+
+    if (matching.length === 0 && widenedClassified) {
+      matching = widenedClassified
+        .filter((cls) => cls.bucket === tier)
+        .sort((a, b) => b.score - a.score);
+    }
+    if (matching.length === 0) continue;
+
+    results.push({
+      tier,
+      deficit,
+      suggestions: matching.slice(0, perTier).map((cls) => ({
+        classification: cls,
+        reason: buildReason(cls, profile, tier),
+      })),
+    });
+  }
+
+  return results;
+}

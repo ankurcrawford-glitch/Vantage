@@ -1,7 +1,7 @@
 'use client';
 
 import type { Tier } from '@/lib/classifier';
-import type { SchoolSuggestion } from '@/lib/geoRecommendations';
+import type { SchoolSuggestion, TierSuggestion } from '@/lib/geoRecommendations';
 
 export interface BalanceDiagnosticData {
   headline: string;
@@ -13,12 +13,30 @@ export interface BalanceDiagnosticData {
 
 interface Props {
   data: BalanceDiagnosticData;
+  /** @deprecated use tierSuggestions */
   suggestions?: SchoolSuggestion[];
+  /** @deprecated use tierSuggestions */
   neededTier?: Tier | null;
+  /** Multi-tier suggestion blocks — preferred over (suggestions, neededTier). */
+  tierSuggestions?: TierSuggestion[];
   onAddSchool?: (collegeId: string) => void;
 }
 
-export default function BalanceDiagnostic({ data, suggestions, neededTier, onAddSchool }: Props) {
+const TIER_HEADLINE: Record<Tier, string> = {
+  Safety: 'Add a safety',
+  Likely: 'Add a likely',
+  Target: 'Add a target',
+  Reach: 'Add a reach',
+  'Hard Reach': 'Add a hard reach',
+};
+
+export default function BalanceDiagnostic({
+  data,
+  suggestions,
+  neededTier,
+  tierSuggestions,
+  onAddSchool,
+}: Props) {
   const { headline, counts, recommendations } = data;
   const total =
     counts.Safety + counts.Likely + counts.Target + counts.Reach + counts['Hard Reach'];
@@ -118,7 +136,8 @@ export default function BalanceDiagnostic({ data, suggestions, neededTier, onAdd
         </ul>
       )}
 
-      {suggestions && suggestions.length > 0 && neededTier && (
+      {/* Multi-tier suggestion blocks (preferred path) */}
+      {tierSuggestions && tierSuggestions.length > 0 ? (
         <div style={{ marginTop: '22px', paddingTop: '18px', borderTop: '1px solid rgba(232,221,201, 0.1)' }}>
           <p
             className="font-body"
@@ -128,87 +147,140 @@ export default function BalanceDiagnostic({ data, suggestions, neededTier, onAdd
               fontWeight: 600,
               textTransform: 'uppercase',
               letterSpacing: '0.08em',
-              margin: '0 0 12px 0',
+              margin: '0 0 16px 0',
             }}
           >
-            We also recommend adding {neededTier === 'Hard Reach' ? 'a hard reach' : `a ${neededTier.toLowerCase()}`} to balance your list
+            Suggested additions to balance your list
           </p>
-          <ul
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {tierSuggestions.map((block) => (
+              <SuggestionBlock
+                key={block.tier}
+                tierLabel={TIER_HEADLINE[block.tier]}
+                deficit={block.deficit}
+                suggestions={block.suggestions}
+                onAddSchool={onAddSchool}
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
+        // Legacy single-tier path (kept for any caller still using it)
+        suggestions && suggestions.length > 0 && neededTier && (
+          <div style={{ marginTop: '22px', paddingTop: '18px', borderTop: '1px solid rgba(232,221,201, 0.1)' }}>
+            <SuggestionBlock
+              tierLabel={TIER_HEADLINE[neededTier]}
+              deficit={1}
+              suggestions={suggestions}
+              onAddSchool={onAddSchool}
+            />
+          </div>
+        )
+      )}
+    </div>
+  );
+}
+
+function SuggestionBlock({
+  tierLabel,
+  deficit,
+  suggestions,
+  onAddSchool,
+}: {
+  tierLabel: string;
+  deficit: number;
+  suggestions: SchoolSuggestion[];
+  onAddSchool?: (collegeId: string) => void;
+}) {
+  const deficitText = deficit > 1 ? ` (${deficit} more)` : '';
+  return (
+    <div>
+      <p
+        className="font-body"
+        style={{
+          color: '#E8DDC9',
+          fontSize: '13px',
+          fontWeight: 600,
+          margin: '0 0 8px 0',
+        }}
+      >
+        {tierLabel}
+        <span style={{ color: 'rgba(232,221,201, 0.5)', fontWeight: 400 }}>{deficitText}</span>
+      </p>
+      <ul
+        style={{
+          listStyle: 'none',
+          margin: 0,
+          padding: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+        }}
+      >
+        {suggestions.map((s) => (
+          <li
+            key={s.classification.college.id}
             style={{
-              listStyle: 'none',
-              margin: 0,
-              padding: 0,
               display: 'flex',
-              flexDirection: 'column',
-              gap: '10px',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '14px',
+              padding: '10px 14px',
+              background: 'rgba(15, 24, 40, 0.6)',
+              border: '1px solid rgba(201,169,119, 0.18)',
+              borderRadius: '4px',
             }}
           >
-            {suggestions.map((s) => (
-              <li
-                key={s.classification.college.id}
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div
+                className="font-body"
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '14px',
-                  padding: '10px 14px',
-                  background: 'rgba(15, 24, 40, 0.6)',
-                  border: '1px solid rgba(201,169,119, 0.18)',
-                  borderRadius: '4px',
+                  color: '#E8DDC9',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div
-                    className="font-body"
-                    style={{
-                      color: '#E8DDC9',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {s.classification.college.name}
-                  </div>
-                  <div
-                    className="font-body"
-                    style={{
-                      color: 'rgba(232,221,201, 0.6)',
-                      fontSize: '12px',
-                      marginTop: '2px',
-                    }}
-                  >
-                    {s.reason}
-                  </div>
-                </div>
-                {onAddSchool && (
-                  <button
-                    onClick={() => onAddSchool(s.classification.college.id)}
-                    className="font-body"
-                    style={{
-                      background: 'transparent',
-                      color: '#C9A977',
-                      border: '1px solid rgba(201,169,119, 0.5)',
-                      padding: '6px 12px',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      borderRadius: '2px',
-                      whiteSpace: 'nowrap',
-                      flexShrink: 0,
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(201,169,119, 0.12)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                  >
-                    + Add
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+                {s.classification.college.name}
+              </div>
+              <div
+                className="font-body"
+                style={{
+                  color: 'rgba(232,221,201, 0.6)',
+                  fontSize: '12px',
+                  marginTop: '2px',
+                }}
+              >
+                {s.reason}
+              </div>
+            </div>
+            {onAddSchool && (
+              <button
+                onClick={() => onAddSchool(s.classification.college.id)}
+                className="font-body"
+                style={{
+                  background: 'transparent',
+                  color: '#C9A977',
+                  border: '1px solid rgba(201,169,119, 0.5)',
+                  padding: '6px 12px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  borderRadius: '2px',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(201,169,119, 0.12)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+              >
+                + Add
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

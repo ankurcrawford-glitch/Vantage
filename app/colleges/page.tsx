@@ -21,7 +21,8 @@ import {
   TIERS,
 } from '@/lib/classifier';
 import { computeEdStrategy } from '@/lib/edStrategy';
-import { buildSchoolSuggestions } from '@/lib/geoRecommendations';
+import { buildAllTierSuggestions } from '@/lib/geoRecommendations';
+import type { GeoPreference } from '@/lib/classifier';
 
 type Tab = 'strategy' | 'add';
 
@@ -111,17 +112,14 @@ export default function CollegesPage() {
 
   const diagnostic = useMemo(() => buildBalanceDiagnostic(tierCounts), [tierCounts]);
 
-  const { neededTier, suggestions } = useMemo(() => {
-    if (!profile || classifications.length === 0) {
-      return { neededTier: null, suggestions: [] };
-    }
-    return buildSchoolSuggestions({
+  const tierSuggestions = useMemo(() => {
+    if (!profile || classifications.length === 0) return [];
+    return buildAllTierSuggestions({
       profile,
-      classifications,
       allColleges: colleges,
       userCollegeIds: userColleges,
       counts: tierCounts,
-      max: 3,
+      perTier: 3,
     });
   }, [profile, classifications, colleges, userColleges, tierCounts]);
 
@@ -152,6 +150,17 @@ export default function CollegesPage() {
     if (!user) return;
     const { error } = await supabase.from('user_colleges').insert({ user_id: user.id, college_id: collegeId });
     if (!error) setUserColleges((prev) => [...prev, collegeId]);
+  }
+
+  async function handleGeoPreferenceChange(value: string) {
+    const next = value as GeoPreference | '';
+    setProfile((prev) => (prev ? { ...prev, geoPreference: next || undefined } : prev));
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase
+      .from('user_stats')
+      .update({ geo_preference: next || null })
+      .eq('user_id', user.id);
   }
 
   async function handleRemoveCollege(collegeId: string) {
@@ -318,11 +327,17 @@ export default function CollegesPage() {
               </Card>
             ) : (
               <>
+                {/* Geographic preference inline selector */}
+                <GeoPreferenceBar
+                  value={profile?.geoPreference}
+                  state={profile?.state}
+                  onChange={handleGeoPreferenceChange}
+                />
+
                 {/* Balance diagnostic card */}
                 <BalanceDiagnostic
                   data={diagnostic}
-                  suggestions={suggestions}
-                  neededTier={neededTier}
+                  tierSuggestions={tierSuggestions}
                   onAddSchool={handleAddCollege}
                 />
 
@@ -439,6 +454,81 @@ export default function CollegesPage() {
 }
 
 /* ------------------------------ subviews ------------------------------ */
+
+function GeoPreferenceBar({
+  value,
+  state,
+  onChange,
+}: {
+  value: string | undefined;
+  state: string | undefined;
+  onChange: (next: string) => void;
+}) {
+  const helper = state
+    ? `Suggestions filter to schools that match your preference (your state: ${state.toUpperCase()}).`
+    : 'Set your state in Profile to enable in-state and regional filtering.';
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        gap: '14px',
+        background: 'rgba(11,19,32, 0.4)',
+        border: '1px solid rgba(232,221,201, 0.12)',
+        borderRadius: '6px',
+        padding: '12px 18px',
+        marginBottom: '16px',
+      }}
+    >
+      <span
+        className="font-body"
+        style={{
+          color: '#C9A977',
+          fontSize: '11px',
+          fontWeight: 600,
+          textTransform: 'uppercase',
+          letterSpacing: '0.12em',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        Geographic preference
+      </span>
+      <select
+        value={value ?? ''}
+        onChange={(e) => onChange(e.target.value)}
+        className="font-body"
+        style={{
+          background: 'rgba(0,0,0,0.3)',
+          border: '1px solid rgba(201,169,119, 0.35)',
+          color: '#E8DDC9',
+          padding: '6px 12px',
+          fontSize: '13px',
+          outline: 'none',
+          cursor: 'pointer',
+          borderRadius: '2px',
+        }}
+      >
+        <option value="">— not set —</option>
+        <option value="in-state">Stay in-state</option>
+        <option value="regional">Stay in my region</option>
+        <option value="no-preference">No preference</option>
+        <option value="out-of-state">Prefer out-of-state</option>
+      </select>
+      <span
+        className="font-body"
+        style={{
+          color: 'rgba(232,221,201, 0.55)',
+          fontSize: '12px',
+          flex: '1 1 240px',
+          minWidth: 0,
+        }}
+      >
+        {helper}
+      </span>
+    </div>
+  );
+}
 
 function TierColumn({
   tier,
