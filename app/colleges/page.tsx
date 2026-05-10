@@ -119,7 +119,7 @@ export default function CollegesPage() {
       allColleges: colleges,
       userCollegeIds: userColleges,
       counts: tierCounts,
-      perTier: 3,
+      perTier: 12,
     });
   }, [profile, classifications, colleges, userColleges, tierCounts]);
 

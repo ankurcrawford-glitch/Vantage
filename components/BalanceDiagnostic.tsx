@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import type { Tier } from '@/lib/classifier';
 import type { SchoolSuggestion, TierSuggestion } from '@/lib/geoRecommendations';
 
@@ -181,6 +182,8 @@ export default function BalanceDiagnostic({
   );
 }
 
+const COLLAPSED_COUNT = 3;
+
 function SuggestionBlock({
   tierLabel,
   deficit,
@@ -192,7 +195,10 @@ function SuggestionBlock({
   suggestions: SchoolSuggestion[];
   onAddSchool?: (collegeId: string) => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const deficitText = deficit > 1 ? ` (${deficit} more)` : '';
+  const visible = expanded ? suggestions : suggestions.slice(0, COLLAPSED_COUNT);
+  const hiddenCount = suggestions.length - visible.length;
   return (
     <div>
       <p
@@ -217,7 +223,7 @@ function SuggestionBlock({
           gap: '8px',
         }}
       >
-        {suggestions.map((s) => (
+        {visible.map((s) => (
           <li
             key={s.classification.college.id}
             style={{
@@ -281,6 +287,27 @@ function SuggestionBlock({
           </li>
         ))}
       </ul>
+      {suggestions.length > COLLAPSED_COUNT && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="font-body"
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: '#C9A977',
+            fontSize: '12px',
+            fontWeight: 600,
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+            padding: '8px 0 0 0',
+            marginTop: '4px',
+          }}
+        >
+          {expanded ? 'Show fewer' : `Show all ${suggestions.length} options${hiddenCount ? ` (+${hiddenCount} more)` : ''}`}
+        </button>
+      )}
     </div>
   );
 }
