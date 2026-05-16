@@ -42,24 +42,17 @@ export default function Navigation() {
 
   // Determine which page is active
   const isActive = (path: string) => {
-    if (path === '/dashboard') {
-      return pathname === '/dashboard';
+    if (path === '/dashboard') return pathname === '/dashboard';
+    if (path === '/applications') {
+      return (
+        pathname.startsWith('/personal-statement') ||
+        pathname.startsWith('/essays') ||
+        pathname.startsWith('/common-app')
+      );
     }
-    if (path === '/personal-statement' || path === '/essays') {
-      return pathname.startsWith('/personal-statement') || pathname.startsWith('/essays');
-    }
-    if (path === '/common-app') {
-      return pathname.startsWith('/common-app');
-    }
-    if (path === '/profile') {
-      return pathname === '/profile';
-    }
-    if (path === '/discovery') {
-      return pathname === '/discovery';
-    }
-    if (path === '/colleges') {
-      return pathname.startsWith('/colleges');
-    }
+    if (path === '/profile') return pathname === '/profile';
+    if (path === '/discovery') return pathname === '/discovery';
+    if (path === '/colleges') return pathname.startsWith('/colleges');
     return false;
   };
 
@@ -86,12 +79,11 @@ export default function Navigation() {
             <span style={{ color: 'rgba(232,221,201,0.5)', fontSize: '14px' }}>Loading...</span>
           ) : user ? (
             <>
-              <Link href="/dashboard" style={getLinkStyle('/dashboard')}>Dashboard</Link>
-              <Link href="/personal-statement" style={getLinkStyle('/personal-statement')}>Essays</Link>
-              <Link href="/common-app" style={getLinkStyle('/common-app')}>Common App</Link>
-              <Link href="/colleges" style={getLinkStyle('/colleges')}>Portfolio</Link>
-              <Link href="/profile" style={getLinkStyle('/profile')}>Profile</Link>
               <Link href="/discovery" style={getLinkStyle('/discovery')}>Insight Questions</Link>
+              <Link href="/personal-statement" style={getLinkStyle('/applications')}>Applications</Link>
+              <Link href="/colleges" style={getLinkStyle('/colleges')}>My Schools</Link>
+              <Link href="/profile" style={getLinkStyle('/profile')}>Profile</Link>
+              <Link href="/dashboard" style={getLinkStyle('/dashboard')}>Dashboard</Link>
               <button
                 onClick={handleLogout}
                 style={{

@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
 import StatCard from '@/components/StatCard';
+import Navigation from '@/components/Navigation';
 
 interface UserStats {
   gpa_weighted: number | null;
@@ -199,24 +200,7 @@ function DashboardContent() {
 
   return (
     <div className="min-h-screen bg-midnight">
-      {/* Navigation */}
-      <nav className="border-b border-hairline/10 px-8 py-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <span className="font-heading text-2xl font-semibold text-cream">VANTAGE</span>
-            <span className="text-gold-leaf text-2xl">.</span>
-          </Link>
-          <div className="flex items-center gap-6">
-            <Link href="/dashboard" className="font-body text-sm transition-colors" style={{ color: pathname === '/dashboard' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', fontWeight: pathname === '/dashboard' ? 600 : 400, textDecoration: 'none' }}>Dashboard</Link>
-            <Link href="/personal-statement" className="font-body text-sm transition-colors" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? '#E8DDC9' : 'rgba(232,221,201,0.7)', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? 600 : 400, textDecoration: 'none' }}>Essays</Link>
-            <Link href="/common-app" className="font-body text-sm transition-colors" style={{ color: pathname.startsWith('/common-app') ? '#E8DDC9' : 'rgba(232,221,201,0.7)', fontWeight: pathname.startsWith('/common-app') ? 600 : 400, textDecoration: 'none' }}>Common App</Link>
-            <Link href="/colleges" className="font-body text-sm transition-colors" style={{ color: pathname.startsWith('/colleges') ? '#E8DDC9' : 'rgba(232,221,201,0.7)', fontWeight: pathname.startsWith('/colleges') ? 600 : 400, textDecoration: 'none' }}>Portfolio</Link>
-            <Link href="/profile" className="font-body text-sm transition-colors" style={{ color: pathname === '/profile' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', fontWeight: pathname === '/profile' ? 600 : 400, textDecoration: 'none' }}>Profile</Link>
-            <Link href="/discovery" className="font-body text-sm transition-colors" style={{ color: pathname === '/discovery' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', fontWeight: pathname === '/discovery' ? 600 : 400, textDecoration: 'none' }}>Insight Questions</Link>
-            <button onClick={handleLogout} className="font-body text-sm transition-colors" style={{ color: 'rgba(232,221,201,0.7)', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#E8DDC9'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(232,221,201,0.7)'; }}>Logout</button>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       <div className="max-w-7xl mx-auto px-8 py-16">
         {/* Payment Success Banner */}
