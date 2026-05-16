@@ -11,6 +11,7 @@ import EdStrategyPanel from '@/components/EdStrategyPanel';
 import SchoolDetailModal from '@/components/SchoolDetailModal';
 import StrategyHeader from '@/components/StrategyHeader';
 import BalanceDiagnostic, { buildBalanceDiagnostic } from '@/components/BalanceDiagnostic';
+import Navigation from '@/components/Navigation';
 import {
   classify,
   profileFromUserStats,
@@ -210,24 +211,7 @@ export default function CollegesPage() {
 
   return (
     <div className="min-h-screen" style={{ background: '#0B1320' }}>
-      {/* NAV — preserved verbatim from prior page */}
-      <nav style={{ borderBottom: '1px solid rgba(232,221,201,0.1)', padding: '24px 32px' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-            <span className="font-heading text-2xl font-semibold" style={{ color: '#E8DDC9' }}>VANTAGE</span>
-            <span className="text-2xl" style={{ color: '#C9A977' }}>.</span>
-          </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <Link href="/dashboard" style={{ color: pathname === '/dashboard' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: pathname === '/dashboard' ? 600 : 400 }}>Dashboard</Link>
-            <Link href="/personal-statement" style={{ color: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: (pathname.startsWith('/personal-statement') || pathname.startsWith('/essays')) ? 600 : 400 }}>Essays</Link>
-            <Link href="/common-app" style={{ color: pathname.startsWith('/common-app') ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: pathname.startsWith('/common-app') ? 600 : 400 }}>Common App</Link>
-            <Link href="/colleges" style={{ color: pathname.startsWith('/colleges') ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: pathname.startsWith('/colleges') ? 600 : 400 }}>Portfolio</Link>
-            <Link href="/profile" style={{ color: pathname === '/profile' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: pathname === '/profile' ? 600 : 400 }}>Profile</Link>
-            <Link href="/discovery" style={{ color: pathname === '/discovery' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: pathname === '/discovery' ? 600 : 400 }}>Insight Questions</Link>
-            <button onClick={handleLogout} style={{ background: 'transparent', color: 'rgba(232,221,201,0.7)', border: 'none', fontFamily: 'var(--font-body)', fontSize: '14px', cursor: 'pointer', padding: 0 }}>Logout</button>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '64px 32px' }}>
         {/* Header — title + balance pill */}
@@ -431,7 +415,7 @@ export default function CollegesPage() {
                       )}
                     </div>
                     <Button variant="secondary" onClick={() => handleAddCollege(college.id)} style={{ width: '100%' }}>
-                      Add to Portfolio
+                      Add to My Schools
                     </Button>
                   </Card>
                 ))}
