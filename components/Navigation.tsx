@@ -79,7 +79,7 @@ export default function Navigation() {
             <span style={{ color: 'rgba(232,221,201,0.5)', fontSize: '14px' }}>Loading...</span>
           ) : user ? (
             <>
-              <Link href="/discovery" style={getLinkStyle('/discovery')}>Insight Questions</Link>
+              <Link href="/discovery" style={getLinkStyle('/discovery')}>Story Builder</Link>
               <Link href="/personal-statement" style={getLinkStyle('/applications')}>Applications</Link>
               <Link href="/colleges" style={getLinkStyle('/colleges')}>My Schools</Link>
               <Link href="/profile" style={getLinkStyle('/profile')}>Profile</Link>

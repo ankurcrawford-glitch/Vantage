@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
         gated: true,
         answeredCount,
         requiredCount: MIN_INSIGHT_ANSWERS,
-        message: `Strategic Intelligence works best when it truly understands who you are — your experiences, your values, the moments that shaped you. Right now, you've answered ${answeredCount} of 12 Insight Questions. To unlock this feature, take a few minutes to complete at least ${MIN_INSIGHT_ANSWERS}. The more you share, the more personalized and powerful your guidance becomes.`
+        message: `Strategic Intelligence works best when it truly understands who you are — your experiences, your values, the moments that shaped you. Right now, you've answered ${answeredCount} of 12 Story Builder questions. To unlock this feature, take a few minutes to complete at least ${MIN_INSIGHT_ANSWERS}. The more you share, the more personalized and powerful your guidance becomes.`
       });
     }
 

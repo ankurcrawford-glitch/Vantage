@@ -169,7 +169,7 @@ export default function PrivacyPage() {
           <p>
             We may retain minimal records of a deleted account (e.g., email address + a
             deletion timestamp) to comply with legal obligations or fraud prevention. We
-            do not retain your essay content, Insight Questions, or profile after deletion.
+            do not retain your essay content, Story Builder answers, or profile after deletion.
           </p>
           <p>
             Backup systems may retain deleted data for up to 30 days before they are

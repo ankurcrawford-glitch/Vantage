@@ -172,7 +172,7 @@ export default function DiscoveryPage() {
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '64px 32px' }}>
         {!hasSubscription ? (
           <Card>
-            <h1 className="font-heading text-3xl mb-4" style={{ color: '#E8DDC9' }}>Insight Questions</h1>
+            <h1 className="font-heading text-3xl mb-4" style={{ color: '#E8DDC9' }}>Story Builder</h1>
             <p className="font-body text-lg mb-6" style={{ color: 'rgba(232,221,201,0.9)' }}>
               The 12 reflective questions unlock after a one-time purchase—
               <strong style={{ color: '#E8DDC9', fontWeight: 600 }}>
@@ -199,7 +199,7 @@ export default function DiscoveryPage() {
               {checkoutLoading ? 'Redirecting...' : 'Unlock for $100'}
             </button>
             <p className="font-body text-sm mt-4" style={{ color: 'rgba(232,221,201,0.5)' }}>
-              One-time payment. Full access to Insight Questions and Strategic Intelligence.
+              One-time payment. Full access to Story Builder and Strategic Intelligence.
             </p>
 
             <div
@@ -269,7 +269,7 @@ export default function DiscoveryPage() {
         ) : (
           <>
             <div style={{ marginBottom: '32px' }}>
-              <h1 className="font-heading text-4xl mb-2" style={{ color: '#E8DDC9' }}>Insight Questions</h1>
+              <h1 className="font-heading text-4xl mb-2" style={{ color: '#E8DDC9' }}>Story Builder</h1>
               <p className="font-body text-lg" style={{ color: '#E8DDC9' }}>
                 12 reflective questions that help us understand your story and power Strategic Intelligence for your essays.
               </p>
