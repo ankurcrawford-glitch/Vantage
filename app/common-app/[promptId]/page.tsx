@@ -1059,7 +1059,7 @@ export default function CommonAppEssayPage() {
                       {insightGateMessage}
                     </p>
                     <a href="/discovery" style={{ display: 'inline-block', marginTop: '16px', background: 'transparent', color: '#C9A977', padding: '8px 16px', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, border: '1px solid #C9A977', borderRadius: '2px', textDecoration: 'none' }}>
-                      Complete Insight Questions
+                      Complete Story Builder
                     </a>
                   </div>
                 )}

@@ -209,7 +209,7 @@ function DashboardContent() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-heading text-lg text-gold-leaf">Payment Successful</p>
-                <p className="font-body text-sm text-cream/70">Thank you! You now have full access to Insight Questions and Strategic Intelligence.</p>
+                <p className="font-body text-sm text-cream/70">Thank you! You now have full access to Story Builder and Strategic Intelligence.</p>
               </div>
               <button
                 onClick={() => setShowPaymentSuccess(false)}
@@ -333,7 +333,7 @@ function DashboardContent() {
                 <div>
                   <h2 className="font-heading text-2xl text-gold-leaf mb-2">Unlock Full Access</h2>
                   <p className="font-body text-cream/70 text-sm" style={{ maxWidth: '600px' }}>
-                    Get access to 12 Insight Questions and Strategic Intelligence, our AI-powered essay coaching that learns your unique story and provides personalized guidance.
+                    Get access to the 12-question Story Builder and Strategic Intelligence, our AI-powered essay coaching that learns your unique story and provides personalized guidance.
                   </p>
                   <p className="font-heading text-3xl text-cream mt-3">$100 <span className="font-body text-sm text-cream/50">one-time</span></p>
                 </div>
