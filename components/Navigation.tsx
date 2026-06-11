@@ -11,6 +11,7 @@ export default function Navigation() {
   const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [grade, setGrade] = useState<number | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -27,6 +28,20 @@ export default function Navigation() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
+      if (user) {
+        try {
+          const { data, error } = await supabase
+            .from('user_stats')
+            .select('grade')
+            .eq('user_id', user.id)
+            .single();
+          if (!error && data && typeof data.grade === 'number') {
+            setGrade(data.grade);
+          }
+        } catch {
+          /* grade column not present yet - leave hidden */
+        }
+      }
     } catch (error) {
       console.error('Error checking auth:', error);
     } finally {
@@ -43,6 +58,7 @@ export default function Navigation() {
   // Determine which page is active
   const isActive = (path: string) => {
     if (path === '/dashboard') return pathname === '/dashboard';
+    if (path === '/foundations') return pathname.startsWith('/foundations');
     if (path === '/applications') {
       return (
         pathname.startsWith('/personal-statement') ||
@@ -79,6 +95,9 @@ export default function Navigation() {
             <span style={{ color: 'rgba(232,221,201,0.5)', fontSize: '14px' }}>Loading...</span>
           ) : user ? (
             <>
+              {grade !== null && grade >= 9 && grade <= 11 && (
+                <Link href="/foundations/compass" style={getLinkStyle('/foundations')}>Foundations</Link>
+              )}
               <Link href="/discovery" style={getLinkStyle('/discovery')}>Story Builder</Link>
               <Link href="/personal-statement" style={getLinkStyle('/applications')}>Applications</Link>
               <Link href="/colleges" style={getLinkStyle('/colleges')}>My Schools</Link>
