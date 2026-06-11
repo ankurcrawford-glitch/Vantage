@@ -84,13 +84,14 @@ export default function FoundationsActivities() {
   const [selected, setSelected] = useState(null);
 
   return (
-    <div style={{ ...body, background: C.navy, minHeight: "100vh", color: C.ink }}>
+    <div style={{ ...body, background: C.navy, minHeight: "100vh", color: C.ink, width: "100%" }}>
       <link
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Montserrat:wght@300;400;500;600&display=swap"
         rel="stylesheet"
       />
 
-      <main className="px-6 md:px-12 py-10 max-w-5xl mx-auto">
+      <main className="px-6 md:px-12 py-10 max-w-5xl mx-auto"
+            style={{ width: "100%", maxWidth: 1024, margin: "0 auto", padding: "40px clamp(16px, 4vw, 48px)", boxSizing: "border-box" }}>
         {/* ── Header ── */}
         <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div>

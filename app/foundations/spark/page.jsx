@@ -70,13 +70,14 @@ export default function FoundationsSpark() {
   };
 
   return (
-    <div style={{ ...body, background: C.navy, minHeight: "100vh", color: C.ink }}>
+    <div style={{ ...body, background: C.navy, minHeight: "100vh", color: C.ink, width: "100%" }}>
       <link
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Montserrat:wght@300;400;500;600&display=swap"
         rel="stylesheet"
       />
 
-      <main className="px-6 md:px-12 py-10 max-w-3xl mx-auto">
+      <main className="px-6 md:px-12 py-10 max-w-3xl mx-auto"
+            style={{ width: "100%", maxWidth: 768, margin: "0 auto", padding: "40px clamp(16px, 4vw, 48px)", boxSizing: "border-box" }}>
         {/* ── Header ── */}
         <div className="mb-10">
           <p style={{ color: C.gold, fontSize: 11, letterSpacing: 3 }} className="uppercase mb-2">
