@@ -33,28 +33,9 @@ const currentSpark = {
   hint: "Don't write what sounds good. Write what's true. Five minutes, no editing.",
 };
 
-const archive = [
-  {
-    month: "May 2026",
-    prompt: "What's something you changed your mind about this year?",
-    excerpt: "I used to think volunteering was about helping people. Now I think it's mostly about noticing them...",
-    threads: ["Biology × Community Health"],
-  },
-  {
-    month: "April 2026",
-    prompt: "What do you do when no one is making you do anything?",
-    excerpt: "Saturday mornings I take my camera to the bus station downtown...",
-    threads: ["Visual Storytelling"],
-  },
-  {
-    month: "March 2026",
-    prompt: "Describe a place you keep returning to.",
-    excerpt: "The waiting room on the third floor has the same six people every Tuesday...",
-    threads: ["Biology × Community Health", "Visual Storytelling"],
-  },
-];
+const archive = [];
 
-const bankCount = 14;
+const bankCount = 0;
 
 // ===================== END MOCK DATA (TODO) =============================
 
@@ -179,6 +160,9 @@ export default function FoundationsSpark() {
           Your vault
         </p>
         <div className="space-y-3">
+          {archive.length === 0 && (
+            <p style={{ color: C.inkDim, fontSize: 14, lineHeight: 1.7 }}>No past reflections yet. Your saved reflections will collect here.</p>
+          )}
           {archive.map((a) => (
             <div
               key={a.month}

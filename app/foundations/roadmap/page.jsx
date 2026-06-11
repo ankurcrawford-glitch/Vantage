@@ -26,49 +26,13 @@ const body = { fontFamily: "'Montserrat', sans-serif" };
 // Wire these values to the student's real data (user_stats, activities,
 // counselor_messages, etc.). See counselor-schema.sql for table shapes.
 // ========================================================================
-const currentGrade = 10;
+const currentGrade = null;
 
 const roadmap = [
-  {
-    grade: 9,
-    theme: "Explore",
-    status: "complete",
-    items: [
-      { cat: "Courses", text: "Honors Bio, Honors English — strong start", done: true },
-      { cat: "Activities", text: "Tried 4 clubs, kept 2 (HOSA, Yearbook)", done: true },
-      { cat: "Summer", text: "Hospital volunteering began", done: true },
-    ],
-  },
-  {
-    grade: 10,
-    theme: "Deepen",
-    status: "current",
-    items: [
-      { cat: "Courses", text: "AP Bio next year — register by course selection deadline", done: false, due: "This month" },
-      { cat: "Testing", text: "PSAT in October — light prep starts August", done: false, due: "Aug" },
-      { cat: "Summer", text: "Self-initiated project: community health + photography", done: false, due: "Jul 1" },
-      { cat: "Activities", text: "Reached 120 volunteer hours", done: true },
-    ],
-  },
-  {
-    grade: 11,
-    theme: "Lead",
-    status: "upcoming",
-    items: [
-      { cat: "Courses", text: "AP Bio + AP Lang — your rigor signal year", done: false },
-      { cat: "Testing", text: "SAT: March + May sittings. Prep starts winter.", done: false },
-      { cat: "Activities", text: "Target: HOSA officer position, project grows", done: false },
-      { cat: "Summer", text: "Research program apps open Dec–Feb. We'll prep early.", done: false },
-    ],
-  },
-  {
-    grade: 12,
-    theme: "Apply",
-    status: "upcoming",
-    items: [
-      { cat: "Milestone", text: "Graduate to Vantage Application — your story becomes your essays", done: false },
-    ],
-  },
+  { grade: 9, theme: "Explore", status: "upcoming", items: [] },
+  { grade: 10, theme: "Deepen", status: "upcoming", items: [] },
+  { grade: 11, theme: "Lead", status: "upcoming", items: [] },
+  { grade: 12, theme: "Apply", status: "upcoming", items: [] },
 ];
 
 const catColor = {
@@ -188,6 +152,9 @@ export default function FoundationsRoadmap() {
                     {/* Items */}
                     {open && (
                       <div className="px-5 pb-5 space-y-2">
+                        {g.items.length === 0 && (
+                          <p style={{ color: C.inkDim, fontSize: 13 }}>Plan items for this grade will appear here.</p>
+                        )}
                         {g.items.map((item) => (
                           <div
                             key={item.text}

@@ -27,40 +27,10 @@ const body = { fontFamily: "'Montserrat', sans-serif" };
 // Wire these values to the student's real data (user_stats, activities,
 // counselor_messages, etc.). See counselor-schema.sql for table shapes.
 // ========================================================================
-const threads = [
-  {
-    id: "bio-health",
-    name: "Biology × Community Health",
-    strength: "Strong",
-    summary:
-      "A clear through-line connecting academic interest in biology with hands-on community health work. This is reading as genuine, not résumé-built.",
-    evidence: [
-      { type: "Activity", label: "Hospital volunteering — 120 hrs", grade: 10 },
-      { type: "Activity", label: "HOSA member", grade: 10 },
-      { type: "Course", label: "Honors Biology — A", grade: 9 },
-      { type: "Reflection", label: "\u201cThe waiting room essay\u201d — March Spark", grade: 10 },
-    ],
-    nextMove:
-      "Add something self-initiated this summer. A community health project you start yourself turns this from interest into identity.",
-  },
-  {
-    id: "visual-storytelling",
-    name: "Visual Storytelling",
-    strength: "Emerging",
-    summary:
-      "Photography and yearbook hint at a creative dimension. Underdeveloped, but valuable — it could become the texture that makes your applications human.",
-    evidence: [
-      { type: "Activity", label: "Yearbook staff", grade: 9 },
-      { type: "Activity", label: "Photography (personal)", grade: 9 },
-      { type: "Reflection", label: "\u201cWhy I photograph strangers\u201d — Nov Spark", grade: 9 },
-    ],
-    nextMove:
-      "Don't force this into a club. Consider documenting your health work visually — the two threads could braid together.",
-  },
-];
+const threads = [];
 
 const aiInsight =
-  "Two threads, one strong and one emerging. The most compelling version of your story isn't choosing between them — it's the intersection. A student who documents community health through photography has a story no one else in the pile has. Keep both alive.";
+  "Your narrative threads will appear here as you log activities and reflections. By senior year, the strongest threads become your applications.";
 
 // ===================== END MOCK DATA (TODO) =============================
 
@@ -114,6 +84,9 @@ export default function FoundationsStory() {
 
         {/* ── Threads ── */}
         <div className="space-y-5">
+          {threads.length === 0 && (
+            <p style={{ color: C.inkDim, fontSize: 14, lineHeight: 1.7 }}>No narrative threads yet. They will appear as you log activities and reflections.</p>
+          )}
           {threads.map((t) => {
             const open = openThread === t.id;
             return (

@@ -30,49 +30,30 @@ const body = { fontFamily: "'Montserrat', sans-serif" };
 // counselor_messages, etc.). See counselor-schema.sql for table shapes.
 // ========================================================================
 const student = {
-  firstName: "Maya",
-  grade: 10,
-  semester: "Spring",
-  thread: "Biology × Community Health",
+  firstName: "",
+  grade: null,
+  semester: "",
+  thread: "",
 };
 
 const arc = [
-  { grade: 9, label: "Explore", done: true },
-  { grade: 10, label: "Deepen", current: true },
+  { grade: 9, label: "Explore", done: false },
+  { grade: 10, label: "Deepen", done: false },
   { grade: 11, label: "Lead", done: false },
   { grade: 12, label: "Apply", done: false },
 ];
 
 const counselorNote = {
-  date: "June 2026",
-  text: "Your biology thread is getting real depth — the hospital volunteering and HOSA together are starting to read as a story, not a list. This summer is the window to add something self-initiated. A small independent project now becomes the spine of your applications later. Don't worry about it being impressive yet. Worry about it being yours.",
+  date: "",
+  text: "Your counselor's monthly note will appear here. As you add activities and reflections, this becomes personal guidance written just for you.",
 };
 
-const priorities = [
-  {
-    title: "Lock in a summer plan",
-    detail: "Program deadlines have passed — pivot to a self-initiated project or local research outreach.",
-    due: "Decide by June 20",
-    page: "Roadmap",
-  },
-  {
-    title: "Start your independent project",
-    detail: "Something at the intersection of biology and your community. Small and real beats big and vague.",
-    due: "Kick off by July 1",
-    page: "Activities",
-  },
-  {
-    title: "June reflection",
-    detail: "This month's Spark: \u201cDescribe a moment this year when you felt most like yourself.\u201d",
-    due: "5 minutes, anytime",
-    page: "Spark",
-  },
-];
+const priorities = [];
 
 const storyPulse = [
-  { label: "Narrative threads", value: "2 emerging" },
-  { label: "Activities tracked", value: "6" },
-  { label: "Reflections banked", value: "14" },
+  { label: "Narrative threads", value: "0" },
+  { label: "Activities tracked", value: "0" },
+  { label: "Reflections banked", value: "0" },
 ];
 
 const nav = ["Compass", "Story", "Roadmap", "Activities", "Spark"];
@@ -134,14 +115,16 @@ export default function FoundationsCompass() {
         {/* ── Greeting + position ── */}
         <div className="mb-10">
           <p style={{ color: C.inkDim, fontSize: 12, letterSpacing: 2 }} className="uppercase mb-2">
-            {student.semester} · Grade {student.grade}
+            Welcome
           </p>
           <h1 style={{ ...display, fontSize: 44, fontWeight: 500, lineHeight: 1.1 }}>
-            Good morning, {student.firstName}.
+            Good morning.
           </h1>
-          <p style={{ color: C.inkDim, fontSize: 14, marginTop: 8 }}>
-            Your thread: <span style={{ color: C.gold }}>{student.thread}</span>
-          </p>
+          {student.thread && (
+            <p style={{ color: C.inkDim, fontSize: 14, marginTop: 8 }}>
+              Your thread: <span style={{ color: C.gold }}>{student.thread}</span>
+            </p>
+          )}
         </div>
 
         {/* ── Four-year arc ── */}
@@ -230,6 +213,9 @@ export default function FoundationsCompass() {
           This month
         </p>
         <div className="grid md:grid-cols-3 gap-4 mb-10">
+          {priorities.length === 0 && (
+            <p style={{ color: C.inkDim, fontSize: 14, lineHeight: 1.7 }} className="md:col-span-3">Your monthly priorities will appear here as your roadmap and profile fill in.</p>
+          )}
           {priorities.map((p) => (
             <button
               key={p.title}

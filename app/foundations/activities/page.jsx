@@ -27,52 +27,11 @@ const body = { fontFamily: "'Montserrat', sans-serif" };
 // Wire these values to the student's real data (user_stats, activities,
 // counselor_messages, etc.). See counselor-schema.sql for table shapes.
 // ========================================================================
-const activities = [
-  {
-    id: 1,
-    name: "Hospital Volunteering",
-    role: "Volunteer",
-    since: "Grade 9",
-    hours: 120,
-    depth: 3,
-    thread: "Biology × Community Health",
-    trajectory: "Ask about the patient-liaison program — it's the leadership rung here.",
-  },
-  {
-    id: 2,
-    name: "HOSA",
-    role: "Member",
-    since: "Grade 10",
-    hours: 40,
-    depth: 2,
-    thread: "Biology × Community Health",
-    trajectory: "Officer elections are in spring of 11th. Start being visibly useful now.",
-  },
-  {
-    id: 3,
-    name: "Yearbook",
-    role: "Staff Photographer",
-    since: "Grade 9",
-    hours: 60,
-    depth: 2,
-    thread: "Visual Storytelling",
-    trajectory: "Photo editor by 11th grade is realistic. Or let this stay a craft, not a title.",
-  },
-  {
-    id: 4,
-    name: "Photography",
-    role: "Personal practice",
-    since: "Grade 9",
-    hours: null,
-    depth: 2,
-    thread: "Visual Storytelling",
-    trajectory: "Unstructured is fine — but a public output (zine, exhibit, account) makes it real.",
-  },
-];
+const activities = [];
 
 const counselorTake = {
-  headline: "Four activities. Two threads. One gap.",
-  text: "Your list is healthy — focused, not scattered. What's missing is anything you started yourself. Colleges read joined activities as participation; they read self-initiated ones as character. The summer project fills this gap. Resist adding a fifth club.",
+  headline: "Depth over breadth",
+  text: "Your counselor's take on your activity mix will appear here once you've added a few activities.",
 };
 
 const depthLabels = ["", "Tried it", "Committed", "Deep", "Leading", "Defining"];
@@ -139,6 +98,9 @@ export default function FoundationsActivities() {
 
         {/* ── Activity cards ── */}
         <div className="grid md:grid-cols-2 gap-4">
+          {activities.length === 0 && (
+            <p style={{ color: C.inkDim, fontSize: 14, lineHeight: 1.7 }} className="md:col-span-2">No activities yet. Add your first one to start tracking.</p>
+          )}
           {activities.map((a) => {
             const open = selected === a.id;
             return (
