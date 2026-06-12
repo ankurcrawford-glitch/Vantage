@@ -62,7 +62,7 @@ export default function FoundationsStart() {
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || "Save failed");
       // 9-11 land in Foundations; 12 goes to the existing college-app dashboard.
-      router.push(g <= 11 ? "/foundations/compass" : "/dashboard");
+      router.push(g <= 11 ? "/foundations/welcome" : "/dashboard");
     } catch (e) {
       setError("Couldn't save your grade. Please try again.");
       setSaving(null);
