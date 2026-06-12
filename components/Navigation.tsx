@@ -98,9 +98,16 @@ export default function Navigation() {
               {grade !== null && grade >= 9 && grade <= 11 && (
                 <Link href="/foundations/compass" style={getLinkStyle('/foundations')}>Foundations</Link>
               )}
-              <Link href="/discovery" style={getLinkStyle('/discovery')}>Story Builder</Link>
-              <Link href="/personal-statement" style={getLinkStyle('/applications')}>Applications</Link>
-              <Link href="/colleges" style={getLinkStyle('/colleges')}>My Schools</Link>
+              {/* College-app tools: hidden for pure Foundation grades (9-10);
+                  shown for 11 (both), 12 (college-app), and users with no grade set
+                  yet (preserves existing behaviour for current users). */}
+              {!(grade === 9 || grade === 10) && (
+                <>
+                  <Link href="/discovery" style={getLinkStyle('/discovery')}>Story Builder</Link>
+                  <Link href="/personal-statement" style={getLinkStyle('/applications')}>Applications</Link>
+                  <Link href="/colleges" style={getLinkStyle('/colleges')}>My Schools</Link>
+                </>
+              )}
               <Link href="/profile" style={getLinkStyle('/profile')}>Profile</Link>
               <Link href="/dashboard" style={getLinkStyle('/dashboard')}>Dashboard</Link>
               <button
