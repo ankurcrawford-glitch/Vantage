@@ -125,7 +125,7 @@ export default function FoundationsWelcome() {
         <div style={{ width: "100%", maxWidth: 720, margin: "0 auto" }}>
           {done ? (
             <button
-              onClick={() => router.push("/foundations/conversation")}
+              onClick={() => router.push("/foundations/compass")}
               style={{
                 width: "100%",
                 background: C.gold,

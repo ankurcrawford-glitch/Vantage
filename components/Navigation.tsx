@@ -90,7 +90,7 @@ export default function Navigation() {
   return (
     <nav style={{ borderBottom: '1px solid rgba(232,221,201,0.1)', padding: '24px 32px' }}>
       <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href={user ? (isFoundations ? "/foundations/conversation" : "/dashboard") : "/"} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+        <Link href={user ? (isFoundations ? "/foundations/compass" : "/dashboard") : "/"} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
           <span className="font-heading text-2xl font-semibold" style={{ color: '#E8DDC9' }}>VANTAGE</span>
           <span className="text-2xl" style={{ color: '#C9A977' }}>.</span>
         </Link>
@@ -100,7 +100,7 @@ export default function Navigation() {
           ) : user ? (
             <>
               {isFoundations && (
-                <Link href="/foundations/conversation" style={getLinkStyle('/foundations')}>Foundations</Link>
+                <Link href="/foundations/compass" style={getLinkStyle('/foundations')}>Foundations</Link>
               )}
               {/* College-app interface: only for grade 12 and users with no
                   grade set yet (preserves existing behaviour for current users).
