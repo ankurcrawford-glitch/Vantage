@@ -66,6 +66,63 @@ async function callHaiku(system, messages, maxTokens) {
   return (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
 }
 
+// ─── Activity extraction (best-effort) ───────────────────────────
+// Pulls concrete activities the student mentioned (sports, instruments,
+// clubs, jobs, self-started projects) into foundations_activities as
+// unconfirmed suggestions. The student confirms/edits them on the
+// Activities page. Never invents; never duplicates existing rows.
+async function extractActivities(supabase, userId, notes, transcript) {
+  const { data: existing } = await supabase
+    .from("foundations_activities")
+    .select("name")
+    .eq("user_id", userId);
+  const existingNames = (existing || []).map((a) => a.name.toLowerCase().trim());
+
+  const raw = await callHaiku(
+    "You extract structured data. Reply with ONLY a valid JSON array — no prose, no code fences.",
+    [{ role: "user", content:
+      `From the counselor notes and conversation below, list the student's concrete activities: sports, instruments, clubs, volunteering, jobs, self-started projects, serious hobbies. Already tracked (do NOT repeat): ${existingNames.join("; ") || "(none)"}.
+
+Reply with a JSON array (empty array if nothing new). Each item:
+{"name": "short title", "role": "their role, e.g. Member / Goalie / First chair", "since": "when they started if stated, else \\"\\"", "hours": "weekly hours if stated, else \\"\\"", "depth": 1-5 (1 tried it, 2 committed, 3 deep, 4 leading, 5 defining), "thread": "2-4 word theme", "trajectory": "one sentence on a natural next step"}
+
+Only include activities the student explicitly mentioned doing — never infer or invent.
+
+NOTES:
+${notes}
+
+CONVERSATION:
+${transcript}` }],
+    800
+  );
+
+  let list;
+  try {
+    list = JSON.parse(raw.replace(/```json|```/gi, "").trim());
+  } catch {
+    return; // model didn't return clean JSON — skip silently
+  }
+  if (!Array.isArray(list)) return;
+
+  const rows = list
+    .filter((a) => a && a.name && !existingNames.includes(String(a.name).toLowerCase().trim()))
+    .slice(0, 8)
+    .map((a) => ({
+      user_id: userId,
+      name: String(a.name).slice(0, 80),
+      role: String(a.role || "").slice(0, 80),
+      since: String(a.since || "").slice(0, 40),
+      hours: String(a.hours || "").slice(0, 20),
+      depth: Math.min(5, Math.max(1, parseInt(a.depth, 10) || 1)),
+      thread: String(a.thread || "").slice(0, 60),
+      trajectory: String(a.trajectory || "").slice(0, 400),
+      source: "conversation",
+      confirmed: false,
+    }));
+
+  if (rows.length) await supabase.from("foundations_activities").insert(rows);
+}
+
 // ─── Notes refresh (best-effort) ─────────────────────────────────
 // Distills the conversation into structured counselor notes and refreshes
 // narrative_summary so Counselor/Roadmap/Compass benefit immediately.
@@ -97,6 +154,14 @@ async function refreshNotes(supabase, userId, oldNotes, recentMessages) {
   } else {
     await supabase.from("user_stats")
       .insert({ user_id: userId, discovery_notes: notes, narrative_summary: summary });
+  }
+
+  // Also pull any newly mentioned activities onto the Activities page
+  // (unconfirmed — the student reviews them there). Non-fatal.
+  try {
+    await extractActivities(supabase, userId, notes, transcript);
+  } catch (e) {
+    console.error("activity extraction failed:", e);
   }
 }
 
