@@ -15,6 +15,7 @@ const display = { fontFamily: "'Cormorant Garamond', Georgia, serif" };
 
 const ITEMS = [
   { label: "Compass", href: "/foundations/compass" },
+  { label: "Conversation", href: "/foundations/conversation" },
   { label: "Story", href: "/foundations/story" },
   { label: "Roadmap", href: "/foundations/roadmap" },
   { label: "Activities", href: "/foundations/activities" },
