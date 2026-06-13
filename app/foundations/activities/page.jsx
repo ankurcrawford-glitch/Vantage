@@ -356,16 +356,23 @@ export default function FoundationsActivities() {
             );
           })}
 
-          {/* The self-initiated slot — deliberately empty */}
-          <div style={{ border: `1px dashed ${C.gold}`, borderRadius: 12, background: "transparent" }} className="p-6 flex flex-col justify-center">
+          {/* The self-initiated slot — opens the form with a nudge prefilled */}
+          <button
+            onClick={() => {
+              setForm({ ...EMPTY_FORM, role: "Founder", depth: 1, thread: "Self-started" });
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            style={{ border: `1px dashed ${C.gold}`, borderRadius: 12, background: "transparent", textAlign: "left", cursor: "pointer" }}
+            className="p-6 flex flex-col justify-center hover:bg-[rgba(197,165,106,0.08)] transition-colors"
+          >
             <p style={{ ...display, fontSize: 22, fontWeight: 600, color: C.gold, marginBottom: 6 }}>
-              The one you start yourself
+              + The one you start yourself
             </p>
             <p style={{ fontSize: 12.5, color: C.inkDim, lineHeight: 1.65 }}>
-              This slot stays open until you fill it. Every great application has one thing
-              the student built, not joined.
+              Tap to add it. Every great application has one thing the student built, not joined —
+              a club, a project, a fundraiser, a small business. Start it here.
             </p>
-          </div>
+          </button>
         </div>
       </main>
     </div>

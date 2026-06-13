@@ -21,7 +21,8 @@ const MODEL = "claude-haiku-4-5";
 const MAX_TOKENS = 250;
 const HISTORY_LIMIT = 12; // messages sent to the model per turn
 const DAILY_CAP = 150; // student messages per day
-const NOTES_EVERY = 8; // refresh notes every N student messages
+const NOTES_EVERY = 8; // refresh full notes/summary every N student messages
+const ACTIVITIES_EVERY = 2; // scan for new activities every N student messages
 
 // ─── System prompt ───────────────────────────────────────────────
 function systemPrompt(narrativeSummary, discoveryNotes, grade) {
@@ -41,7 +42,11 @@ HOW TO TALK:
 - Follow the energy. When something lights them up, stay there — ask 2-3 deeper follow-ups before moving on. A vivid specific beats broad coverage.
 - Light encouragement is fine; no advice dumps, no plans, no checklists. This conversation is about who they are, not what to do.
 - If they return after a break, greet them briefly, reference something real from your notes, and pick up where you left off.
-- If anything touches mental-health crisis, self-harm, or safety, respond with care and direct them to a trusted adult or school counselor — do not play therapist.`;
+
+STAY IN YOUR LANE — you are a COLLEGE counselor, not a therapist:
+- Your domain is academics, activities, interests, college aspirations, and growth. Keep the conversation there.
+- Do NOT do therapy: no diagnosing, no probing feelings about family/mental health, no "how does that make you feel," no processing trauma, no emotional-coaching or reflective-listening loops. Acknowledge an emotion in a sentence, then steer back to their path.
+- If a student raises stress, anxiety, sadness, family conflict, self-harm, or any safety/mental-health issue: respond briefly with warmth, do NOT explore or counsel it, and direct them to a trusted adult, parent, or their school counselor. Then gently return to college-related ground. You are not a substitute for professional mental-health support.`;
 }
 
 const FIRST_SESSION_NOTES =
@@ -155,14 +160,6 @@ async function refreshNotes(supabase, userId, oldNotes, recentMessages) {
     await supabase.from("user_stats")
       .insert({ user_id: userId, discovery_notes: notes, narrative_summary: summary });
   }
-
-  // Also pull any newly mentioned activities onto the Activities page
-  // (unconfirmed — the student reviews them there). Non-fatal.
-  try {
-    await extractActivities(supabase, userId, notes, transcript);
-  } catch (e) {
-    console.error("activity extraction failed:", e);
-  }
 }
 
 // ─── GET: resume — full history + usage ──────────────────────────
@@ -188,6 +185,23 @@ export async function GET(req) {
       .eq("user_id", auth.userId)
       .eq("role", "user")
       .gte("created_at", dayStart.toISOString());
+
+    // Catch-up scan: if the student left mid-session, pull any activities
+    // we hadn't extracted yet from the tail of the conversation. Best-effort.
+    if ((history || []).length >= 2) {
+      try {
+        const { data: prof } = await supabase
+          .from("user_stats").select("discovery_notes").eq("user_id", auth.userId).maybeSingle();
+        await extractActivities(
+          supabase,
+          auth.userId,
+          prof?.discovery_notes || "",
+          (history || []).slice(-12).map((m) => ({ role: m.role, content: m.content }))
+        );
+      } catch (e) {
+        console.error("resume extraction failed:", e);
+      }
+    }
 
     return Response.json({ messages: history || [], used: count || 0, cap: DAILY_CAP });
   } catch (err) {
@@ -259,16 +273,23 @@ export async function POST(req) {
       { user_id: userId, role: "assistant", content: reply },
     ]);
 
-    // Periodic notes refresh — best-effort, never blocks the reply
     const newCount = count + 1;
+    const recent = [...history, { role: "assistant", content: reply }];
+
+    // Pull newly mentioned activities onto the Activities page often, so they
+    // show up while the kid is still talking (not only on a notes refresh).
+    if (newCount >= ACTIVITIES_EVERY && newCount % ACTIVITIES_EVERY === 0) {
+      try {
+        await extractActivities(supabase, userId, profile?.discovery_notes || "", recent);
+      } catch (e) {
+        console.error("activity extraction failed:", e);
+      }
+    }
+
+    // Periodic full notes/summary refresh — best-effort, never blocks the reply
     if (newCount % NOTES_EVERY === 0) {
       try {
-        await refreshNotes(
-          supabase,
-          userId,
-          profile?.discovery_notes,
-          [...history, { role: "assistant", content: reply }]
-        );
+        await refreshNotes(supabase, userId, profile?.discovery_notes, recent);
       } catch (e) {
         console.error("Conversation notes refresh failed:", e);
       }
