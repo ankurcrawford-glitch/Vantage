@@ -98,7 +98,7 @@ export default function CounselorChat() {
 
   return (
     <div
-      style={{ ...body, background: C.navy, minHeight: "100vh", color: C.ink }}
+      style={{ ...body, background: C.navy, minHeight: "100vh", color: C.ink, width: "100%" }}
       className="flex flex-col"
     >
       <link
@@ -125,7 +125,7 @@ export default function CounselorChat() {
       </div>
 
       {/* ── Messages ── */}
-      <div className="flex-1 overflow-y-auto px-6 md:px-12 py-8 max-w-3xl w-full mx-auto">
+      <div className="flex-1 overflow-y-auto px-6 md:px-12 py-8 max-w-3xl w-full mx-auto" style={{ width: "100%", maxWidth: 768, margin: "0 auto" }}>
         <div className="space-y-5">
           {messages.map((m, i) => (
             <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
@@ -208,7 +208,7 @@ export default function CounselorChat() {
 
       {/* ── Composer ── */}
       <div style={{ borderTop: `1px solid ${C.line}` }} className="px-6 md:px-12 py-5">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-3xl mx-auto" style={{ width: "100%", maxWidth: 768, margin: "0 auto" }}>
           {capped ? (
             <div
               style={{ background: C.navyCard, border: `1px solid ${C.line}`, borderRadius: 12 }}

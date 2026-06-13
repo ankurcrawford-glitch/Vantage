@@ -19,7 +19,7 @@ const ITEMS = [
   { label: "Roadmap", href: "/foundations/roadmap" },
   { label: "Activities", href: "/foundations/activities" },
   { label: "Spark", href: "/foundations/spark" },
-  { label: "Ask", href: "/foundations/counselor" },
+  { label: "Counselor", href: "/foundations/counselor" },
 ];
 
 export default function FoundationsNav() {
