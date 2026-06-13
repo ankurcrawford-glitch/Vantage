@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from "react";
+import FoundationsNav from "@/components/FoundationsNav";
 
 // ─── Vantage Foundations — Roadmap ───────────────────────────────
 // Grade-by-grade strategic plan: courses, testing, summers, milestones.
@@ -26,13 +27,55 @@ const body = { fontFamily: "'Montserrat', sans-serif" };
 // Wire these values to the student's real data (user_stats, activities,
 // counselor_messages, etc.). See counselor-schema.sql for table shapes.
 // ========================================================================
-const currentGrade = null;
+const currentGrade = 9;
 
 const roadmap = [
-  { grade: 9, theme: "Explore", status: "upcoming", items: [] },
-  { grade: 10, theme: "Deepen", status: "upcoming", items: [] },
-  { grade: 11, theme: "Lead", status: "upcoming", items: [] },
-  { grade: 12, theme: "Apply", status: "upcoming", items: [] },
+  {
+    grade: 9,
+    theme: "Explore",
+    status: "upcoming",
+    items: [
+      { cat: "Courses", text: "Take the most challenging classes you can handle well; build solid study habits." },
+      { cat: "Activities", text: "Try several clubs, sports, or activities — then keep the few you genuinely enjoy." },
+      { cat: "Summer", text: "Explore interests: volunteering, a job, a personal project, or a summer camp.", due: "Summer" },
+    ],
+  },
+  {
+    grade: 10,
+    theme: "Deepen",
+    status: "upcoming",
+    items: [
+      { cat: "Testing", text: "Take the PSAT in October for a no-stakes baseline (it doesn't go to colleges).", due: "October" },
+      { cat: "Courses", text: "Add your first AP/honors courses in subjects where you're strong." },
+      { cat: "Activities", text: "Go deeper in 1-2 activities; look for small leadership or initiative." },
+      { cat: "Summer", text: "Apply to summer programs and internships — many open from winter into spring.", due: "Jan-Apr" },
+    ],
+  },
+  {
+    grade: 11,
+    theme: "Lead",
+    status: "upcoming",
+    items: [
+      { cat: "Summer", text: "Apply to selective summer research/internships — deadlines are often Dec-Mar.", due: "Dec-Mar" },
+      { cat: "Testing", text: "PSAT/NMSQT in October (this one is the National Merit qualifier).", due: "October" },
+      { cat: "Testing", text: "Take the SAT and/or ACT in spring; leave room for a retake.", due: "Spring" },
+      { cat: "Testing", text: "Sit AP exams for any AP courses.", due: "May" },
+      { cat: "Activities", text: "Aim for a leadership role or a self-initiated project." },
+      { cat: "Applications", text: "Start building your college list and visiting/researching schools.", due: "Spring-Summer" },
+    ],
+  },
+  {
+    grade: 12,
+    theme: "Apply",
+    status: "upcoming",
+    items: [
+      { cat: "Testing", text: "Final SAT/ACT retakes in the fall, if needed.", due: "Fall" },
+      { cat: "Applications", text: "Early Decision / Early Action deadlines — usually November 1.", due: "Nov 1" },
+      { cat: "Applications", text: "Submit the FAFSA for financial aid (opens in the fall).", due: "Oct+" },
+      { cat: "Applications", text: "Regular Decision deadlines — usually January 1.", due: "Jan 1" },
+      { cat: "Milestone", text: "Graduate to Vantage Application — your story becomes your essays." },
+    ],
+  },
 ];
 
 const catColor = {
@@ -40,6 +83,7 @@ const catColor = {
   Testing: "#9BB8D4",
   Activities: "#A8C5A6",
   Summer: "#D4A89B",
+  Applications: "#C9A977",
   Milestone: C.gold,
 };
 
@@ -56,6 +100,8 @@ export default function FoundationsRoadmap() {
         rel="stylesheet"
       />
 
+      <FoundationsNav />
+
       <main className="px-6 md:px-12 py-10 max-w-4xl mx-auto"
             style={{ width: "100%", maxWidth: 896, margin: "0 auto", padding: "40px clamp(16px, 4vw, 48px)", boxSizing: "border-box" }}>
         {/* ── Header ── */}
@@ -68,7 +114,7 @@ export default function FoundationsRoadmap() {
           </h1>
           <p style={{ color: C.inkDim, fontSize: 14, marginTop: 8, maxWidth: 540, lineHeight: 1.7 }}>
             Courses, testing, summers, and milestones — sequenced so nothing sneaks up on you.
-            Deadlines here trigger reminders to your inbox.
+            Dates are general guidelines — always confirm exact deadlines with official sources.
           </p>
         </div>
 

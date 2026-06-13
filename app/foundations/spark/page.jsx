@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from "react";
+import FoundationsNav from "@/components/FoundationsNav";
 
 // ─── Vantage Foundations — Spark ─────────────────────────────────
 // Monthly reflection ritual. Each entry banks raw material that
@@ -56,6 +57,8 @@ export default function FoundationsSpark() {
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Montserrat:wght@300;400;500;600&display=swap"
         rel="stylesheet"
       />
+
+      <FoundationsNav />
 
       <main className="px-6 md:px-12 py-10 max-w-3xl mx-auto"
             style={{ width: "100%", maxWidth: 768, margin: "0 auto", padding: "40px clamp(16px, 4vw, 48px)", boxSizing: "border-box" }}>

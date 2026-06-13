@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
+import FoundationsNav from "@/components/FoundationsNav";
 
 // ─── Vantage Foundations — Compass ───────────────────────────────
 // Design system: Cormorant Garamond (display) + Montserrat (body)
@@ -56,14 +57,11 @@ const storyPulse = [
   { label: "Reflections banked", value: "0" },
 ];
 
-const nav = ["Compass", "Story", "Roadmap", "Activities", "Spark"];
-
 // ===================== END MOCK DATA (TODO) =============================
 
 // ─── Component ───────────────────────────────────────────────────
 export default function FoundationsCompass() {
   const router = useRouter();
-  const active = "Compass";
   // Tabs / CTAs navigate to the real Foundations routes.
   const setActive = (name) => router.push(`/foundations/${name.toLowerCase()}`);
 
@@ -74,41 +72,10 @@ export default function FoundationsCompass() {
         rel="stylesheet"
       />
 
+      <FoundationsNav />
+
       {/* ── Top bar ── */}
-      <header
-        style={{ borderBottom: `1px solid ${C.line}` }}
-        className="px-6 md:px-12 py-5 flex items-center justify-between"
-      >
-        <div className="flex items-baseline gap-3">
-          <span style={{ ...display, fontSize: 26, fontWeight: 600, letterSpacing: 0.5 }}>
-            Vantage
-          </span>
-          <span
-            style={{ color: C.gold, fontSize: 11, letterSpacing: 3, fontWeight: 500 }}
-            className="uppercase"
-          >
-            Foundations
-          </span>
-        </div>
-        <nav className="hidden md:flex gap-8">
-          {nav.map((n) => (
-            <button
-              key={n}
-              onClick={() => setActive(n)}
-              style={{
-                fontSize: 12,
-                letterSpacing: 1.5,
-                color: active === n ? C.gold : C.inkDim,
-                borderBottom: active === n ? `1px solid ${C.gold}` : "1px solid transparent",
-                paddingBottom: 4,
-              }}
-              className="uppercase transition-colors hover:text-white"
-            >
-              {n}
-            </button>
-          ))}
-        </nav>
-      </header>
+      
 
       <main className="px-6 md:px-12 py-10 max-w-5xl mx-auto"
             style={{ width: "100%", maxWidth: 1024, margin: "0 auto", padding: "40px clamp(16px, 4vw, 48px)", boxSizing: "border-box" }}>

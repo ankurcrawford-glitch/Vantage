@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import FoundationsNav from "@/components/FoundationsNav";
 
 // ─── Vantage Foundations — Counselor Chat ────────────────────────
 // Ask-anything counselor. Pairs with /api/counselor route (Haiku,
@@ -104,6 +105,8 @@ export default function CounselorChat() {
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Montserrat:wght@300;400;500;600&display=swap"
         rel="stylesheet"
       />
+
+      <FoundationsNav />
 
       {/* ── Header ── */}
       <div
