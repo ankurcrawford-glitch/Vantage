@@ -77,7 +77,7 @@ function DashboardContent() {
           .eq('user_id', user.id)
           .maybeSingle();
         if (typeof gs?.grade === 'number' && gs.grade >= 9 && gs.grade <= 11) {
-          router.push('/foundations/compass');
+          router.push('/foundations/conversation');
           return;
         }
       } catch { /* grade column missing — never block existing users */ }

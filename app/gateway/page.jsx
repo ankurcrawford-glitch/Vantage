@@ -35,7 +35,7 @@ export default function Gateway() {
           .maybeSingle();
         const g = data?.grade;
         if (typeof g === 'number' && g >= 9 && g <= 11) {
-          router.replace('/foundations/compass');
+          router.replace('/foundations/conversation');
           return;
         }
         if (g === 12) {

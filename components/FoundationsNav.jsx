@@ -19,7 +19,6 @@ const C = {
 const display = { fontFamily: "'Cormorant Garamond', Georgia, serif" };
 
 const ITEMS = [
-  { label: "Compass", href: "/foundations/compass" },
   { label: "Conversation", href: "/foundations/conversation" },
   { label: "Story", href: "/foundations/story" },
   { label: "Roadmap", href: "/foundations/roadmap" },
@@ -64,7 +63,7 @@ export default function FoundationsNav() {
       }}
     >
       <Link
-        href="/foundations/compass"
+        href="/foundations/conversation"
         style={{ display: "flex", alignItems: "baseline", gap: 12, textDecoration: "none" }}
       >
         <span style={{ ...display, fontSize: 24, fontWeight: 600, color: C.ink, letterSpacing: 0.5 }}>
