@@ -78,8 +78,9 @@ export default function SignupPage() {
       }
 
       if (data.user) {
-        // Immediately redirect to profile page - no email confirmation needed
-        router.push('/profile');
+        // Gateway asks Foundations (9-11) vs Vantage (senior) and remembers it.
+        // Seniors are sent on to /profile from there.
+        router.push('/gateway');
         router.refresh();
       }
     } catch (error: any) {

@@ -83,10 +83,14 @@ export default function Navigation() {
     };
   };
 
+  // Foundations students (9-11) get a fully separate interface:
+  // only the Foundations link, and the logo points to their home.
+  const isFoundations = grade !== null && grade >= 9 && grade <= 11;
+
   return (
     <nav style={{ borderBottom: '1px solid rgba(232,221,201,0.1)', padding: '24px 32px' }}>
       <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href={user ? "/dashboard" : "/"} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+        <Link href={user ? (isFoundations ? "/foundations/compass" : "/dashboard") : "/"} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
           <span className="font-heading text-2xl font-semibold" style={{ color: '#E8DDC9' }}>VANTAGE</span>
           <span className="text-2xl" style={{ color: '#C9A977' }}>.</span>
         </Link>
@@ -95,21 +99,21 @@ export default function Navigation() {
             <span style={{ color: 'rgba(232,221,201,0.5)', fontSize: '14px' }}>Loading...</span>
           ) : user ? (
             <>
-              {grade !== null && grade >= 9 && grade <= 11 && (
+              {isFoundations && (
                 <Link href="/foundations/compass" style={getLinkStyle('/foundations')}>Foundations</Link>
               )}
-              {/* College-app tools: hidden for pure Foundation grades (9-10);
-                  shown for 11 (both), 12 (college-app), and users with no grade set
-                  yet (preserves existing behaviour for current users). */}
-              {!(grade === 9 || grade === 10) && (
+              {/* College-app interface: only for grade 12 and users with no
+                  grade set yet (preserves existing behaviour for current users).
+                  Foundations students (9-11) never see these. */}
+              {!isFoundations && (
                 <>
                   <Link href="/discovery" style={getLinkStyle('/discovery')}>Story Builder</Link>
                   <Link href="/personal-statement" style={getLinkStyle('/applications')}>Applications</Link>
                   <Link href="/colleges" style={getLinkStyle('/colleges')}>My Schools</Link>
+                  <Link href="/profile" style={getLinkStyle('/profile')}>Profile</Link>
+                  <Link href="/dashboard" style={getLinkStyle('/dashboard')}>Dashboard</Link>
                 </>
               )}
-              <Link href="/profile" style={getLinkStyle('/profile')}>Profile</Link>
-              <Link href="/dashboard" style={getLinkStyle('/dashboard')}>Dashboard</Link>
               <button
                 onClick={handleLogout}
                 style={{

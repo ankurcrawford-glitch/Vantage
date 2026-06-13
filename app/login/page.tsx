@@ -40,7 +40,9 @@ export default function LoginPage() {
 
       if (data.user) {
         const next = searchParams.get('next');
-        const redirect = next && next.startsWith('/') ? next : '/dashboard';
+        // Default to the gateway: it routes by remembered grade
+        // (9-11 → Foundations, 12 → Vantage) or shows the chooser.
+        const redirect = next && next.startsWith('/') ? next : '/gateway';
         router.push(redirect);
         router.refresh();
       }

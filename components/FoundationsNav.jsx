@@ -1,9 +1,14 @@
 'use client';
 
+import { useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
-// Shared top navigation for every Foundations page.
+// Shared top navigation for every Foundations page. Also acts as the
+// interface guard: seniors (grade 12) are sent to the Vantage dashboard,
+// users with no grade yet are sent to the grade picker. Fails open on
+// any error so Foundations never breaks for its own students.
 
 const C = {
   line: "rgba(197,165,106,0.18)",
@@ -25,6 +30,27 @@ const ITEMS = [
 
 export default function FoundationsNav() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return; // each page handles its own login redirect
+        const { data } = await supabase
+          .from("user_stats")
+          .select("grade")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        const g = data?.grade;
+        if (g === 12) router.replace("/dashboard");
+        else if (typeof g !== "number") router.replace("/foundations/start");
+      } catch {
+        /* fail open */
+      }
+    })();
+  }, [router]);
+
   return (
     <header
       style={{

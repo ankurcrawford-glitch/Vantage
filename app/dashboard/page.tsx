@@ -69,6 +69,18 @@ function DashboardContent() {
     if (!user) {
       router.push('/login');
     } else {
+      // Foundations students (9-11) have their own interface — send them home.
+      try {
+        const { data: gs } = await supabase
+          .from('user_stats')
+          .select('grade')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (typeof gs?.grade === 'number' && gs.grade >= 9 && gs.grade <= 11) {
+          router.push('/foundations/compass');
+          return;
+        }
+      } catch { /* grade column missing — never block existing users */ }
       setUser(user);
       // Check subscription
       try {
