@@ -34,22 +34,74 @@ const starters = [
   "What should I do this summer?",
 ];
 
+// Shown only to first-time / empty-history students. Marked synthetic so it's
+// never sent to the model (the API never persisted it anyway).
+const OPENER = {
+  role: "assistant",
+  synthetic: true,
+  content:
+    "I'm your counselor — I know your profile, your threads, and your roadmap. Ask me anything about your path. Course choices, testing, activities, the stuff that's keeping you up at night.",
+};
+
 export default function CounselorChat() {
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content:
-        "I'm your counselor — I know your profile, your threads, and your roadmap. Ask me anything about your path. Course choices, testing, activities, the stuff that's keeping you up at night.",
-    },
-  ]);
+  const [messages, setMessages] = useState([]);
+  const [hydrated, setHydrated] = useState(false);
+  const [returning, setReturning] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [used, setUsed] = useState(12); // fetched from Supabase in production
+  const [used, setUsed] = useState(0);
   const endRef = useRef(null);
+  const scrollRef = useRef(null);
+  const didInitialScroll = useRef(false);
+
+  const jumpToBottom = () => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  };
+
+  // Resume: load full history on mount so we pick up where we left off.
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch("/api/counselor", {
+          headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
+        });
+        const data = await res.json();
+        if (Array.isArray(data.messages) && data.messages.length > 0) {
+          setMessages(data.messages.map((m) => ({ role: m.role, content: m.content })));
+          setReturning(true);
+        } else {
+          setMessages([OPENER]);
+        }
+        if (typeof data.used === "number") setUsed(data.used);
+      } catch {
+        setMessages([OPENER]);
+      } finally {
+        setHydrated(true);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
+    if (!hydrated) return;
+
+    // First paint after history loads: jump hard to the bottom (the web fonts
+    // reflow the list, so set scrollTop directly and retry to catch it).
+    if (!didInitialScroll.current) {
+      didInitialScroll.current = true;
+      jumpToBottom();
+      requestAnimationFrame(jumpToBottom);
+      const t1 = setTimeout(jumpToBottom, 120);
+      const t2 = setTimeout(jumpToBottom, 400);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
+
     endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+  }, [messages, loading, hydrated]);
 
   const send = async (text) => {
     const q = (text ?? input).trim();
@@ -71,7 +123,8 @@ export default function CounselorChat() {
         },
         body: JSON.stringify({
           // Send only recent history — the API truncates again server-side.
-          messages: nextMessages.slice(-10).filter((m, i) => !(i === 0 && m.role === "assistant")),
+          // Drop the synthetic opener; it was never persisted.
+          messages: nextMessages.filter((m) => !m.synthetic).slice(-10),
         }),
       });
       const data = await res.json();
@@ -125,7 +178,7 @@ export default function CounselorChat() {
       </div>
 
       {/* ── Messages ── */}
-      <div className="flex-1 overflow-y-auto px-6 md:px-12 py-8 max-w-3xl w-full mx-auto" style={{ width: "100%", maxWidth: 768, margin: "0 auto" }}>
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 md:px-12 py-8 max-w-3xl w-full mx-auto" style={{ width: "100%", maxWidth: 768, margin: "0 auto" }}>
         <div className="space-y-5">
           {messages.map((m, i) => (
             <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
@@ -179,8 +232,8 @@ export default function CounselorChat() {
           <div ref={endRef} />
         </div>
 
-        {/* Starters — only before first user message */}
-        {messages.length === 1 && (
+        {/* Starters — only for first-time students, before any history */}
+        {hydrated && !returning && messages.length <= 1 && (
           <div className="mt-8">
             <p style={{ fontSize: 10.5, letterSpacing: 2, color: C.inkDim }} className="uppercase mb-3">
               Common questions

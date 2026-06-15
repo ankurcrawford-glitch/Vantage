@@ -6,7 +6,7 @@
 
 import { getAuthedUser, getAdminClient } from "@/lib/auth";
 
-const MODEL = "claude-haiku-4-5";
+const MODEL = "claude-haiku-4-5-20251001";
 const TARGET_TURNS = 6; // wrap up after ~6 student answers (medium length)
 const MAX_TOKENS = 300;
 

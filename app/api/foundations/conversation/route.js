@@ -17,7 +17,7 @@
 
 import { getAuthedUser, getAdminClient } from "@/lib/auth";
 
-const MODEL = "claude-haiku-4-5";
+const MODEL = "claude-haiku-4-5-20251001";
 const MAX_TOKENS = 250;
 const HISTORY_LIMIT = 12; // messages sent to the model per turn
 const DAILY_CAP = 150; // student messages per day
@@ -64,8 +64,10 @@ async function callHaiku(system, messages, maxTokens) {
     body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, system, messages }),
   });
   if (!res.ok) {
-    console.error("Anthropic error:", await res.text());
-    throw new Error("AI call failed");
+    const errBody = await res.text();
+    console.error("Anthropic error:", errBody);
+    // TEMP(debug): include status + body so we can see the real reason.
+    throw new Error(`AI call failed [${res.status}]: ${errBody.slice(0, 300)}`);
   }
   const data = await res.json();
   return (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
@@ -76,12 +78,18 @@ async function callHaiku(system, messages, maxTokens) {
 // clubs, jobs, self-started projects) into foundations_activities as
 // unconfirmed suggestions. The student confirms/edits them on the
 // Activities page. Never invents; never duplicates existing rows.
-async function extractActivities(supabase, userId, notes, transcript) {
+async function extractActivities(supabase, userId, notes, messages) {
   const { data: existing } = await supabase
     .from("foundations_activities")
     .select("name")
     .eq("user_id", userId);
   const existingNames = (existing || []).map((a) => a.name.toLowerCase().trim());
+
+  // Build a readable transcript from the message array (NOT a raw array —
+  // string-interpolating objects yields "[object Object]" and breaks extraction).
+  const transcript = (Array.isArray(messages) ? messages : [])
+    .map((m) => (m.role === "user" ? "Student" : "Counselor") + ": " + m.content)
+    .join("\n");
 
   const raw = await callHaiku(
     "You extract structured data. Reply with ONLY a valid JSON array — no prose, no code fences.",
@@ -298,6 +306,10 @@ export async function POST(req) {
     return Response.json({ reply, used: newCount, cap: DAILY_CAP });
   } catch (err) {
     console.error("Conversation POST error:", err);
-    return Response.json({ error: "Something went wrong" }, { status: 500 });
+    // TEMP(debug): surface the real reason. Revert before production.
+    return Response.json(
+      { error: "Something went wrong", detail: String(err?.message || err) },
+      { status: 500 }
+    );
   }
 }

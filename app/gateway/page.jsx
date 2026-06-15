@@ -77,6 +77,18 @@ export default function Gateway() {
       });
       if (!res.ok) throw new Error('save failed');
 
+      // Carry their Foundations activities into the senior list as they cross
+      // over. Idempotent and non-fatal — proceed even if it fails.
+      try {
+        await fetch('/api/foundations/sync-activities', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
+          },
+        });
+      } catch { /* non-fatal */ }
+
       // New seniors set up their profile first; returning users go home.
       router.push(existing ? '/dashboard' : '/profile');
     } catch {

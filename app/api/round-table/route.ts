@@ -265,6 +265,7 @@ ${flattened.join('\n\n---\n\n')}`;
       apClasses?.length ? `AP Classes: ${apClasses.map((c: any) => c.class_name).join(', ')}` : '',
       extracurriculars?.length ? `Activities: ${extracurriculars.map((e: any) => `${e.activity_name}${e.role ? ` (${e.role})` : ''}`).join(', ')}` : '',
       awards?.length ? `Awards: ${awards.map((a: any) => a.award_name).join(', ')}` : '',
+      userStats?.narrative_summary ? `Counselor's profile of this student (built over their years in Vantage Foundations — draw on it to understand who they are and surface authentic, specific material): ${userStats.narrative_summary}` : '',
     ].filter(Boolean).join('\n');
 
     // ============================================

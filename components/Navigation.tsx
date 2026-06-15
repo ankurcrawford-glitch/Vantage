@@ -102,18 +102,14 @@ export default function Navigation() {
               {isFoundations && (
                 <Link href="/foundations/compass" style={getLinkStyle('/foundations')}>Foundations</Link>
               )}
-              {/* College-app interface: only for grade 12 and users with no
-                  grade set yet (preserves existing behaviour for current users).
-                  Foundations students (9-11) never see these. */}
-              {!isFoundations && (
-                <>
-                  <Link href="/discovery" style={getLinkStyle('/discovery')}>Story Builder</Link>
-                  <Link href="/personal-statement" style={getLinkStyle('/applications')}>Applications</Link>
-                  <Link href="/colleges" style={getLinkStyle('/colleges')}>My Schools</Link>
-                  <Link href="/profile" style={getLinkStyle('/profile')}>Profile</Link>
-                  <Link href="/dashboard" style={getLinkStyle('/dashboard')}>Dashboard</Link>
-                </>
-              )}
+              {/* College-app links. Grade 9-11 students can toggle over from
+                  Foundations to browse the college side, and always have the
+                  Foundations link above to return home. */}
+              <Link href="/discovery" style={getLinkStyle('/discovery')}>Story Builder</Link>
+              <Link href="/personal-statement" style={getLinkStyle('/applications')}>Applications</Link>
+              <Link href="/colleges" style={getLinkStyle('/colleges')}>My Schools</Link>
+              <Link href="/profile" style={getLinkStyle('/profile')}>Profile</Link>
+              <Link href="/dashboard" style={getLinkStyle('/dashboard')}>Dashboard</Link>
               <button
                 onClick={handleLogout}
                 style={{

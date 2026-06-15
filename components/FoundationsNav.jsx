@@ -95,6 +95,22 @@ export default function FoundationsNav() {
             </Link>
           );
         })}
+        {/* Toggle: let a Foundations student peek at the college side.
+            They return via the "Foundations" link in the college nav. */}
+        <Link
+          href="/dashboard"
+          style={{
+            fontSize: 12,
+            letterSpacing: 1.5,
+            textTransform: "uppercase",
+            textDecoration: "none",
+            color: C.inkDim,
+            borderLeft: `1px solid ${C.line}`,
+            paddingLeft: "clamp(14px, 2.5vw, 24px)",
+          }}
+        >
+          College Prep →
+        </Link>
       </nav>
     </header>
   );
