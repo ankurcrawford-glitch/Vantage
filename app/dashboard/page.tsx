@@ -8,6 +8,7 @@ import Button from '@/components/Button';
 import Card from '@/components/Card';
 import StatCard from '@/components/StatCard';
 import Navigation from '@/components/Navigation';
+import { canAccessCollegePrep } from '@/lib/college-prep-access';
 
 interface UserStats {
   gpa_weighted: number | null;
@@ -69,14 +70,20 @@ function DashboardContent() {
     if (!user) {
       router.push('/login');
     } else {
-      // Foundations students (9-11) have their own interface — send them home.
+      // Foundations students stay in their interface until college prep opens
+      // (juniors from January; seniors via gateway crossover).
       try {
         const { data: gs } = await supabase
           .from('user_stats')
           .select('grade')
           .eq('user_id', user.id)
           .maybeSingle();
-        if (typeof gs?.grade === 'number' && gs.grade >= 9 && gs.grade <= 11) {
+        if (
+          typeof gs?.grade === 'number' &&
+          gs.grade >= 9 &&
+          gs.grade <= 11 &&
+          !canAccessCollegePrep(gs.grade)
+        ) {
           router.push('/foundations/compass');
           return;
         }
