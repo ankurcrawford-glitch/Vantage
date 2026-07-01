@@ -60,29 +60,15 @@ export default function AcceptInvitationPage() {
       const { data: { user } } = await supabase.auth.getUser();
       setCurrentUser(user);
 
-      // Look up invitation by token
-      const { data: invData, error: invError } = await supabase
-        .from('essay_invitations')
-        .select(`
-          id, essay_id, student_id, invitee_email, invitee_name, role, status, token,
-          essays:essay_id (
-            id, user_id, college_prompt_id,
-            college_prompts:college_prompt_id (
-              id, college_id, prompt_text, sort_order,
-              colleges:college_id ( id, name )
-            )
-          )
-        `)
-        .eq('token', token)
-        .single();
-
-      if (invError || !invData) {
+      const res = await fetch(`/api/invitations/${encodeURIComponent(token)}`);
+      const payload = await res.json();
+      if (!res.ok || !payload.invitation) {
         setError('This invitation link is invalid or has expired.');
         setLoading(false);
         return;
       }
 
-      const inv = invData as unknown as InvitationData;
+      const inv = payload.invitation as InvitationData;
       setInvitation(inv);
 
       // Pre-fill email from invitation

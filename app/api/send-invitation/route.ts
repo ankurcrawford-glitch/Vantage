@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     // SECURITY: require an authenticated student. Without this, the route is
     // an open relay for sending emails from noreply@my-vantage.app to arbitrary
     // addresses with attacker-controlled HTML content.
-    const auth = await getAuthedUser();
+    const auth = await getAuthedUser(request);
     if (!auth.ok) return auth.response;
     const studentId = auth.userId;
 

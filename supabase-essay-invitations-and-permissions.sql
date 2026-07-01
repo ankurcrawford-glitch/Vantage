@@ -36,10 +36,13 @@ comment on table public.essay_permissions is 'Who can view/comment on an essay (
 alter table public.essay_invitations enable row level security;
 alter table public.essay_permissions enable row level security;
 
--- essay_invitations: essay owner can insert; authenticated can read (owner lists invites, invitee loads by token on accept page)
+-- essay_invitations: owner or invitee only (never using(true) — see SECURITY-AUDIT.md)
 drop policy if exists "essay_invitations_select" on public.essay_invitations;
 create policy "essay_invitations_select" on public.essay_invitations
-  for select to authenticated using (true);
+  for select to authenticated using (
+    student_id = auth.uid()
+    or invitee_email = lower(coalesce(auth.jwt() ->> 'email', ''))
+  );
 
 drop policy if exists "essay_invitations_insert_owner" on public.essay_invitations;
 create policy "essay_invitations_insert_owner" on public.essay_invitations
@@ -47,10 +50,13 @@ create policy "essay_invitations_insert_owner" on public.essay_invitations
     student_id = auth.uid() and exists (select 1 from public.essays e where e.id = essay_id and e.user_id = auth.uid())
   );
 
--- essay_permissions: invitee can insert when accepting (we need to allow insert for the user accepting); owner can read
+-- essay_permissions: grant holder or essay owner can read
 drop policy if exists "essay_permissions_select" on public.essay_permissions;
 create policy "essay_permissions_select" on public.essay_permissions
-  for select to authenticated using (true);
+  for select to authenticated using (
+    user_id = auth.uid()
+    or essay_id in (select id from public.essays where user_id = auth.uid())
+  );
 
 drop policy if exists "essay_permissions_insert" on public.essay_permissions;
 create policy "essay_permissions_insert" on public.essay_permissions

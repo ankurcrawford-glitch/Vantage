@@ -124,10 +124,13 @@ function DashboardContent() {
     if (!user) return;
     setCheckoutLoading(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id }),
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
       });
       const data = await res.json();
       if (data.url) {
@@ -147,10 +150,14 @@ function DashboardContent() {
     setCodeLoading(true);
     setCodeError('');
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/redeem-code', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: accessCode, userId: user.id }),
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ code: accessCode }),
       });
       const data = await res.json();
       if (data.success) {
@@ -246,7 +253,7 @@ function DashboardContent() {
             Welcome back{user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : ''}
           </h1>
           <p className="font-body text-gold-light text-lg">
-            Your admissions command center
+            Your work, in one place.
           </p>
         </div>
 

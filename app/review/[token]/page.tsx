@@ -66,27 +66,15 @@ export default function ReviewEssayPage() {
       }
       setCurrentUser(user);
 
-      // Get invitation by token
-      const { data: inv, error: invError } = await supabase
-        .from('essay_invitations')
-        .select(`
-          id, essay_id, student_id, invitee_email, invitee_name, role, status, student_name,
-          essays:essay_id (
-            id, user_id, college_prompt_id,
-            college_prompts:college_prompt_id (
-              id, college_id, prompt_text, sort_order, word_limit,
-              colleges:college_id ( id, name )
-            )
-          )
-        `)
-        .eq('token', token)
-        .single();
-
-      if (invError || !inv) {
+      const res = await fetch(`/api/invitations/${encodeURIComponent(token)}`);
+      const payload = await res.json();
+      if (!res.ok || !payload.invitation) {
         setError('This review link is invalid or has expired.');
         setLoading(false);
         return;
       }
+
+      const inv = payload.invitation;
 
       if (inv.status !== 'accepted') {
         // Redirect to accept first

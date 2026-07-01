@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     // SECURITY: userId is the authenticated caller's id. Without this, any
     // logged-in user could activate someone else's subscription by passing
     // their UUID in the body.
-    const auth = await getAuthedUser();
+    const auth = await getAuthedUser(request);
     if (!auth.ok) return auth.response;
     const userId = auth.userId;
 

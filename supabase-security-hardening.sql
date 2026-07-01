@@ -1,10 +1,11 @@
 -- Security hardening migration. Run in Supabase SQL Editor.
 -- Safe to run multiple times (uses drop-if-exists + create).
 --
--- Addresses SECURITY-AUDIT.md findings:
---   Critical #4 — enable RLS on user-private tables that were missing it
---   Critical #5 — tighten essay_invitations select policy (was using(true))
---   Critical #6 — tighten essay_permissions select policy (was using(true))
+-- Fixes Supabase Security Advisor warnings:
+--   • RLS disabled on user-private tables
+--   • essay_invitations / essay_permissions select policies too permissive (using true)
+--
+-- After running: Supabase → Advisors → Security — re-run scan; warnings should clear.
 
 -- =============================================================================
 -- 1. Tighten essay_invitations select policy
@@ -154,3 +155,107 @@ create policy "Users can delete own essays"
   on public.essays for delete
   to authenticated
   using (auth.uid() = user_id);
+
+-- =============================================================================
+-- 5. user_colleges — student's college list (was missing RLS; Security Advisor)
+-- =============================================================================
+
+alter table if exists public.user_colleges enable row level security;
+drop policy if exists "user_colleges_select" on public.user_colleges;
+drop policy if exists "user_colleges_insert" on public.user_colleges;
+drop policy if exists "user_colleges_update" on public.user_colleges;
+drop policy if exists "user_colleges_delete" on public.user_colleges;
+create policy "user_colleges_select" on public.user_colleges
+  for select to authenticated using (auth.uid() = user_id);
+create policy "user_colleges_insert" on public.user_colleges
+  for insert to authenticated with check (auth.uid() = user_id);
+create policy "user_colleges_update" on public.user_colleges
+  for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "user_colleges_delete" on public.user_colleges
+  for delete to authenticated using (auth.uid() = user_id);
+
+-- =============================================================================
+-- 6. counselor_comments — essay feedback (was missing RLS; Security Advisor)
+-- =============================================================================
+-- Essay owners, invited reviewers (essay_permissions), and comment authors
+-- can read. Only owners and permitted reviewers can insert (as themselves).
+
+alter table if exists public.counselor_comments enable row level security;
+
+drop policy if exists "counselor_comments_select" on public.counselor_comments;
+create policy "counselor_comments_select"
+  on public.counselor_comments
+  for select to authenticated
+  using (
+    counselor_id = auth.uid()
+    or exists (
+      select 1
+      from public.essay_versions ev
+      join public.essays e on e.id = ev.essay_id
+      where ev.id = counselor_comments.essay_version_id
+        and e.user_id = auth.uid()
+    )
+    or exists (
+      select 1
+      from public.essay_versions ev
+      join public.essay_permissions ep on ep.essay_id = ev.essay_id
+      where ev.id = counselor_comments.essay_version_id
+        and ep.user_id = auth.uid()
+    )
+  );
+
+drop policy if exists "counselor_comments_insert" on public.counselor_comments;
+create policy "counselor_comments_insert"
+  on public.counselor_comments
+  for insert to authenticated
+  with check (
+    counselor_id = auth.uid()
+    and (
+      exists (
+        select 1
+        from public.essay_versions ev
+        join public.essays e on e.id = ev.essay_id
+        where ev.id = essay_version_id
+          and e.user_id = auth.uid()
+      )
+      or exists (
+        select 1
+        from public.essay_versions ev
+        join public.essay_permissions ep on ep.essay_id = ev.essay_id
+        where ev.id = essay_version_id
+          and ep.user_id = auth.uid()
+      )
+    )
+  );
+
+drop policy if exists "counselor_comments_delete" on public.counselor_comments;
+create policy "counselor_comments_delete"
+  on public.counselor_comments
+  for delete to authenticated
+  using (
+    counselor_id = auth.uid()
+    or exists (
+      select 1
+      from public.essay_versions ev
+      join public.essays e on e.id = ev.essay_id
+      where ev.id = counselor_comments.essay_version_id
+        and e.user_id = auth.uid()
+    )
+  );
+
+-- =============================================================================
+-- 7. Public reference catalogs — enable RLS with read-only policies
+--    (Supabase flags any public table without RLS, even reference data)
+-- =============================================================================
+
+alter table if exists public.colleges enable row level security;
+drop policy if exists "colleges_public_read" on public.colleges;
+create policy "colleges_public_read"
+  on public.colleges for select
+  using (true);
+
+alter table if exists public.college_prompts enable row level security;
+drop policy if exists "college_prompts_public_read" on public.college_prompts;
+create policy "college_prompts_public_read"
+  on public.college_prompts for select
+  using (true);

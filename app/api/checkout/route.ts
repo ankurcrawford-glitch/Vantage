@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe, STRIPE_PRICE_ID } from '@/lib/stripe';
+import { getAuthedUser } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   if (!stripe || !STRIPE_PRICE_ID) {
@@ -10,12 +11,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json().catch(() => ({}));
+    const auth = await getAuthedUser(request);
+    if (!auth.ok) return auth.response;
+    const userId = auth.userId;
+
     const origin = request.headers.get('origin') || request.nextUrl.origin;
     const successUrl = `${origin}/dashboard?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${origin}/dashboard`;
-
-    const userId = typeof body.userId === 'string' ? body.userId : undefined;
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
