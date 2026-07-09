@@ -236,7 +236,7 @@ export default function CollegeDetailPage() {
           .from('college_prompts')
           .select('*')
           .eq('college_id', collegeId)
-          .eq('year', currentYear)
+          .eq('cycle', '2026-27')
           .order('sort_order'),
         user
           ? supabase.from('user_stats').select('*').eq('user_id', user.id).single()

@@ -58,16 +58,18 @@ export default function PersonalStatementPage() {
       // in the portfolio; other colleges come from user_colleges.
       const { data: userColleges } = await supabase
         .from('user_colleges')
-        .select('college_id, colleges:college_id(id, name)')
+        .select('college_id, colleges:college_id(id, name, no_supplement)')
         .eq('user_id', user.id);
 
       const collegeNameMap = new Map<string, string>();
+      const noSupplementIds = new Set<string>();
       const collegeIds: string[] = [];
       if (userColleges) {
         for (const uc of userColleges as any[]) {
           const c = uc.colleges;
           if (c?.id) {
             collegeNameMap.set(c.id, c.name);
+            if (c.no_supplement) noSupplementIds.add(c.id);
             collegeIds.push(c.id);
           }
         }
@@ -85,7 +87,7 @@ export default function PersonalStatementPage() {
       // for every selected college — including ones that have no prompts
       // yet in college_prompts.
       setUserColleges(
-        Array.from(collegeNameMap.entries()).map(([id, name]) => ({ id, name }))
+        Array.from(collegeNameMap.entries()).map(([id, name]) => ({ id, name, noSupplement: noSupplementIds.has(id) }))
       );
 
       if (collegeIds.length === 0) {
@@ -98,6 +100,7 @@ export default function PersonalStatementPage() {
         .from('college_prompts')
         .select('id, prompt_text, sort_order, college_id, word_limit')
         .in('college_id', collegeIds)
+        .eq('cycle', '2026-27') // current application cycle only
         .order('sort_order', { ascending: true });
 
       if (promptsError) throw promptsError;
@@ -216,11 +219,12 @@ export default function PersonalStatementPage() {
             const COMMON_APP_COLLEGE_ID = 'a0000000-0000-0000-0000-000000000000';
             // Seed a group for every selected college so colleges without
             // any loaded prompts still appear with a placeholder card.
-            const groupsMap = new Map<string, { collegeId: string; collegeName: string; essays: Essay[] }>();
+            const groupsMap = new Map<string, { collegeId: string; collegeName: string; noSupplement?: boolean; essays: Essay[] }>();
             for (const college of userColleges) {
               groupsMap.set(college.id, {
                 collegeId: college.id,
                 collegeName: college.name,
+                noSupplement: (college as any).noSupplement === true,
                 essays: [],
               });
             }
@@ -235,6 +239,7 @@ export default function PersonalStatementPage() {
                 groupsMap.set(essay.college_id, {
                   collegeId: essay.college_id,
                   collegeName: essay.college_name,
+                  noSupplement: false,
                   essays: [essay],
                 });
               }
@@ -335,14 +340,25 @@ export default function PersonalStatementPage() {
                             </Link>
                           </div>
                         </Card>
+                      ) : group.essays.length === 0 && group.noSupplement ? (
+                        <Card>
+                          <div style={{ textAlign: 'center', padding: '48px 32px' }}>
+                            <h3 className="font-heading text-2xl mb-3" style={{ color: '#C9A977' }}>
+                              No Supplemental Essays
+                            </h3>
+                            <p className="font-body" style={{ color: 'rgba(232,221,201,0.7)', maxWidth: '520px', margin: '0 auto' }}>
+                              {group.collegeName} asks only for your Common App personal statement this year — one less essay, one more reason to make that statement sing.
+                            </p>
+                          </div>
+                        </Card>
                       ) : group.essays.length === 0 ? (
                         <Card>
                           <div style={{ textAlign: 'center', padding: '48px 32px' }}>
-                            <h3 className="font-heading text-2xl mb-3" style={{ color: '#D4AF37' }}>
-                              Prompts Coming Soon
+                            <h3 className="font-heading text-2xl mb-3" style={{ color: '#C9A977' }}>
+                              Awaiting This Year&apos;s Prompts
                             </h3>
-                            <p className="font-body" style={{ color: 'rgba(255,255,255,0.7)', maxWidth: '520px', margin: '0 auto' }}>
-                              We haven&apos;t loaded {group.collegeName}&apos;s prompts yet. Once they&apos;re available, they&apos;ll appear here so you can start writing.
+                            <p className="font-body" style={{ color: 'rgba(232,221,201,0.7)', maxWidth: '520px', margin: '0 auto' }}>
+                              {group.collegeName} hasn&apos;t published its 2026–27 supplemental essays yet. We check every week — the moment they&apos;re released, they&apos;ll appear here and in your Friday brief.
                             </p>
                           </div>
                         </Card>

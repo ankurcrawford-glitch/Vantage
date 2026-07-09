@@ -248,7 +248,7 @@ export default function CollegesPage() {
           }}
         >
           <p className="font-body text-sm" style={{ color: '#E8DDC9', lineHeight: 1.6, margin: 0 }}>
-            <strong style={{ color: '#C9A977' }}>Important:</strong> Essay prompts are from a <strong>prior application cycle</strong> and may not match the current year. Use them for practice; when new prompts ship, outdated-question essays may be removed.
+            <strong style={{ color: '#C9A977' }}>2026–27 cycle:</strong> Essay prompts update as each college publishes them — we verify releases weekly. Schools still finalizing their questions are marked <em>awaiting this year&apos;s prompts</em>.
           </p>
         </div>
 
