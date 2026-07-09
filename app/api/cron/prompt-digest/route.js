@@ -60,9 +60,28 @@ function unsubscribeSig(userId) {
     .digest("hex");
 }
 
+// Approval flow: the Friday cron does NOT email students directly. It sends
+// Ankur a preview with an approval link; clicking that link (valid for the
+// current week) triggers the actual send to seniors.
+function weekToken() {
+  const d = new Date();
+  const onejan = new Date(d.getFullYear(), 0, 1);
+  const week = Math.ceil(((d - onejan) / 86400000 + onejan.getDay() + 1) / 7);
+  return crypto
+    .createHmac("sha256", process.env.CRON_SECRET || "")
+    .update(`digest-${d.getFullYear()}-W${week}`)
+    .digest("hex");
+}
+
 export async function GET(request) {
   const auth = request.headers.get("authorization") || "";
-  if (!process.env.CRON_SECRET || auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  const confirm = new URL(request.url).searchParams.get("confirm") || "";
+  const expected = weekToken();
+  const isApproval =
+    confirm.length === expected.length &&
+    crypto.timingSafeEqual(Buffer.from(confirm), Buffer.from(expected));
+  const isCron = auth === `Bearer ${process.env.CRON_SECRET}`;
+  if (!process.env.CRON_SECRET || (!isCron && !isApproval)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -139,6 +158,27 @@ export async function GET(request) {
         </p>
       </div>`;
 
+    // Preview mode (cron run, not yet approved): email Ankur only.
+    if (!isApproval) {
+      const approveUrl = `${site}/api/cron/prompt-digest?confirm=${expected}`;
+      await resend.emails.send({
+        from: "Vantage <noreply@my-vantage.app>",
+        to: ADMIN_EMAIL,
+        subject: `[APPROVE to send · ${(seniors || []).length} seniors] ${subject}`,
+        html: `
+          <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto">
+            <p style="background:#fff7e6;border:1px solid #e0c98f;padding:12px 16px;border-radius:6px">
+              <strong>Preview — nothing sent to students yet.</strong><br/>
+              This is what ${(seniors || []).length} senior${(seniors || []).length === 1 ? "" : "s"} will receive.
+              <a href="${approveUrl}" style="color:#8a744d;font-weight:bold">Approve &amp; send now</a>
+              (link valid through Sunday). To skip this week, simply do nothing.
+            </p>
+          </div>
+          ${bodyFor(null)}`,
+      });
+      return Response.json({ ok: true, mode: "preview", awaitingApproval: true, recipients: (seniors || []).length });
+    }
+
     let sent = 0;
     for (const row of seniors || []) {
       const { data: u } = await supabase.auth.admin.getUserById(row.user_id);
@@ -162,7 +202,14 @@ export async function GET(request) {
       html: bodyFor(null),
     });
 
-    return Response.json({ ok: true, sent, adminCopy: ADMIN_EMAIL, fresh: fresh.length, alreadyOut: alreadyOut.length });
+    // Approval clicks come from a browser — show a human-readable result.
+    return new Response(
+      `<html><body style="font-family:Georgia,serif;background:#0B1320;color:#E8DDC9;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
+        <div style="text-align:center"><h2>Sent.</h2>
+        <p style="color:#8B93A7">The Friday brief went out to ${sent} senior${sent === 1 ? "" : "s"}. A copy is in your inbox.</p></div>
+       </body></html>`,
+      { headers: { "Content-Type": "text/html" } }
+    );
   } catch (err) {
     console.error("Prompt digest error:", err);
     return Response.json({ error: "Something went wrong" }, { status: 500 });
