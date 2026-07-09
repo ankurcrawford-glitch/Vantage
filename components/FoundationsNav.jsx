@@ -49,6 +49,13 @@ export default function FoundationsNav() {
     })();
   }, [router]);
 
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch { /* sign out anyway */ }
+    router.push("/");
+  };
+
   const collegePrepStyle = {
     fontSize: 12,
     letterSpacing: 1.5,
@@ -127,6 +134,25 @@ export default function FoundationsNav() {
             College Prep →
           </button>
         )}
+        <button
+          type="button"
+          onClick={logout}
+          style={{
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            fontSize: 12,
+            letterSpacing: 1,
+            color: C.inkDim,
+            fontFamily: "inherit",
+            paddingBottom: 4,
+            marginLeft: "auto",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = C.ink; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = C.inkDim; }}
+        >
+          Log out
+        </button>
       </nav>
     </header>
     {collegePrepNote && (
