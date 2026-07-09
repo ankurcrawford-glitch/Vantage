@@ -130,11 +130,12 @@ export async function GET(request) {
       <p style="font-size:16px;line-height:1.6;margin:0">${escapeHtml(tip)}</p>`;
 
     const freshHtml = fresh.length
-      ? `<p style="letter-spacing:2px;font-size:11px;color:#8a744d;margin:26px 0 6px">NEW PROMPTS THIS WEEK</p>
+      ? `<p style="letter-spacing:2px;font-size:11px;color:#8a744d;margin:26px 0 6px">THESE COLLEGES ADDED THEIR PROMPTS THIS WEEK</p>
          <ul style="margin:6px 0">${fresh
            .map((c) => `<li><strong>${escapeHtml(c.name)}</strong> \u2014 ${c.count} prompt${c.count === 1 ? "" : "s"}</li>`)
            .join("")}</ul>`
       : "";
+    const noSupplementHtml = `<p style="margin:14px 0 0;font-size:13px;color:#555">No supplemental essays this year: Tulane, UGA, Miami, UNC-Chapel Hill \u2014 Common App statement only.</p>`;
     const outHtml = alreadyOut.length
       ? `<p style="margin:14px 0 0;font-size:13px;color:#555">Already out for ${CYCLE}: ${alreadyOut
           .map((c) => escapeHtml(c.name))
@@ -142,7 +143,7 @@ export async function GET(request) {
       : "";
 
     const subject = fresh.length
-      ? `New essay prompts out: ${fresh.map((c) => c.name).slice(0, 3).join(", ")}${fresh.length > 3 ? "\u2026" : ""}`
+      ? `These colleges added their prompts this week: ${fresh.map((c) => c.name).slice(0, 3).join(", ")}${fresh.length > 3 ? "\u2026" : ""}`
       : "Your week in college apps \u2014 one move that matters";
 
     const bodyFor = (unsubLink) => `
@@ -151,6 +152,7 @@ export async function GET(request) {
         ${tipHtml}
         ${freshHtml}
         ${outHtml}
+        ${noSupplementHtml}
         <p style="margin-top:22px"><a href="${site}/applications" style="color:#8a744d">Open Vantage</a> and put 30 minutes on it this weekend.</p>
         <p style="font-size:12px;color:#888;margin-top:28px">
           You're getting this because you're a senior on Vantage.
