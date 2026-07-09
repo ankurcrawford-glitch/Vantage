@@ -76,6 +76,32 @@ async function authHeaders() {
 }
 
 // ─── Component ───────────────────────────────────────────────────
+
+// ─── Official test dates, next 12 months ─────────────────────────
+// Verified 2026-07-09 from satsuite.collegeboard.org and act.org.
+// SAT deadlines are College Board's regular-registration dates; ACT
+// closes registration about five weeks before each sitting.
+const TEST_DATES = [
+  { test: "SAT", date: "2026-08-22", deadline: "2026-08-07" },
+  { test: "SAT", date: "2026-09-12", deadline: "2026-08-28" },
+  { test: "ACT", date: "2026-09-19", deadline: "2026-08-14" },
+  { test: "SAT", date: "2026-10-03", deadline: "2026-09-18" },
+  { test: "ACT", date: "2026-10-17", deadline: null },
+  { test: "SAT", date: "2026-11-07", deadline: "2026-10-23" },
+  { test: "SAT", date: "2026-12-05", deadline: "2026-11-20" },
+  { test: "ACT", date: "2026-12-12", deadline: null },
+  { test: "ACT", date: "2027-02-27", deadline: null },
+  { test: "SAT", date: "2027-03-06", deadline: "2027-02-19" },
+  { test: "ACT", date: "2027-04-10", deadline: null },
+  { test: "SAT", date: "2027-05-01", deadline: "2027-04-16" },
+  { test: "SAT", date: "2027-06-05", deadline: "2027-05-21" },
+  { test: "ACT", date: "2027-06-12", deadline: null },
+  { test: "ACT", date: "2027-07-10", deadline: null },
+];
+
+const fmtTestDate = (d) =>
+  new Date(d + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+
 export default function FoundationsRoadmap() {
   const [grade, setGrade] = useState(null);
   const [doneKeys, setDoneKeys] = useState(new Set());
@@ -271,6 +297,53 @@ export default function FoundationsRoadmap() {
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        {/* ── SAT / ACT test dates (next 12 months) ── */}
+        <div style={{ marginTop: 48 }}>
+          <p style={{ color: C.gold, fontSize: 11, letterSpacing: 3 }} className="uppercase mb-2">
+            Test dates
+          </p>
+          <h2 style={{ ...display, fontSize: 28, fontWeight: 500, marginBottom: 6 }}>
+            SAT &amp; ACT — the next 12 months
+          </h2>
+          <p style={{ color: C.inkDim, fontSize: 13, lineHeight: 1.7, marginBottom: 16 }}>
+            Registration closes about five weeks before each sitting — put the deadline in your
+            calendar, not the test day.
+          </p>
+          <div style={{ background: C.navyCard, border: `1px solid ${C.line}`, borderRadius: 12, overflow: "hidden" }}>
+            {TEST_DATES.filter((t) => t.date >= new Date().toISOString().slice(0, 10)).map((t, i) => (
+              <div
+                key={t.test + t.date}
+                style={{
+                  display: "flex",
+                  alignItems: "baseline",
+                  gap: 16,
+                  padding: "12px 20px",
+                  borderTop: i === 0 ? "none" : `1px solid ${C.line}`,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 10,
+                    letterSpacing: 1.5,
+                    color: t.test === "SAT" ? C.gold : C.ink,
+                    border: `1px solid ${t.test === "SAT" ? C.gold : C.line}`,
+                    borderRadius: 4,
+                    padding: "2px 8px",
+                    minWidth: 42,
+                    textAlign: "center",
+                  }}
+                >
+                  {t.test}
+                </span>
+                <span style={{ fontSize: 14, color: C.ink }}>{fmtTestDate(t.date)}</span>
+                <span style={{ fontSize: 12, color: C.inkDim, marginLeft: "auto" }}>
+                  {t.deadline ? `register by ${fmtTestDate(t.deadline)}` : "register ~5 weeks ahead"}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       </main>
