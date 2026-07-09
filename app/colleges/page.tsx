@@ -147,17 +147,6 @@ export default function CollegesPage() {
     if (!error) setUserColleges((prev) => [...prev, collegeId]);
   }
 
-  async function handleGeoPreferenceChange(value: string) {
-    const next = value as GeoPreference | '';
-    setProfile((prev) => (prev ? { ...prev, geoPreference: next || undefined } : prev));
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    await supabase
-      .from('user_stats')
-      .update({ geo_preference: next || null })
-      .eq('user_id', user.id);
-  }
-
   async function handleRemoveCollege(collegeId: string) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -235,22 +224,6 @@ export default function CollegesPage() {
           </div>
         )}
 
-        {/* 2025 Questions Disclaimer Banner */}
-        <div
-          style={{
-            background: 'rgba(201, 169, 119, 0.1)',
-            border: '1px solid rgba(201, 169, 119, 0.3)',
-            borderLeft: '4px solid #C9A977',
-            padding: '16px 24px',
-            marginBottom: '24px',
-            borderRadius: '4px',
-          }}
-        >
-          <p className="font-body text-sm" style={{ color: '#E8DDC9', lineHeight: 1.6, margin: 0 }}>
-            <strong style={{ color: '#C9A977' }}>2026–27 cycle:</strong> Essay prompts update as each college publishes them — we verify releases weekly. Schools still finalizing their questions are marked <em>awaiting this year&apos;s prompts</em>.
-          </p>
-        </div>
-
         {/* Tab switcher */}
         <div style={{ display: 'flex', gap: '4px', marginBottom: '32px', borderBottom: '1px solid rgba(232,221,201,0.1)' }}>
           {(
@@ -304,13 +277,6 @@ export default function CollegesPage() {
               </Card>
             ) : (
               <>
-                {/* Geographic preference inline selector */}
-                <GeoPreferenceBar
-                  value={profile?.geoPreference}
-                  state={profile?.state}
-                  onChange={handleGeoPreferenceChange}
-                />
-
                 {/* Balance diagnostic card */}
                 <BalanceDiagnostic
                   data={diagnostic}
@@ -447,80 +413,6 @@ export default function CollegesPage() {
 
 /* ------------------------------ subviews ------------------------------ */
 
-function GeoPreferenceBar({
-  value,
-  state,
-  onChange,
-}: {
-  value: string | undefined;
-  state: string | undefined;
-  onChange: (next: string) => void;
-}) {
-  const helper = state
-    ? `Suggestions filter to schools that match your preference (your state: ${state.toUpperCase()}).`
-    : 'Set your state in Profile to enable in-state and regional filtering.';
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        gap: '14px',
-        background: 'rgba(11,19,32, 0.4)',
-        border: '1px solid rgba(232,221,201, 0.12)',
-        borderRadius: '6px',
-        padding: '12px 18px',
-        marginBottom: '16px',
-      }}
-    >
-      <span
-        className="font-body"
-        style={{
-          color: '#C9A977',
-          fontSize: '11px',
-          fontWeight: 600,
-          textTransform: 'uppercase',
-          letterSpacing: '0.12em',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        Geographic preference
-      </span>
-      <select
-        value={value ?? ''}
-        onChange={(e) => onChange(e.target.value)}
-        className="font-body"
-        style={{
-          background: 'rgba(0,0,0,0.3)',
-          border: '1px solid rgba(201,169,119, 0.35)',
-          color: '#E8DDC9',
-          padding: '6px 12px',
-          fontSize: '13px',
-          outline: 'none',
-          cursor: 'pointer',
-          borderRadius: '2px',
-        }}
-      >
-        <option value="">— not set —</option>
-        <option value="in-state">Stay in-state</option>
-        <option value="regional">Stay in my region</option>
-        <option value="no-preference">No preference</option>
-        <option value="out-of-state">Prefer out-of-state</option>
-      </select>
-      <span
-        className="font-body"
-        style={{
-          color: 'rgba(232,221,201, 0.55)',
-          fontSize: '12px',
-          flex: '1 1 240px',
-          minWidth: 0,
-        }}
-      >
-        {helper}
-      </span>
-    </div>
-  );
-}
 
 function TierColumn({
   tier,
