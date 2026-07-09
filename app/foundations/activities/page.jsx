@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import FoundationsNav from "@/components/FoundationsNav";
+import { C, display, body } from "@/lib/foundations-theme";
 
 // ─── Vantage Foundations — Activities ────────────────────────────
 // Live tracker wired to /api/foundations/activities. The Conversation
@@ -10,19 +11,7 @@ import FoundationsNav from "@/components/FoundationsNav";
 // conversation" until the student confirms, edits, or removes them).
 // Students can also add and edit activities directly.
 
-const C = {
-  navy: "#0B1426",
-  navyCard: "#101B33",
-  navyRaised: "#16243F",
-  line: "rgba(197,165,106,0.18)",
-  gold: "#C5A56A",
-  goldSoft: "rgba(197,165,106,0.12)",
-  ink: "#E8E6E1",
-  inkDim: "#8B93A7",
-};
 
-const display = { fontFamily: "'Cormorant Garamond', Georgia, serif" };
-const body = { fontFamily: "'Montserrat', sans-serif" };
 
 const depthLabels = ["", "Tried it", "Committed", "Deep", "Leading", "Defining"];
 const EMPTY_FORM = { name: "", role: "", since: "", hours: "", depth: 1, thread: "", trajectory: "" };

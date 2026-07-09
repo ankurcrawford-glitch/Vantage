@@ -3,25 +3,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import FoundationsNav from "@/components/FoundationsNav";
+import { C, display, body } from "@/lib/foundations-theme";
 
 // ─── Vantage Foundations — Conversation ──────────────────────────
 // Ongoing get-to-know-you discovery conversation. Pairs with
 // /api/foundations/conversation (Haiku, running notes, daily cap).
 // Full history reloads on every visit — leave and come back anytime.
 
-const C = {
-  navy: "#0B1426",
-  navyCard: "#101B33",
-  navyRaised: "#16243F",
-  line: "rgba(197,165,106,0.18)",
-  gold: "#C5A56A",
-  goldSoft: "rgba(197,165,106,0.12)",
-  ink: "#E8E6E1",
-  inkDim: "#8B93A7",
-};
 
-const display = { fontFamily: "'Cormorant Garamond', Georgia, serif" };
-const body = { fontFamily: "'Montserrat', sans-serif" };
 
 // Shown only when there is no history yet. Not persisted — the API stores
 // the conversation from the first student message onward.

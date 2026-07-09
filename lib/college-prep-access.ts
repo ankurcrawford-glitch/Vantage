@@ -2,7 +2,9 @@
 export function canAccessCollegePrep(grade: number | null | undefined): boolean {
   if (typeof grade !== "number") return false;
   if (grade === 12) return true;
-  if (grade === 11) return new Date().getMonth() >= 0; // January onward
+  // Juniors unlock in January and keep access through the summer
+  // (Jan=0 … Jul=6). Locked during fall semester (Aug=7 … Dec=11).
+  if (grade === 11) return new Date().getMonth() <= 6;
   return false;
 }
 

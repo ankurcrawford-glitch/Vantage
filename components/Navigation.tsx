@@ -4,7 +4,19 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { canAccessCollegePrep } from '@/lib/college-prep-access';
 import Button from './Button';
+
+// College-prep-only routes. Foundations students (9/10, and juniors
+// before January) are routed back to their own home if they land here.
+const COLLEGE_PREP_PATHS = [
+  '/dashboard',
+  '/colleges',
+  '/common-app',
+  '/essays',
+  '/story-builder',
+  '/applications',
+];
 
 export default function Navigation() {
   const router = useRouter();
@@ -87,6 +99,21 @@ export default function Navigation() {
   // only the Foundations link, and the logo points to their home.
   const isFoundations = grade !== null && grade >= 9 && grade <= 11;
 
+  // Grade 9/10 (and juniors before January) don't get the college-prep
+  // tools yet. Fails open when the grade is unknown so legacy accounts
+  // are never locked out.
+  const collegeSideAllowed =
+    grade === null || grade === 12 || !isFoundations || canAccessCollegePrep(grade);
+
+  // Route guard: if a Foundations-only student lands on a college-prep
+  // page via direct URL, send them back to their own home.
+  useEffect(() => {
+    if (loading || !user || collegeSideAllowed) return;
+    if (COLLEGE_PREP_PATHS.some((p) => pathname.startsWith(p))) {
+      router.replace('/foundations/compass');
+    }
+  }, [loading, user, collegeSideAllowed, pathname, router]);
+
   return (
     <nav style={{ borderBottom: '1px solid rgba(232,221,201,0.1)', padding: '24px 32px' }}>
       <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -102,14 +129,17 @@ export default function Navigation() {
               {isFoundations && (
                 <Link href="/foundations/compass" style={getLinkStyle('/foundations')}>Foundations</Link>
               )}
-              {/* College-app links. Grade 9-11 students can toggle over from
-                  Foundations to browse the college side, and always have the
-                  Foundations link above to return home. */}
-              <Link href="/story-builder" style={getLinkStyle('/story-builder')}>Story Builder</Link>
-              <Link href="/applications" style={getLinkStyle('/applications')}>Applications</Link>
-              <Link href="/colleges" style={getLinkStyle('/colleges')}>My Schools</Link>
-              <Link href="/profile" style={getLinkStyle('/profile')}>Profile</Link>
-              <Link href="/dashboard" style={getLinkStyle('/dashboard')}>Dashboard</Link>
+              {/* College-app links. Seniors always; juniors from January
+                  (canAccessCollegePrep). Grade 9/10 stay in Foundations. */}
+              {collegeSideAllowed && (
+                <>
+                  <Link href="/story-builder" style={getLinkStyle('/story-builder')}>Story Builder</Link>
+                  <Link href="/applications" style={getLinkStyle('/applications')}>Applications</Link>
+                  <Link href="/colleges" style={getLinkStyle('/colleges')}>My Schools</Link>
+                  <Link href="/profile" style={getLinkStyle('/profile')}>Profile</Link>
+                  <Link href="/dashboard" style={getLinkStyle('/dashboard')}>Dashboard</Link>
+                </>
+              )}
               <button
                 onClick={handleLogout}
                 style={{

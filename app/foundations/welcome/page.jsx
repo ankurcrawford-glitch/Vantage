@@ -3,20 +3,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { C, display, body } from "@/lib/foundations-theme";
 
 // First-conversation onboarding. Pairs with /api/foundations/onboarding.
 
-const C = {
-  navy: "#0B1426",
-  navyCard: "#101B33",
-  navyRaised: "#16243F",
-  line: "rgba(197,165,106,0.18)",
-  gold: "#C5A56A",
-  goldSoft: "rgba(197,165,106,0.12)",
-  ink: "#E8E6E1",
-  inkDim: "#8B93A7",
-};
-const display = { fontFamily: "'Cormorant Garamond', Georgia, serif" };
 const bodyFont = { fontFamily: "'Montserrat', sans-serif" };
 
 const GREETING =

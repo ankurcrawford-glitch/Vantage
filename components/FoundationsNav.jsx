@@ -5,19 +5,13 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { canAccessCollegePrep, collegePrepLockedMessage } from "@/lib/college-prep-access";
+import { C, display } from "@/lib/foundations-theme";
 
 // Shared top navigation for every Foundations page. Also acts as the
 // interface guard: seniors (grade 12) are sent to the Vantage dashboard,
 // users with no grade yet are sent to the grade picker. Fails open on
 // any error so Foundations never breaks for its own students.
 
-const C = {
-  line: "rgba(197,165,106,0.18)",
-  gold: "#C5A56A",
-  ink: "#E8E6E1",
-  inkDim: "#8B93A7",
-};
-const display = { fontFamily: "'Cormorant Garamond', Georgia, serif" };
 
 const ITEMS = [
   { label: "Compass", href: "/foundations/compass" },

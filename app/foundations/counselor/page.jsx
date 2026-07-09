@@ -3,30 +3,18 @@
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import FoundationsNav from "@/components/FoundationsNav";
+import { C, display, body } from "@/lib/foundations-theme";
 
 // ─── Vantage Foundations — Counselor Chat ────────────────────────
 // Ask-anything counselor. Pairs with /api/counselor route (Haiku,
 // FAQ layer, truncated history, monthly cap).
 
-const C = {
-  navy: "#0B1426",
-  navyCard: "#101B33",
-  navyRaised: "#16243F",
-  line: "rgba(197,165,106,0.18)",
-  gold: "#C5A56A",
-  goldSoft: "rgba(197,165,106,0.12)",
-  ink: "#E8E6E1",
-  inkDim: "#8B93A7",
-};
 
-const display = { fontFamily: "'Cormorant Garamond', Georgia, serif" };
-const body = { fontFamily: "'Montserrat', sans-serif" };
 
 const MONTHLY_CAP = 40;
 
-// The user is now derived server-side from the session token (secure).
-// TODO(Supabase): `used` (monthly count) is still a demo value — fetch the
-// real count from counselor_messages on load.
+// The user is derived server-side from the session token (secure).
+// `used`/`cap` come from the API on load and after each send.
 const starters = [
   "Should I take the SAT or ACT?",
   "How do I ask a teacher for a rec letter?",

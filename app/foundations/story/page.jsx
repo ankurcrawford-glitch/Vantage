@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import FoundationsNav from "@/components/FoundationsNav";
+import { C, display, body } from "@/lib/foundations-theme";
 
 // ─── Vantage Foundations — Story ─────────────────────────────────
 // The payoff layer. Live, no mock data: shows what the Conversation and
@@ -11,19 +12,7 @@ import FoundationsNav from "@/components/FoundationsNav";
 // confirmed activities by theme. By senior year, the strongest threads
 // become applications.
 
-const C = {
-  navy: "#0B1426",
-  navyCard: "#101B33",
-  navyRaised: "#16243F",
-  line: "rgba(197,165,106,0.18)",
-  gold: "#C5A56A",
-  goldSoft: "rgba(197,165,106,0.12)",
-  ink: "#E8E6E1",
-  inkDim: "#8B93A7",
-};
 
-const display = { fontFamily: "'Cormorant Garamond', Georgia, serif" };
-const body = { fontFamily: "'Montserrat', sans-serif" };
 
 async function authHeaders() {
   const { data: { session } } = await supabase.auth.getSession();

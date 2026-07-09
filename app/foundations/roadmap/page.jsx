@@ -3,25 +3,14 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import FoundationsNav from "@/components/FoundationsNav";
+import { C, display, body } from "@/lib/foundations-theme";
 
 // ─── Vantage Foundations — Roadmap ───────────────────────────────
 // Grade-by-grade strategic plan, wired to /api/foundations/roadmap:
 // knows the student's real grade ("You are here") and lets them check
 // items off — progress persists in roadmap_progress.
 
-const C = {
-  navy: "#0B1426",
-  navyCard: "#101B33",
-  navyRaised: "#16243F",
-  line: "rgba(197,165,106,0.18)",
-  gold: "#C5A56A",
-  goldSoft: "rgba(197,165,106,0.12)",
-  ink: "#E8E6E1",
-  inkDim: "#8B93A7",
-};
 
-const display = { fontFamily: "'Cormorant Garamond', Georgia, serif" };
-const body = { fontFamily: "'Montserrat', sans-serif" };
 
 // ─── Roadmap template (versioned in-app; keys must stay stable) ──
 const roadmap = [
