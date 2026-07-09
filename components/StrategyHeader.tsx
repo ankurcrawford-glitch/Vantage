@@ -42,7 +42,7 @@ export default function StrategyHeader({ totalSchools, pillLabel, pillVariant }:
             margin: 0,
           }}
         >
-          Your School List
+          Where I'm Applying
         </h1>
         <div
           style={{

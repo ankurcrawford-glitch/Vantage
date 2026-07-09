@@ -135,7 +135,7 @@ export default function Navigation() {
                 <>
                   <Link href="/story-builder" style={getLinkStyle('/story-builder')}>Story Builder</Link>
                   <Link href="/applications" style={getLinkStyle('/applications')}>Essays</Link>
-                  <Link href="/colleges" style={getLinkStyle('/colleges')}>My Schools</Link>
+                  <Link href="/colleges" style={getLinkStyle('/colleges')}>Strategy</Link>
                   <Link href="/profile" style={getLinkStyle('/profile')}>My Profile</Link>
                   <Link href="/dashboard" style={getLinkStyle('/dashboard')}>Dashboard</Link>
                 </>

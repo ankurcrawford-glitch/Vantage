@@ -255,8 +255,8 @@ export default function CollegesPage() {
         <div style={{ display: 'flex', gap: '4px', marginBottom: '32px', borderBottom: '1px solid rgba(232,221,201,0.1)' }}>
           {(
             [
-              { k: 'strategy' as Tab, label: 'Strategy' },
-              { k: 'add' as Tab, label: 'Add Schools' },
+              { k: 'strategy' as Tab, label: 'My List' },
+              { k: 'add' as Tab, label: 'Explore' },
             ]
           ).map(({ k, label }) => {
             const active = tab === k;
@@ -431,7 +431,7 @@ export default function CollegesPage() {
                       </div>
                     ) : (
                       <Button variant="secondary" onClick={() => handleAddCollege(college.id)} style={{ width: '100%' }}>
-                        Add to My Schools
+                        Add to my list
                       </Button>
                     )}
                   </Card>

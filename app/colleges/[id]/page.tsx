@@ -326,7 +326,7 @@ export default function CollegeDetailPage() {
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '64px 32px' }}>
         <div style={{ marginBottom: '48px' }}>
-          <Link href="/colleges" style={{ color: '#C9A977', textDecoration: 'none', fontSize: '14px', display: 'inline-block', marginBottom: '16px' }}>← Back to My Schools</Link>
+          <Link href="/colleges" style={{ color: '#C9A977', textDecoration: 'none', fontSize: '14px', display: 'inline-block', marginBottom: '16px' }}>← Back to my list</Link>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
             <div style={{ minWidth: 0, flex: 1 }}>
               <h1 className="font-heading text-5xl mb-4" style={{ color: '#E8DDC9' }}>{college.name}</h1>
