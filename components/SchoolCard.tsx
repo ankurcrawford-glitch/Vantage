@@ -131,14 +131,15 @@ export default function SchoolCard({ classification, onRemove, hasPrompts }: Pro
             right: '12px',
             background: 'none',
             border: 'none',
-            color: 'rgba(232,221,201,0.4)',
+            color: 'rgba(232,221,201,0.7)',
             fontSize: '12px',
+            textDecoration: 'underline',
             cursor: 'pointer',
             fontFamily: 'var(--font-body)',
             zIndex: 1,
           }}
           onMouseEnter={(e) => { e.currentTarget.style.color = '#A35A6A'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(232,221,201,0.4)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(232,221,201,0.7)'; }}
         >
           Remove
         </button>

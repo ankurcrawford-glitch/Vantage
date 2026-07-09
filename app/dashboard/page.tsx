@@ -37,6 +37,7 @@ function DashboardContent() {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [collegeCount, setCollegeCount] = useState(0);
   const [essayCount, setEssayCount] = useState(0);
+  const [deadlineGroups, setDeadlineGroups] = useState<{ date: string; items: { name: string; kind: string }[] }[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasSubscription, setHasSubscription] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -196,6 +197,31 @@ function DashboardContent() {
         .eq('user_id', user.id);
 
       setCollegeCount(collegeCountData || 0);
+
+      // Load user's colleges with deadlines -> group by date so shared
+      // dates (e.g. Nov 1) appear once with schools stacked beneath.
+      try {
+        const { data: dlRows } = await supabase
+          .from('user_colleges')
+          .select('colleges:college_id(name, deadline_ed, deadline_ea, deadline_rd)')
+          .eq('user_id', user.id);
+        const byDate = new Map<string, { name: string; kind: string }[]>();
+        const today = new Date().toISOString().slice(0, 10);
+        for (const row of (dlRows ?? []) as any[]) {
+          const c = row.colleges;
+          if (!c) continue;
+          for (const [kind, d] of [['ED', c.deadline_ed], ['EA', c.deadline_ea], ['RD', c.deadline_rd]] as const) {
+            if (!d || d < today) continue;
+            if (!byDate.has(d)) byDate.set(d, []);
+            byDate.get(d)!.push({ name: c.name, kind });
+          }
+        }
+        const groups = [...byDate.entries()]
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .slice(0, 6)
+          .map(([date, items]) => ({ date, items }));
+        setDeadlineGroups(groups);
+      } catch { /* deadlines are decorative - never block the dashboard */ }
 
       // Load essay count
       const { count: essayCountData } = await supabase
@@ -428,13 +454,45 @@ function DashboardContent() {
           </div>
         )}
 
-        {/* Upcoming Deadlines (placeholder) */}
         <div className="mt-12">
           <h2 className="font-heading text-3xl text-cream mb-6">Upcoming Deadlines</h2>
           <Card>
-            <p className="font-body text-cream/70 text-center py-8">
-              No upcoming deadlines. Add colleges to see deadlines.
-            </p>
+            {deadlineGroups.length === 0 ? (
+              <p className="font-body text-cream/70 text-center py-8">
+                No upcoming deadlines yet. Deadlines appear here as you add schools.
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {deadlineGroups.map((g, i) => (
+                  <div
+                    key={g.date}
+                    style={{
+                      display: 'flex',
+                      gap: '24px',
+                      padding: '16px 8px',
+                      borderTop: i === 0 ? 'none' : '1px solid rgba(201,169,119,0.15)',
+                    }}
+                  >
+                    <div style={{ minWidth: '96px' }}>
+                      <p className="font-heading text-xl" style={{ color: '#C9A977', margin: 0 }}>
+                        {new Date(g.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </p>
+                      <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.5)', margin: 0 }}>
+                        {new Date(g.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric' })}
+                      </p>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', alignItems: 'center' }}>
+                      {g.items.map((it) => (
+                        <span key={it.name + it.kind} className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)' }}>
+                          {it.name}
+                          <span style={{ color: '#C9A977', marginLeft: '6px', fontSize: '11px', letterSpacing: '1px' }}>{it.kind}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
         </div>
       </div>
