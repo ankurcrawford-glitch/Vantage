@@ -490,11 +490,19 @@ export default function CollegeDetailPage() {
         )}
 
         <div>
-          <h2 className="font-heading text-2xl mb-6" style={{ color: '#E8DDC9' }}>Essay Prompts ({getCurrentApplicationYear()})</h2>
-          {prompts.length === 0 ? (
+          <h2 className="font-heading text-2xl mb-6" style={{ color: '#E8DDC9' }}>Essay Prompts (2026–27)</h2>
+          {prompts.length === 0 && (college as any)?.no_supplement ? (
             <Card>
               <p style={{ color: 'rgba(232,221,201,0.7)', textAlign: 'center', padding: '32px' }}>
-                No prompts available for {getCurrentApplicationYear()}. Prompts are typically released in August.
+                {college?.name} requires no supplemental essays this year — only your Common App
+                personal statement. One less essay, one more reason to make that statement sing.
+              </p>
+            </Card>
+          ) : prompts.length === 0 ? (
+            <Card>
+              <p style={{ color: 'rgba(232,221,201,0.7)', textAlign: 'center', padding: '32px' }}>
+                {college?.name} hasn’t published its 2026–27 supplemental essays yet. We check
+                every week — the moment they’re released, they’ll appear here and in your Friday brief.
               </p>
             </Card>
           ) : (
