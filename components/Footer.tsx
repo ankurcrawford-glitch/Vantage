@@ -59,6 +59,17 @@ export default function Footer() {
           >
             Privacy
           </Link>
+          <a
+            href="mailto:support@my-vantage.app?subject=Vantage%20help"
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: '13px',
+              color: 'rgba(232,221,201,0.6)',
+              textDecoration: 'none',
+            }}
+          >
+            Support
+          </a>
         </nav>
       </div>
     </footer>

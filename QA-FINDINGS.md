@@ -42,9 +42,8 @@ The senior side and Foundations side use near-miss colors — visible when a jun
 Also: the Foundations theme constants (`const C = {...}`) are **copy-pasted into ~10 files**. Centralize into one `lib/theme.js` and import — then a single change fixes all pages.
 **Fonts are consistent** (Cormorant Garamond + Montserrat everywhere) — good.
 
-### B2. Foundations side has no footer — and no Terms/Privacy links
-Senior pages show the footer with Terms/Privacy; Foundations pages (the minors' side!) have no footer and zero legal links. Ironic given that side serves the youngest users.
-**Fix:** add a slim footer (or nav links) with Terms + Privacy on Foundations pages.
+### B2. ~~Foundations side has no footer~~ — CORRECTED
+The footer is rendered globally via `app/layout.tsx`, so Terms/Privacy appear on Foundations pages too. Original finding was wrong. (A Support mailto link has since been added to the footer as the student help channel.)
 
 ### B3. Logo renders "VANTAGE ." with a floating period
 Visible on live landing/login/signup — the period sits detached with a gap. Small, but it's the logo.
