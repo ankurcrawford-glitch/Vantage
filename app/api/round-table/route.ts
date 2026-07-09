@@ -3,6 +3,12 @@ import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
 import { getAuthedUser, getAdminClient } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { checkBudget, recordSpend } from '@/lib/budget';
+import {
+  evaluatePromptReadiness,
+  allReady,
+  ROUND_TABLE_WORD_RATIO,
+  ROUND_TABLE_MIN_VERSIONS,
+} from '@/lib/roundTableGate';
 
 // Round Table uses Gemini Pro and synthesizes multiple essays — can take
 // 20-40s on larger applications. Bump the serverless function timeout to 60s
@@ -166,32 +172,53 @@ export async function POST(request: NextRequest) {
       .eq('user_id', userId)
       .in('college_prompt_id', allPromptIds);
 
-    // Build a map of promptId -> current essay content
-    const essayMap: Record<string, { content: string; wordCount: number }> = {};
+    // Build a per-prompt summary: current essay content + version count.
+    // Used both to feed the AI prompt below and to evaluate the Round
+    // Table gate (refinement threshold, not just "started").
+    const essayMap: Record<string, { content: string; wordCount: number; versionCount: number }> = {};
     essays?.forEach((essay: any) => {
-      const currentVersion = essay.essay_versions?.find((v: any) => v.is_current);
+      const versions = essay.essay_versions ?? [];
+      const currentVersion = versions.find((v: any) => v.is_current);
       if (currentVersion && currentVersion.content && currentVersion.content.trim().length > 0) {
         essayMap[essay.college_prompt_id] = {
           content: currentVersion.content,
-          wordCount: currentVersion.word_count || 0
+          wordCount: currentVersion.word_count || 0,
+          versionCount: versions.length || 1,
         };
       }
     });
 
     // ============================================
-    // 4. Check if ALL of THIS college's essays are written
+    // 4. Gate: every supplemental for THIS college must be refined.
+    //    Threshold is shared with the UI via lib/roundTableGate so the
+    //    in-app lock state can never disagree with what the API enforces.
     // ============================================
-    const collegePromptIds = collegePrompts.map(p => p.id);
-    const writtenCollegeEssays = collegePromptIds.filter(id => essayMap[id]).length;
-    const totalCollegePrompts = collegePromptIds.length;
+    const collegePromptReadiness = collegePrompts.map(p => {
+      const entry = essayMap[p.id];
+      return evaluatePromptReadiness({
+        promptId: p.id,
+        promptOrder: p.sort_order,
+        wordLimit: p.word_limit,
+        wordCount: entry?.wordCount ?? 0,
+        versionCount: entry?.versionCount ?? 0,
+        hasContent: !!entry,
+      });
+    });
+    const totalCollegePrompts = collegePromptReadiness.length;
+    const writtenCollegeEssays = collegePromptReadiness.filter(r => r.ready).length;
 
-    if (writtenCollegeEssays < totalCollegePrompts) {
+    if (!allReady(collegePromptReadiness)) {
       const remaining = totalCollegePrompts - writtenCollegeEssays;
       return NextResponse.json({
         gated: true,
         writtenCount: writtenCollegeEssays,
         totalCount: totalCollegePrompts,
-        message: `The Round Table needs to see your complete application before it can give you a meaningful review. You've written ${writtenCollegeEssays} of ${totalCollegePrompts} essays for this school — ${remaining} still to go. Finish all of them, and the Round Table will assess how well your full application comes together as a package.`
+        readiness: collegePromptReadiness,
+        threshold: {
+          wordRatio: ROUND_TABLE_WORD_RATIO,
+          minVersions: ROUND_TABLE_MIN_VERSIONS,
+        },
+        message: `The Round Table is your final-stage review — for when an essay is almost ready to submit. Each supplemental needs to hit at least ${Math.round(ROUND_TABLE_WORD_RATIO * 100)}% of its word limit and have at least ${ROUND_TABLE_MIN_VERSIONS} saved versions. You're at ${writtenCollegeEssays} of ${totalCollegePrompts} for this school — ${remaining} still to refine.`
       }, { status: 200 });
     }
 

@@ -40,6 +40,14 @@ export default function Conversation() {
   const [used, setUsed] = useState(0);
   const [cap, setCap] = useState(150);
   const endRef = useRef(null);
+  const scrollRef = useRef(null);
+  const didInitialScroll = useRef(false);
+
+  // Jump straight to the bottom of the scroll container (no animation).
+  const jumpToBottom = () => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  };
 
   // Resume: load full history on mount.
   useEffect(() => {
@@ -67,7 +75,26 @@ export default function Conversation() {
   }, []);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: hydrated ? "smooth" : "auto" });
+    if (!hydrated) return;
+
+    // First paint after history loads: land hard at the bottom where they left
+    // off. scrollIntoView+smooth is unreliable here because web fonts reflow
+    // the list after the scroll fires, so we set scrollTop directly and retry
+    // a couple of times to catch the reflow.
+    if (!didInitialScroll.current) {
+      didInitialScroll.current = true;
+      jumpToBottom();
+      requestAnimationFrame(jumpToBottom);
+      const t1 = setTimeout(jumpToBottom, 120);
+      const t2 = setTimeout(jumpToBottom, 400); // after web fonts settle
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
+
+    // Subsequent new messages / typing indicator: smooth-scroll to the latest.
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading, hydrated]);
 
   const send = async () => {
@@ -145,6 +172,7 @@ export default function Conversation() {
 
       {/* ── Messages ── */}
       <div
+        ref={scrollRef}
         className="flex-1 overflow-y-auto px-6 md:px-12 py-8"
         style={{ width: "100%", maxWidth: 768, margin: "0 auto" }}
       >

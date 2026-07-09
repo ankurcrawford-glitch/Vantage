@@ -157,11 +157,18 @@ export async function POST(request: NextRequest) {
     const budget = await checkBudget(userId);
     if (!budget.ok) return budget.response;
 
-    const { essayContent, promptId, collegeId } = await request.json();
+    const { essayContent, promptId, collegeId, focusDirective } = await request.json();
 
     if (!promptId) {
       return NextResponse.json({ error: 'Prompt ID required' }, { status: 400 });
     }
+
+    // Sanitize the focus directive — clip length, strip any prompt-injection
+    // attempts. A short phrase from the student, not an override of the
+    // system rules.
+    const focus: string | null = typeof focusDirective === 'string'
+      ? focusDirective.trim().replace(/[\r\n]+/g, ' ').slice(0, 200) || null
+      : null;
 
     let supabase;
     try {
@@ -307,6 +314,20 @@ ${flattened.join('\n\n---\n\n')}`;
       userStats?.narrative_summary ? `Counselor's profile of this student (built over their years in Vantage Foundations — draw on it to understand who they are and surface authentic, specific material): ${userStats.narrative_summary}` : '',
     ].filter(Boolean).join('\n');
 
+    // Optional focus block — surfaces the user's specific ask (e.g.
+    // "focus on the opening", "where should I cut?") as a top-priority
+    // lens for the response. Placed before YOUR TASK so the model reads
+    // it as a directive, not a suggestion. Left empty when the student
+    // asked for general guidance.
+    const focusBlock = focus
+      ? `USER'S SPECIFIC FOCUS REQUEST:
+"${focus}"
+
+This is what the student is worried about right now — make it the primary lens for your response. Address their specific concern first and most thoroughly. You can still cover the essentials of the review, but this focus takes precedence.
+
+`
+      : '';
+
     let systemMessage = '';
     let aiPrompt = '';
 
@@ -325,7 +346,7 @@ ${profileBlock}
 ${discoveryContext}
 ${previousContext}
 
-YOUR TASK — Pre-writing guidance for THIS prompt:
+${focusBlock}YOUR TASK — Pre-writing guidance for THIS prompt:
 
 Break down what this prompt is really asking. What does the admissions reader want to learn?
 
@@ -355,7 +376,7 @@ ${profileBlock}
 ${discoveryContext}
 ${previousContext}
 
-YOUR TASK — Early draft feedback:
+${focusBlock}YOUR TASK — Early draft feedback:
 
 Start with what's promising in this draft — what seeds are there to build on? Quote specific lines that work.
 
@@ -386,7 +407,7 @@ ${profileBlock}
 ${discoveryContext}
 ${previousContext}
 
-YOUR TASK — Revision feedback:
+${focusBlock}YOUR TASK — Revision feedback:
 
 Assess how effectively this draft answers what the prompt is really asking. Be honest — does it deliver?
 

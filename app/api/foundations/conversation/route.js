@@ -66,8 +66,7 @@ async function callHaiku(system, messages, maxTokens) {
   if (!res.ok) {
     const errBody = await res.text();
     console.error("Anthropic error:", errBody);
-    // TEMP(debug): include status + body so we can see the real reason.
-    throw new Error(`AI call failed [${res.status}]: ${errBody.slice(0, 300)}`);
+    throw new Error(`AI call failed [${res.status}]`);
   }
   const data = await res.json();
   return (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
@@ -306,10 +305,6 @@ export async function POST(req) {
     return Response.json({ reply, used: newCount, cap: DAILY_CAP });
   } catch (err) {
     console.error("Conversation POST error:", err);
-    // TEMP(debug): surface the real reason. Revert before production.
-    return Response.json(
-      { error: "Something went wrong", detail: String(err?.message || err) },
-      { status: 500 }
-    );
+    return Response.json({ error: "Something went wrong" }, { status: 500 });
   }
 }

@@ -259,3 +259,62 @@ drop policy if exists "college_prompts_public_read" on public.college_prompts;
 create policy "college_prompts_public_read"
   on public.college_prompts for select
   using (true);
+
+-- =============================================================================
+-- 8. Foundations tables (Security Advisor often flags these — ~9 issues total)
+-- =============================================================================
+-- Writes go through API routes (service role). Users get SELECT on own rows only.
+
+alter table if exists public.foundations_activities enable row level security;
+drop policy if exists "Users can read own activities" on public.foundations_activities;
+drop policy if exists "foundations_activities_select" on public.foundations_activities;
+create policy "foundations_activities_select" on public.foundations_activities
+  for select to authenticated using (auth.uid() = user_id);
+
+alter table if exists public.conversation_messages enable row level security;
+drop policy if exists "Users can read own conversation messages" on public.conversation_messages;
+drop policy if exists "conversation_messages_select" on public.conversation_messages;
+create policy "conversation_messages_select" on public.conversation_messages
+  for select to authenticated using (auth.uid() = user_id);
+
+alter table if exists public.roadmap_progress enable row level security;
+drop policy if exists "Users can read own roadmap progress" on public.roadmap_progress;
+drop policy if exists "roadmap_progress_select" on public.roadmap_progress;
+create policy "roadmap_progress_select" on public.roadmap_progress
+  for select to authenticated using (auth.uid() = user_id);
+
+alter table if exists public.counselor_messages enable row level security;
+drop policy if exists "Users can read own counselor messages" on public.counselor_messages;
+drop policy if exists "counselor_messages_select" on public.counselor_messages;
+create policy "counselor_messages_select" on public.counselor_messages
+  for select to authenticated using (auth.uid() = user_id);
+
+-- =============================================================================
+-- 9. Subscriptions, commenters, activity extraction tracking
+-- =============================================================================
+
+alter table if exists public.user_subscriptions enable row level security;
+drop policy if exists "Users can read own subscription" on public.user_subscriptions;
+create policy "Users can read own subscription" on public.user_subscriptions
+  for select to authenticated using (auth.uid() = user_id);
+
+alter table if exists public.student_commenters enable row level security;
+drop policy if exists "student_commenters_select_own" on public.student_commenters;
+drop policy if exists "student_commenters_select_as_commenter" on public.student_commenters;
+drop policy if exists "student_commenters_insert" on public.student_commenters;
+drop policy if exists "student_commenters_delete" on public.student_commenters;
+create policy "student_commenters_select_own" on public.student_commenters
+  for select to authenticated using (student_id = auth.uid());
+create policy "student_commenters_select_as_commenter" on public.student_commenters
+  for select to authenticated using (
+    commenter_email = lower(coalesce(auth.jwt() ->> 'email', ''))
+  );
+create policy "student_commenters_insert" on public.student_commenters
+  for insert to authenticated with check (student_id = auth.uid());
+create policy "student_commenters_delete" on public.student_commenters
+  for delete to authenticated using (student_id = auth.uid());
+
+alter table if exists public.activity_extraction_runs enable row level security;
+drop policy if exists "activity_extraction_runs_select" on public.activity_extraction_runs;
+create policy "activity_extraction_runs_select" on public.activity_extraction_runs
+  for select to authenticated using (auth.uid() = user_id);

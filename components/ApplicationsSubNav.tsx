@@ -9,7 +9,7 @@ import { usePathname } from 'next/navigation';
  */
 export default function ApplicationsSubNav() {
   const pathname = usePathname();
-  const isEssays = pathname.startsWith('/personal-statement') || pathname.startsWith('/essays');
+  const isEssays = pathname.startsWith('/applications') || pathname.startsWith('/essays');
   const isCommonApp = pathname.startsWith('/common-app');
 
   const tabStyle = (active: boolean): React.CSSProperties => ({
@@ -41,7 +41,7 @@ export default function ApplicationsSubNav() {
           gap: '32px',
         }}
       >
-        <Link href="/personal-statement" style={tabStyle(isEssays)}>
+        <Link href="/applications" style={tabStyle(isEssays)}>
           Essays
         </Link>
         <Link href="/common-app" style={tabStyle(isCommonApp)}>

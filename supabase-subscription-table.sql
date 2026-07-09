@@ -1,5 +1,5 @@
 -- Run this in Supabase SQL Editor to enable the Insight Questions paywall.
--- After a user pays (Stripe), insert or update a row here so they can access /discovery.
+-- After a user pays (Stripe), insert or update a row here so they can access /story-builder.
 
 create table if not exists public.user_subscriptions (
   id uuid primary key default gen_random_uuid(),

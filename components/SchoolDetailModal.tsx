@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { type SchoolClassification, type Tier } from '@/lib/classifier';
 
 const TIER_PILL_BG: Record<Tier, string> = {
@@ -180,12 +181,51 @@ export default function SchoolDetailModal({ classification, onClose, onRemove }:
           </ul>
         </Section>
 
-        {onRemove && (
-          <div style={{ marginTop: '32px', display: 'flex', gap: '12px' }}>
+        <div style={{ marginTop: '32px', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+          <Link
+            href={`/colleges/${college.id}`}
+            onClick={onClose}
+            className="font-body"
+            style={{
+              background: '#C9A977',
+              color: '#0B1320',
+              border: '1px solid #C9A977',
+              padding: '10px 20px',
+              fontSize: '12px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              fontWeight: 600,
+              cursor: 'pointer',
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.color = '#C9A977';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#C9A977';
+              e.currentTarget.style.color = '#0B1320';
+            }}
+          >
+            Open School Page
+          </Link>
+          <span
+            className="font-body"
+            style={{
+              fontSize: '12px',
+              color: 'rgba(232,221,201,0.5)',
+              fontStyle: 'italic',
+            }}
+          >
+            Prompts. The Round Table. The full workspace.
+          </span>
+          {onRemove && (
             <button
               onClick={() => { onRemove(); onClose(); }}
               className="font-body"
               style={{
+                marginLeft: 'auto',
                 background: 'transparent',
                 color: '#A35A6A',
                 border: '1px solid rgba(248, 113, 113, 0.4)',
@@ -199,8 +239,8 @@ export default function SchoolDetailModal({ classification, onClose, onRemove }:
             >
               Remove from List
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

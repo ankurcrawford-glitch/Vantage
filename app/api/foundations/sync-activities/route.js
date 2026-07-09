@@ -36,7 +36,7 @@ export async function POST(req) {
     // conversation suggestions the student hasn't accepted).
     const { data: fActs, error: fErr } = await supabase
       .from("foundations_activities")
-      .select("name, role, since, hours, depth, thread, trajectory")
+      .select("id, name, role, since, hours, depth, thread, trajectory")
       .eq("user_id", userId)
       .eq("confirmed", true);
     if (fErr) throw fErr;
@@ -45,27 +45,40 @@ export async function POST(req) {
       return Response.json({ ok: true, imported: 0, skipped: 0 });
     }
 
-    // Existing senior activities — dedupe by name (case-insensitive).
+    // Existing senior activities — dedupe by both name (case-insensitive)
+    // and source_foundation_id so we don't re-mirror activities the
+    // confirm path already snapshotted.
     const { data: existing, error: eErr } = await supabase
       .from("user_extracurriculars")
-      .select("activity_name")
+      .select("activity_name, source_foundation_id")
       .eq("user_id", userId);
     if (eErr) throw eErr;
 
-    const have = new Set(
+    const haveNames = new Set(
       (existing || []).map((e) => (e.activity_name || "").trim().toLowerCase())
+    );
+    const haveSourceIds = new Set(
+      (existing || []).map((e) => e.source_foundation_id).filter(Boolean)
     );
 
     const toInsert = [];
     for (const a of fActs) {
+      if (haveSourceIds.has(a.id)) continue;
       const key = (a.name || "").trim().toLowerCase();
-      if (!key || have.has(key)) continue;
-      have.add(key); // guard against dupes within the Foundations set too
+      if (!key || haveNames.has(key)) continue;
+      haveNames.add(key); // guard against dupes within the Foundations set too
       toInsert.push({
         user_id: userId,
         activity_name: a.name.trim(),
         role: a.role ? a.role.trim() : null,
         description: buildDescription(a),
+        status: "accepted",
+        source_foundation_id: a.id,
+        depth: a.depth ?? null,
+        thread: a.thread || null,
+        trajectory: a.trajectory || null,
+        hours: a.hours || null,
+        since: a.since || null,
       });
     }
 

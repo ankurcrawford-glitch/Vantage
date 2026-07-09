@@ -1,5 +1,5 @@
 // Shared 12 Insight / Discovery questions (used by discovery page and thinking-partner context)
-export const DISCOVERY_QUESTIONS = [
+export const DISCOVERY_QUESTIONS: { id: string; question: string; category: string; hint?: string }[] = [
   { id: 'story1', question: 'Tell us about a moment that fundamentally changed how you see yourself or the world. What happened, and why did it matter?', category: 'transformative_moment' },
   { id: 'story2', question: 'Describe a time you failed or made a significant mistake. What did you learn, and how did it shape who you are today?', category: 'resilience' },
   { id: 'story3', question: 'What is something you care deeply about that others might not understand? Why does it matter to you?', category: 'authentic_passions' },

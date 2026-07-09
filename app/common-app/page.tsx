@@ -8,6 +8,8 @@ import Card from '@/components/Card';
 import Navigation from '@/components/Navigation';
 import ApplicationsSubNav from '@/components/ApplicationsSubNav';
 
+const COMMON_APP_COLLEGE_ID = 'a0000000-0000-0000-0000-000000000000';
+
 const COMMON_APP_PROMPTS = [
   {
     id: 'common-app-1',
@@ -57,16 +59,56 @@ export default function CommonAppPage() {
   const router = useRouter();
   const pathname = usePathname();
   const [loading, setLoading] = useState(true);
+  // Track which prompt numbers (1..7) the user has already started so
+  // the CTA can read "Continue Writing" instead of "Write Essay."
+  const [startedPromptNumbers, setStartedPromptNumbers] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    checkAuth();
+    void init();
   }, []);
 
-  const checkAuth = async () => {
+  const init = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       router.push('/login');
-    } else {
+      return;
+    }
+
+    try {
+      // Map Common App prompts to UUIDs (we route by slug like
+      // "common-app-2" but essays in the DB key on the real UUID via
+      // sort_order on the Common App pseudo-college).
+      const { data: promptRows } = await supabase
+        .from('college_prompts')
+        .select('id, sort_order')
+        .eq('college_id', COMMON_APP_COLLEGE_ID);
+
+      const promptUuids = (promptRows ?? []).map((p: any) => p.id);
+      const sortOrderById = new Map<string, number>(
+        (promptRows ?? []).map((p: any) => [p.id, p.sort_order])
+      );
+
+      if (promptUuids.length === 0) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: essays } = await supabase
+        .from('essays')
+        .select('college_prompt_id, essay_versions(content, is_current)')
+        .eq('user_id', user.id)
+        .in('college_prompt_id', promptUuids);
+
+      const started = new Set<number>();
+      essays?.forEach((essay: any) => {
+        const current = essay.essay_versions?.find((v: any) => v.is_current);
+        if (current?.content && current.content.trim().length > 0) {
+          const n = sortOrderById.get(essay.college_prompt_id);
+          if (n != null) started.add(n);
+        }
+      });
+      setStartedPromptNumbers(started);
+    } finally {
       setLoading(false);
     }
   };
@@ -98,53 +140,73 @@ export default function CommonAppPage() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {COMMON_APP_PROMPTS.map((prompt) => (
-            <Card key={prompt.id}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '24px' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                    <span className="font-heading text-2xl" style={{ color: '#C9A977' }}>Prompt {prompt.number}</span>
-                    <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
-                      {prompt.word_limit} words
-                    </span>
+          {COMMON_APP_PROMPTS.map((prompt) => {
+            const isStarted = startedPromptNumbers.has(prompt.number);
+            return (
+              <Card key={prompt.id}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '24px' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                      <span className="font-heading text-2xl" style={{ color: '#C9A977' }}>Prompt {prompt.number}</span>
+                      <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
+                        {prompt.word_limit} words
+                      </span>
+                      {isStarted && (
+                        <span
+                          className="font-body"
+                          style={{
+                            fontSize: '10px',
+                            color: '#8FB89A',
+                            background: 'rgba(143, 184, 154, 0.12)',
+                            padding: '2px 8px',
+                            borderRadius: '3px',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.1em',
+                            fontWeight: 600,
+                          }}
+                        >
+                          In progress
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-body" style={{ color: 'rgba(232,221,201,0.9)', lineHeight: '1.6', marginBottom: '16px' }}>
+                      {prompt.prompt}
+                    </p>
                   </div>
-                  <p className="font-body" style={{ color: 'rgba(232,221,201,0.9)', lineHeight: '1.6', marginBottom: '16px' }}>
-                    {prompt.prompt}
-                  </p>
+                  <Link
+                    href={`/common-app/${prompt.id}`}
+                    style={{
+                      display: 'inline-block',
+                      background: '#C9A977',
+                      color: '#0B1320',
+                      padding: '12px 24px',
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      textDecoration: 'none',
+                      borderRadius: '2px',
+                      transition: 'all 0.2s',
+                      whiteSpace: 'nowrap',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = '#C9A977';
+                      e.currentTarget.style.border = '1px solid #C9A977';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#C9A977';
+                      e.currentTarget.style.color = '#0B1320';
+                      e.currentTarget.style.border = 'none';
+                    }}
+                  >
+                    {isStarted ? 'Continue Writing' : 'Write Essay'}
+                  </Link>
                 </div>
-                <Link
-                  href={`/common-app/${prompt.id}`}
-                  style={{
-                    display: 'inline-block',
-                    background: '#C9A977',
-                    color: '#0B1320',
-                    padding: '12px 24px',
-                    fontFamily: 'var(--font-body)',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    textDecoration: 'none',
-                    borderRadius: '2px',
-                    transition: 'all 0.2s',
-                    whiteSpace: 'nowrap',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = '#C9A977';
-                    e.currentTarget.style.border = '1px solid #C9A977';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#C9A977';
-                    e.currentTarget.style.color = '#0B1320';
-                    e.currentTarget.style.border = 'none';
-                  }}
-                >
-                  Write Essay
-                </Link>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       </div>
     </div>

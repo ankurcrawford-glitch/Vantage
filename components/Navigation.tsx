@@ -61,13 +61,13 @@ export default function Navigation() {
     if (path === '/foundations') return pathname.startsWith('/foundations');
     if (path === '/applications') {
       return (
-        pathname.startsWith('/personal-statement') ||
+        pathname.startsWith('/applications') ||
         pathname.startsWith('/essays') ||
         pathname.startsWith('/common-app')
       );
     }
     if (path === '/profile') return pathname === '/profile';
-    if (path === '/discovery') return pathname === '/discovery';
+    if (path === '/story-builder') return pathname === '/story-builder';
     if (path === '/colleges') return pathname.startsWith('/colleges');
     return false;
   };
@@ -105,8 +105,8 @@ export default function Navigation() {
               {/* College-app links. Grade 9-11 students can toggle over from
                   Foundations to browse the college side, and always have the
                   Foundations link above to return home. */}
-              <Link href="/discovery" style={getLinkStyle('/discovery')}>Story Builder</Link>
-              <Link href="/personal-statement" style={getLinkStyle('/applications')}>Applications</Link>
+              <Link href="/story-builder" style={getLinkStyle('/story-builder')}>Story Builder</Link>
+              <Link href="/applications" style={getLinkStyle('/applications')}>Applications</Link>
               <Link href="/colleges" style={getLinkStyle('/colleges')}>My Schools</Link>
               <Link href="/profile" style={getLinkStyle('/profile')}>Profile</Link>
               <Link href="/dashboard" style={getLinkStyle('/dashboard')}>Dashboard</Link>

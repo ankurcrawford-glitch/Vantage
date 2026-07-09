@@ -41,6 +41,8 @@ interface Extracurricular {
   activity_name: string;
   role: string | null;
   description: string | null;
+  status?: 'accepted' | 'suggested' | 'rejected';
+  source_question_id?: string | null;
 }
 
 interface Award {
@@ -61,6 +63,7 @@ export default function ProfilePage() {
   });
   const [apClasses, setApClasses] = useState<APClass[]>([]);
   const [extracurriculars, setExtracurriculars] = useState<Extracurricular[]>([]);
+  const [suggestedActivities, setSuggestedActivities] = useState<Extracurricular[]>([]);
   const [awards, setAwards] = useState<Award[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -169,7 +172,11 @@ export default function ProfilePage() {
         setApClasses(apData);
       }
 
-      // Load extracurriculars
+      // Load extracurriculars. We split client-side into accepted (the
+      // user's actual list) and suggested (proposals surfaced from their
+      // Story Builder, shown in a separate Add/Skip section above the
+      // form). Rejected rows stay in the DB so the extractor doesn't
+      // re-propose them, but never render here.
       const { data: ecData, error: ecError } = await supabase
         .from('user_extracurriculars')
         .select('*')
@@ -179,7 +186,10 @@ export default function ProfilePage() {
       if (ecError) {
         console.error('Error loading extracurriculars:', ecError);
       } else if (ecData) {
-        setExtracurriculars(ecData);
+        const accepted = ecData.filter((e: any) => (e.status ?? 'accepted') === 'accepted');
+        const suggested = ecData.filter((e: any) => e.status === 'suggested');
+        setExtracurriculars(accepted);
+        setSuggestedActivities(suggested);
       }
 
       // Load awards
@@ -369,6 +379,45 @@ export default function ProfilePage() {
       alert('Error adding extracurricular: ' + (error.message || 'Unknown error'));
     } finally {
       setAddingExtracurricular(false);
+    }
+  };
+
+  // Promote a Story Builder–surfaced suggestion into the user's
+  // actual activities list. Just flips the row's status; no rewrite,
+  // no duplicate insert. Optimistic update so the chip disappears
+  // before the network call finishes.
+  const handleAcceptSuggestion = async (id: string) => {
+    const accepted = suggestedActivities.find((s) => s.id === id);
+    setSuggestedActivities((prev) => prev.filter((s) => s.id !== id));
+    if (accepted) {
+      setExtracurriculars((prev) =>
+        [...prev, { ...accepted, status: 'accepted' as const }].sort((a, b) =>
+          a.activity_name.localeCompare(b.activity_name)
+        )
+      );
+    }
+    const { error } = await supabase
+      .from('user_extracurriculars')
+      .update({ status: 'accepted' })
+      .eq('id', id);
+    if (error) {
+      console.error('Error accepting suggestion:', error);
+      alert('Could not add. Refreshing.');
+      await loadProfile();
+    }
+  };
+
+  // Reject keeps the row but flips status to 'rejected' so the
+  // extractor's dedupe pass won't re-propose the same activity.
+  const handleRejectSuggestion = async (id: string) => {
+    setSuggestedActivities((prev) => prev.filter((s) => s.id !== id));
+    const { error } = await supabase
+      .from('user_extracurriculars')
+      .update({ status: 'rejected' })
+      .eq('id', id);
+    if (error) {
+      console.error('Error skipping suggestion:', error);
+      await loadProfile();
     }
   };
 
@@ -979,6 +1028,98 @@ export default function ProfilePage() {
         <div style={{ marginTop: '32px' }}>
           <Card>
             <h2 className="font-heading text-2xl mb-6" style={{ color: '#C9A977' }}>Extracurriculars</h2>
+
+            {suggestedActivities.length > 0 && (
+              <div
+                style={{
+                  marginBottom: '28px',
+                  padding: '18px 20px',
+                  background: 'rgba(201,169,119,0.06)',
+                  border: '1px solid rgba(201,169,119,0.18)',
+                  borderRadius: '4px',
+                }}
+              >
+                <div style={{ marginBottom: '12px' }}>
+                  <p className="font-body text-sm" style={{ color: '#C9A977', fontWeight: 600, margin: 0, marginBottom: '4px' }}>
+                    Suggested from your Story Builder
+                  </p>
+                  <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.6)', lineHeight: '1.6', margin: 0 }}>
+                    We noticed these in what you wrote. Add the ones you want in your activities list — skip the rest.
+                  </p>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {suggestedActivities.map((sug) => (
+                    <div
+                      key={sug.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '12px',
+                        padding: '12px 14px',
+                        background: 'rgba(11,19,32,0.4)',
+                        border: '1px solid rgba(232,221,201,0.08)',
+                        borderRadius: '4px',
+                      }}
+                    >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="font-body" style={{ color: '#E8DDC9', fontSize: '14px', fontWeight: 600 }}>
+                          {sug.activity_name}
+                          {sug.role && (
+                            <span style={{ color: 'rgba(232,221,201,0.55)', fontWeight: 400, marginLeft: '8px', fontSize: '12px' }}>
+                              · {sug.role}
+                            </span>
+                          )}
+                        </div>
+                        {sug.description && (
+                          <p className="font-body" style={{ color: 'rgba(232,221,201,0.7)', fontSize: '12px', lineHeight: '1.5', margin: '4px 0 0 0' }}>
+                            {sug.description}
+                          </p>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                        <button
+                          onClick={() => handleAcceptSuggestion(sug.id)}
+                          className="font-body"
+                          style={{
+                            background: '#C9A977',
+                            color: '#0B1320',
+                            border: 'none',
+                            padding: '6px 14px',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.1em',
+                            cursor: 'pointer',
+                            borderRadius: '2px',
+                          }}
+                        >
+                          Add
+                        </button>
+                        <button
+                          onClick={() => handleRejectSuggestion(sug.id)}
+                          className="font-body"
+                          style={{
+                            background: 'transparent',
+                            color: 'rgba(232,221,201,0.55)',
+                            border: '1px solid rgba(232,221,201,0.2)',
+                            padding: '6px 14px',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.1em',
+                            cursor: 'pointer',
+                            borderRadius: '2px',
+                          }}
+                        >
+                          Skip
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
               <input
                 type="text"

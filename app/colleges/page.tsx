@@ -8,7 +8,6 @@ import Card from '@/components/Card';
 import Button from '@/components/Button';
 import SchoolCard from '@/components/SchoolCard';
 import EdStrategyPanel from '@/components/EdStrategyPanel';
-import SchoolDetailModal from '@/components/SchoolDetailModal';
 import StrategyHeader from '@/components/StrategyHeader';
 import BalanceDiagnostic, { buildBalanceDiagnostic } from '@/components/BalanceDiagnostic';
 import Navigation from '@/components/Navigation';
@@ -46,7 +45,6 @@ export default function CollegesPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>('strategy');
   const [searchTerm, setSearchTerm] = useState('');
-  const [openSchoolId, setOpenSchoolId] = useState<string | null>(null);
 
   useEffect(() => {
     void init();
@@ -139,10 +137,6 @@ export default function CollegesPage() {
     }
     return out;
   }, [classifications]);
-
-  const openClassification = openSchoolId
-    ? classifications.find((c) => c.college.id === openSchoolId) ?? null
-    : null;
 
   /* ------------------------------ actions ------------------------------ */
 
@@ -346,7 +340,6 @@ export default function CollegesPage() {
                       key={t}
                       tier={t}
                       schools={byTier[t]}
-                      onOpen={(id) => setOpenSchoolId(id)}
                       onRemove={handleRemoveCollege}
                       collegesWithPrompts={collegesWithPrompts}
                     />
@@ -424,15 +417,6 @@ export default function CollegesPage() {
           </>
         )}
       </div>
-
-      {/* Detail modal */}
-      {openClassification && (
-        <SchoolDetailModal
-          classification={openClassification}
-          onClose={() => setOpenSchoolId(null)}
-          onRemove={() => handleRemoveCollege(openClassification.college.id)}
-        />
-      )}
     </div>
   );
 }
@@ -517,13 +501,11 @@ function GeoPreferenceBar({
 function TierColumn({
   tier,
   schools,
-  onOpen,
   onRemove,
   collegesWithPrompts,
 }: {
   tier: Tier;
   schools: SchoolClassification[];
-  onOpen: (id: string) => void;
   onRemove: (id: string) => void;
   collegesWithPrompts: Set<string>;
 }) {
@@ -573,7 +555,6 @@ function TierColumn({
               key={c.college.id}
               classification={c}
               hasPrompts={collegesWithPrompts.has(c.college.id)}
-              onOpen={() => onOpen(c.college.id)}
               onRemove={() => onRemove(c.college.id)}
             />
           ))

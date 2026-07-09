@@ -13,7 +13,7 @@
 import { getAuthedUser, getAdminClient } from "@/lib/auth";
 
 const MONTHLY_CAP = 40;
-const MODEL = "claude-haiku-4-5"; // chat tier; Sonnet reserved for monthly notes
+const MODEL = "claude-haiku-4-5-20251001"; // chat tier; exact string (alias can 404)
 const MAX_TOKENS = 400;
 const HISTORY_LIMIT = 8;
 
@@ -61,11 +61,49 @@ RULES:
 - Answer like a seasoned counselor: specific, honest, tight. 2-4 short paragraphs maximum. No bullet lists unless truly necessary.
 - Ground every answer in THIS student's profile, threads, and grade. Generic advice is a failure.
 - Depth over breadth. Self-initiated over joined. Story over checklist. These are your philosophy.
+- LEAD — don't wait. You are the expert; the student is a teenager who doesn't know what they don't know. Never offload the agenda with "What's on your mind?" or "Is there anything else?" Hold their hand: steer toward the next thing that actually matters for their grade and their story.
+- CONTINUITY — open by briefly anchoring to where you left off: one sentence recapping the last thing the two of you were working on, then move it forward. They should feel picked-up-with, not restarted.
+- CRAFT THE STORY — every exchange should nudge their narrative forward. Connect what they tell you to the throughline you're building (their spike, their Story page). You are shaping an arc, not answering trivia.
+- END WITH A MOVE — close each reply with one specific, proposed next step or question grounded in their profile or Roadmap. Give them the next handhold, never an open-ended "anything else?"
 - If a question needs information you don't have (specific grades, a school policy, a family situation), say what you'd need to know rather than guessing.
 - STAY IN YOUR LANE: you are a COLLEGE counselor, not a therapist. Your domain is academics, testing, activities, and college strategy. Do not diagnose, process emotions, or do therapy/reflective-listening. Acknowledge a feeling in one sentence if needed, then steer back to their path.
 - If a question is about mental-health crisis, anxiety, self-harm, family conflict, or safety, respond briefly with care, do NOT counsel it, and direct them to a trusted adult, parent, or their school counselor. You are not a substitute for professional mental-health support.
 - Never invent deadlines or statistics. If unsure of a specific date, tell them to verify on the official source.
 - You may reference their Compass, Story, Roadmap, Activities, and Spark pages by name.`;
+}
+
+// ─── GET: resume — full history + this month's usage ─────────────
+// Lets the counselor pick up where the student left off instead of
+// resetting to a cold greeting on every visit.
+export async function GET(req) {
+  try {
+    const auth = await getAuthedUser(req);
+    if (!auth.ok) return auth.response;
+    const supabase = getAdminClient();
+
+    const { data: history, error } = await supabase
+      .from("counselor_messages")
+      .select("role, content, created_at")
+      .eq("user_id", auth.userId)
+      .order("created_at", { ascending: true })
+      .limit(500);
+    if (error) throw error;
+
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    const { count } = await supabase
+      .from("counselor_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", auth.userId)
+      .eq("role", "user")
+      .gte("created_at", monthStart.toISOString());
+
+    return Response.json({ messages: history || [], used: count || 0, cap: MONTHLY_CAP });
+  } catch (err) {
+    console.error("Counselor GET error:", err);
+    return Response.json({ error: "Something went wrong" }, { status: 500 });
+  }
 }
 
 // ─── Route handler ───────────────────────────────────────────────
@@ -115,12 +153,13 @@ export async function POST(req) {
       );
     }
 
-    // 3) Load the 500-word narrative summary (your token-saving asset)
+    // 3) Load the narrative summary (token-saving asset). maybeSingle() so a
+    // student with no user_stats row yet doesn't crash the request.
     const { data: profile, error: profErr } = await supabase
       .from("user_stats")
       .select("narrative_summary, grade")
       .eq("user_id", userId)
-      .single();
+      .maybeSingle();
 
     if (profErr) throw profErr;
 

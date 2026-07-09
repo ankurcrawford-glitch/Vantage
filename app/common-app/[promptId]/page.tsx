@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -99,6 +99,15 @@ export default function CommonAppEssayPage() {
   const [wordCount, setWordCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  // Autosave — mirror of the per-school editor. See that file for the
+  // full reasoning. Same shape so behavior is identical across both
+  // editing surfaces.
+  const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [lastAutosavedAt, setLastAutosavedAt] = useState<number | null>(null);
+  const [tickNow, setTickNow] = useState(Date.now());
+  const lastSavedContentRef = useRef<string>('');
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [newComment, setNewComment] = useState({ text: '', type: 'general' });
@@ -112,6 +121,7 @@ export default function CommonAppEssayPage() {
   const [thinkingPartnerResponse, setThinkingPartnerResponse] = useState<string | null>(null);
   const [loadingThinkingPartner, setLoadingThinkingPartner] = useState(false);
   const [insightGateMessage, setInsightGateMessage] = useState<string | null>(null);
+  const [focusDirective, setFocusDirective] = useState<string | null>(null);
   const [guidanceMode, setGuidanceMode] = useState<string | null>(null);
   const [guidanceHistory, setGuidanceHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -144,6 +154,56 @@ export default function CommonAppEssayPage() {
   useEffect(() => {
     setWordCount(countWords(content));
   }, [content]);
+
+  // Autosave: debounced UPDATE to the current version. Mirror of the
+  // per-school essay editor so behavior is identical across both.
+  useEffect(() => {
+    if (!essayId) return;
+    if (!isOwner) return;
+    if (!currentVersion?.id) return;
+    if (content === lastSavedContentRef.current) return;
+
+    setAutosaveStatus('saving');
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+
+    autosaveTimerRef.current = setTimeout(async () => {
+      try {
+        const snapshot = content;
+        const { error } = await supabase
+          .from('essay_versions')
+          .update({ content: snapshot.trim(), word_count: countWords(snapshot) })
+          .eq('id', currentVersion.id);
+        if (error) throw error;
+        lastSavedContentRef.current = snapshot;
+        setLastAutosavedAt(Date.now());
+        setAutosaveStatus('saved');
+      } catch (err) {
+        console.error('Autosave failed:', err);
+        setAutosaveStatus('error');
+      }
+    }, 1500);
+
+    return () => {
+      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [content, essayId, isOwner, currentVersion?.id]);
+
+  useEffect(() => {
+    const id = setInterval(() => setTickNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (autosaveStatus === 'saving' || content !== lastSavedContentRef.current) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [autosaveStatus, content]);
 
   // Load guidance history when user is ready
   useEffect(() => {
@@ -266,6 +326,9 @@ export default function CommonAppEssayPage() {
         if (current) {
           setCurrentVersion(current);
           setContent(current.content);
+          lastSavedContentRef.current = current.content;
+          setAutosaveStatus('saved');
+          setLastAutosavedAt(Date.now());
         }
       }
     } catch (error) {
@@ -380,7 +443,7 @@ export default function CommonAppEssayPage() {
 
   const handleSendInvitation = async () => {
       if (!essayId) {
-        alert('Save your essay first (click "Save New Version" above), then you can invite commenters.');
+        alert('Save your essay first (click "Save Draft" above), then you can invite commenters.');
         return;
       }
       if (!newInvitation.email.trim()) {
@@ -501,6 +564,7 @@ export default function CommonAppEssayPage() {
           collegeId: COMMON_APP_COLLEGE_ID,
           userId: currentUser.id,
           essayContent: content.trim() || null,
+          focusDirective,
         }),
       });
 
@@ -686,8 +750,12 @@ export default function CommonAppEssayPage() {
       if (versionError) throw versionError;
 
       // Reload versions
-      await loadVersions(currentEssayId);
+      if (currentEssayId) await loadVersions(currentEssayId);
 
+      // Manual save also resets the autosave baseline.
+      lastSavedContentRef.current = content.trim();
+      setAutosaveStatus('saved');
+      setLastAutosavedAt(Date.now());
       setSaveSuccessMessage('Saved');
       setTimeout(() => setSaveSuccessMessage(null), 2500);
     } catch (error: any) {
@@ -705,6 +773,9 @@ export default function CommonAppEssayPage() {
   const switchVersion = (version: EssayVersion) => {
     setCurrentVersion(version);
     setContent(version.content);
+    lastSavedContentRef.current = version.content;
+    setAutosaveStatus('saved');
+    setLastAutosavedAt(Date.now());
   };
 
   const deleteVersion = async (e: React.MouseEvent, version: EssayVersion) => {
@@ -832,6 +903,13 @@ export default function CommonAppEssayPage() {
                 <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <h3 className="font-heading text-lg" style={{ color: '#C9A977' }}>Your Essay</h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    {isOwner && essayId && (
+                      <AutosaveIndicator
+                        status={autosaveStatus}
+                        lastSavedAt={lastAutosavedAt}
+                        now={tickNow}
+                      />
+                    )}
                     <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.7)' }}>
                       {wordCount} {prompt.word_limit ? `/ ${prompt.word_limit}` : ''} words
                     </span>
@@ -887,7 +965,7 @@ export default function CommonAppEssayPage() {
                         transition: 'all 0.2s',
                       }}
                     >
-                      {saving ? 'Saving...' : 'Save New Version'}
+                      {saving ? 'Saving...' : 'Save Draft'}
                     </button>
                     {saveSuccessMessage && (
                       <span className="font-body text-sm" style={{ color: '#8FB89A' }}>
@@ -1025,11 +1103,11 @@ export default function CommonAppEssayPage() {
             {/* Strategic Intelligence */}
             <div style={{ marginTop: '32px' }}>
               <Card>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '16px', flexWrap: 'wrap' }}>
                   <div>
                     <h3 className="font-heading text-lg" style={{ color: '#C9A977' }}>Strategic Intelligence</h3>
                     <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.5)', marginTop: '4px' }}>
-                      AI-powered guidance that evolves with your essay
+                      Guidance that sharpens as your essay does.
                     </p>
                   </div>
                   <button
@@ -1052,13 +1130,19 @@ export default function CommonAppEssayPage() {
                   </button>
                 </div>
 
+                <FocusChips
+                  value={focusDirective}
+                  onChange={setFocusDirective}
+                  disabled={loadingThinkingPartner}
+                />
+
                 {/* Insight gate message */}
                 {insightGateMessage && (
                   <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(201,169,119,0.08)', borderRadius: '4px', borderLeft: '3px solid rgba(201,169,119,0.5)' }}>
                     <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', lineHeight: '1.7' }}>
                       {insightGateMessage}
                     </p>
-                    <a href="/discovery" style={{ display: 'inline-block', marginTop: '16px', background: 'transparent', color: '#C9A977', padding: '8px 16px', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, border: '1px solid #C9A977', borderRadius: '2px', textDecoration: 'none' }}>
+                    <a href="/story-builder" style={{ display: 'inline-block', marginTop: '16px', background: 'transparent', color: '#C9A977', padding: '8px 16px', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, border: '1px solid #C9A977', borderRadius: '2px', textDecoration: 'none' }}>
                       Complete Story Builder
                     </a>
                   </div>
@@ -1369,5 +1453,224 @@ export default function CommonAppEssayPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Preset lenses for Strategic Intelligence — mirror of the school
+// editor's FocusChips. Kept in this file rather than a shared component
+// so the two editors can diverge later without a refactor if they want.
+const FOCUS_PRESETS: { key: string; label: string; directive: string }[] = [
+  { key: 'opening', label: 'The opening', directive: 'Focus on the opening — is it earning the reader\'s attention, and is it doing the work of setting up the essay?' },
+  { key: 'ending', label: 'The ending', directive: 'Focus on the ending — does the last paragraph land, or is it drifting into wrap-up mode?' },
+  { key: 'cut', label: 'Where to cut', directive: 'Focus on what to cut — where is the essay padded, redundant, or slowing down?' },
+  { key: 'weakest', label: 'Weakest paragraph', directive: 'Focus on which paragraph is the weakest and why — quote from it and explain what\'s not landing.' },
+  { key: 'showing', label: 'Showing vs. telling', directive: 'Focus on show-don\'t-tell — where is the essay telling the reader something instead of putting them in the moment?' },
+];
+
+function FocusChips({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string | null;
+  onChange: (next: string | null) => void;
+  disabled?: boolean;
+}) {
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customText, setCustomText] = useState('');
+
+  const selectedPreset = FOCUS_PRESETS.find((p) => p.directive === value)?.key ?? null;
+  const usingCustom = value !== null && !selectedPreset;
+
+  return (
+    <div style={{ marginBottom: '16px', paddingTop: '14px', borderTop: '1px solid rgba(232,221,201,0.06)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+        <span
+          className="font-body"
+          style={{
+            fontSize: '10.5px',
+            textTransform: 'uppercase',
+            letterSpacing: '0.14em',
+            color: 'rgba(232,221,201,0.5)',
+            fontWeight: 600,
+          }}
+        >
+          Focus
+        </span>
+        {FOCUS_PRESETS.map((p) => {
+          const active = selectedPreset === p.key;
+          return (
+            <button
+              key={p.key}
+              type="button"
+              disabled={disabled}
+              onClick={() => {
+                onChange(active ? null : p.directive);
+                setCustomOpen(false);
+              }}
+              className="font-body"
+              style={{
+                fontSize: '12px',
+                padding: '6px 12px',
+                borderRadius: '999px',
+                border: `1px solid ${active ? '#C9A977' : 'rgba(232,221,201,0.18)'}`,
+                background: active ? 'rgba(201,169,119,0.14)' : 'transparent',
+                color: active ? '#C9A977' : 'rgba(232,221,201,0.75)',
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                opacity: disabled ? 0.5 : 1,
+                transition: 'all 0.15s',
+              }}
+            >
+              {p.label}
+            </button>
+          );
+        })}
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => {
+            setCustomOpen((v) => !v);
+            if (customOpen && usingCustom) onChange(null);
+          }}
+          className="font-body"
+          style={{
+            fontSize: '12px',
+            padding: '6px 12px',
+            borderRadius: '999px',
+            border: `1px solid ${usingCustom || customOpen ? '#C9A977' : 'rgba(232,221,201,0.18)'}`,
+            background: usingCustom ? 'rgba(201,169,119,0.14)' : 'transparent',
+            color: usingCustom || customOpen ? '#C9A977' : 'rgba(232,221,201,0.75)',
+            cursor: disabled ? 'not-allowed' : 'pointer',
+            opacity: disabled ? 0.5 : 1,
+            transition: 'all 0.15s',
+          }}
+        >
+          {usingCustom ? 'Custom ✓' : 'Custom…'}
+        </button>
+        {value && (
+          <button
+            type="button"
+            onClick={() => { onChange(null); setCustomOpen(false); setCustomText(''); }}
+            className="font-body"
+            style={{
+              fontSize: '11px',
+              color: 'rgba(232,221,201,0.5)',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '4px 8px',
+            }}
+          >
+            Clear
+          </button>
+        )}
+      </div>
+      {customOpen && (
+        <div style={{ marginTop: '12px', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <input
+            type="text"
+            value={customText}
+            placeholder="What do you want the guidance to zero in on?"
+            onChange={(e) => setCustomText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && customText.trim()) {
+                onChange(customText.trim());
+              }
+            }}
+            style={{
+              flex: 1,
+              minWidth: '260px',
+              background: 'rgba(0,0,0,0.2)',
+              border: '1px solid rgba(201,169,119,0.2)',
+              color: '#E8DDC9',
+              padding: '8px 12px',
+              fontFamily: 'var(--font-body)',
+              fontSize: '13px',
+              outline: 'none',
+            }}
+          />
+          <button
+            type="button"
+            disabled={!customText.trim()}
+            onClick={() => onChange(customText.trim())}
+            className="font-body"
+            style={{
+              fontSize: '11px',
+              padding: '8px 14px',
+              borderRadius: '2px',
+              border: `1px solid ${customText.trim() ? '#C9A977' : 'rgba(232,221,201,0.18)'}`,
+              background: customText.trim() ? '#C9A977' : 'transparent',
+              color: customText.trim() ? '#0B1320' : 'rgba(232,221,201,0.5)',
+              cursor: customText.trim() ? 'pointer' : 'not-allowed',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+            }}
+          >
+            Set focus
+          </button>
+        </div>
+      )}
+      {value && (
+        <p
+          className="font-body"
+          style={{
+            marginTop: '10px',
+            fontSize: '11.5px',
+            fontStyle: 'italic',
+            color: 'rgba(232,221,201,0.55)',
+            lineHeight: 1.5,
+          }}
+        >
+          Guidance will zero in on: {selectedPreset ? FOCUS_PRESETS.find((p) => p.key === selectedPreset)?.label.toLowerCase() : `"${value}"`}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function AutosaveIndicator({
+  status,
+  lastSavedAt,
+  now,
+}: {
+  status: 'idle' | 'saving' | 'saved' | 'error';
+  lastSavedAt: number | null;
+  now: number;
+}) {
+  let label = '';
+  let color = 'rgba(232,221,201,0.5)';
+  if (status === 'saving') {
+    label = 'Saving…';
+    color = 'rgba(232,221,201,0.6)';
+  } else if (status === 'error') {
+    label = 'Couldn’t save — retry on next edit';
+    color = '#A35A6A';
+  } else if (status === 'saved' && lastSavedAt) {
+    const secs = Math.max(0, Math.round((now - lastSavedAt) / 1000));
+    if (secs < 5) {
+      label = 'Saved';
+      color = '#8FB89A';
+    } else if (secs < 60) {
+      label = `Saved ${secs}s ago`;
+    } else if (secs < 3600) {
+      label = `Saved ${Math.floor(secs / 60)}m ago`;
+    } else {
+      label = `Saved ${Math.floor(secs / 3600)}h ago`;
+    }
+  }
+  if (!label) return null;
+  return (
+    <span
+      className="font-body text-sm"
+      style={{
+        color,
+        fontSize: '12px',
+        fontStyle: status === 'error' ? 'normal' : 'italic',
+        transition: 'color 0.3s',
+      }}
+    >
+      {label}
+    </span>
   );
 }
