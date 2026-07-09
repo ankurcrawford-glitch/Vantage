@@ -16,6 +16,17 @@ import { C, display, body } from "@/lib/foundations-theme";
 const depthLabels = ["", "Tried it", "Committed", "Deep", "Leading", "Defining"];
 const EMPTY_FORM = { name: "", role: "", since: "", hours: "", depth: 1, thread: "", trajectory: "" };
 
+const COURSE_LEVELS = [
+  { value: "regular", label: "Regular" },
+  { value: "honors", label: "Honors" },
+  { value: "ap", label: "AP" },
+  { value: "ib", label: "IB" },
+  { value: "college", label: "College" },
+];
+const levelLabel = Object.fromEntries(COURSE_LEVELS.map((l) => [l.value, l.label]));
+const isRigor = (lv) => lv === "ap" || lv === "ib";
+const EMPTY_COURSE = { name: "", level: "regular", grade_year: "" };
+
 async function authHeaders() {
   const { data: { session } } = await supabase.auth.getSession();
   return {
@@ -31,13 +42,22 @@ export default function FoundationsActivities() {
   const [form, setForm] = useState(null); // null | {id?, ...fields}
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [courses, setCourses] = useState([]);
+  const [courseForm, setCourseForm] = useState(null); // null | {name, level, grade_year}
+  const [courseSaving, setCourseSaving] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/foundations/activities", { headers: await authHeaders() });
-        const data = await res.json();
+        const headers = await authHeaders();
+        const [actsRes, coursesRes] = await Promise.all([
+          fetch("/api/foundations/activities", { headers }),
+          fetch("/api/foundations/courses", { headers }),
+        ]);
+        const data = await actsRes.json();
         if (Array.isArray(data.activities)) setActivities(data.activities);
+        const courseData = await coursesRes.json();
+        if (Array.isArray(courseData.courses)) setCourses(courseData.courses);
       } catch {
         setError("Couldn't load your activities. Refresh to try again.");
       } finally {
@@ -45,6 +65,36 @@ export default function FoundationsActivities() {
       }
     })();
   }, []);
+
+  const saveCourse = async () => {
+    if (!courseForm?.name.trim() || courseSaving) return;
+    setCourseSaving(true);
+    try {
+      const res = await fetch("/api/foundations/courses", {
+        method: "POST",
+        headers: await authHeaders(),
+        body: JSON.stringify(courseForm),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setCourses((cs) => [...cs, data.course]);
+      setCourseForm(null);
+    } catch {
+      setError("Couldn't save that course. Please try again.");
+    } finally {
+      setCourseSaving(false);
+    }
+  };
+
+  const removeCourse = async (id) => {
+    setCourses((cs) => cs.filter((c) => c.id !== id));
+    try {
+      await fetch(`/api/foundations/courses?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        headers: await authHeaders(),
+      });
+    } catch { /* optimistic; reload will reconcile */ }
+  };
 
   const confirm = async (id) => {
     setActivities((as) => as.map((a) => (a.id === id ? { ...a, confirmed: true } : a)));
@@ -362,6 +412,161 @@ export default function FoundationsActivities() {
               a club, a project, a fundraiser, a small business. Start it here.
             </p>
           </button>
+        </div>
+
+        {/* ── Courses ── */}
+        <div style={{ marginTop: 64 }}>
+          <div className="mb-6 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+            <div>
+              <p style={{ color: C.gold, fontSize: 11, letterSpacing: 3 }} className="uppercase mb-2">
+                Courses
+              </p>
+              <h2 style={{ ...display, fontSize: 32, fontWeight: 500, lineHeight: 1.1 }}>
+                Your course load
+              </h2>
+              <p style={{ color: C.inkDim, fontSize: 13, marginTop: 6, maxWidth: 520, lineHeight: 1.7 }}>
+                Rigor is the first thing colleges read. Track what you&apos;re taking — or just
+                mention it in your Conversation and it lands here.
+              </p>
+            </div>
+            <button
+              onClick={() => setCourseForm({ ...EMPTY_COURSE })}
+              style={{ border: `1px solid ${C.gold}`, color: C.gold, fontSize: 12, letterSpacing: 1.5, borderRadius: 8 }}
+              className="uppercase px-6 py-3 hover:bg-white/5 transition-colors self-start"
+            >
+              + Add course
+            </button>
+          </div>
+
+          {/* Add-course form */}
+          {courseForm && (
+            <div style={{ background: C.navyCard, border: `1px solid ${C.gold}`, borderRadius: 12 }} className="p-6 mb-6">
+              <p style={{ fontSize: 11, letterSpacing: 2, color: C.gold }} className="uppercase mb-4">
+                New course
+              </p>
+              <div className="flex flex-wrap gap-3 mb-4">
+                <div style={{ flex: 2, minWidth: 180 }}>
+                  <p style={{ fontSize: 10, letterSpacing: 1.5, color: C.inkDim }} className="uppercase mb-1">Name</p>
+                  <input
+                    value={courseForm.name}
+                    onChange={(e) => setCourseForm((f) => ({ ...f, name: e.target.value }))}
+                    placeholder="e.g. AP Biology"
+                    style={{
+                      width: "100%", background: C.navyRaised, border: `1px solid ${C.line}`,
+                      borderRadius: 8, color: C.ink, fontSize: 13, padding: "10px 12px",
+                      outline: "none", boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+                <div style={{ flex: 1, minWidth: 130 }}>
+                  <p style={{ fontSize: 10, letterSpacing: 1.5, color: C.inkDim }} className="uppercase mb-1">Level</p>
+                  <select
+                    value={courseForm.level}
+                    onChange={(e) => setCourseForm((f) => ({ ...f, level: e.target.value }))}
+                    style={{
+                      width: "100%", background: C.navyRaised, border: `1px solid ${C.line}`,
+                      borderRadius: 8, color: C.ink, fontSize: 13, padding: "10px 12px",
+                      outline: "none", boxSizing: "border-box",
+                    }}
+                  >
+                    {COURSE_LEVELS.map((l) => (
+                      <option key={l.value} value={l.value}>{l.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ flex: 1, minWidth: 130 }}>
+                  <p style={{ fontSize: 10, letterSpacing: 1.5, color: C.inkDim }} className="uppercase mb-1">Grade year</p>
+                  <select
+                    value={courseForm.grade_year}
+                    onChange={(e) => setCourseForm((f) => ({ ...f, grade_year: e.target.value }))}
+                    style={{
+                      width: "100%", background: C.navyRaised, border: `1px solid ${C.line}`,
+                      borderRadius: 8, color: C.ink, fontSize: 13, padding: "10px 12px",
+                      outline: "none", boxSizing: "border-box",
+                    }}
+                  >
+                    <option value="">Not sure</option>
+                    {[9, 10, 11, 12].map((g) => (
+                      <option key={g} value={g}>Grade {g}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={saveCourse}
+                  disabled={!courseForm.name.trim() || courseSaving}
+                  style={{
+                    background: courseForm.name.trim() && !courseSaving ? C.gold : "transparent",
+                    color: courseForm.name.trim() && !courseSaving ? C.navy : C.inkDim,
+                    border: `1px solid ${courseForm.name.trim() && !courseSaving ? C.gold : C.line}`,
+                    fontSize: 12, letterSpacing: 1.5, borderRadius: 8,
+                  }}
+                  className="uppercase px-6 py-2.5"
+                >
+                  {courseSaving ? "Saving…" : "Save"}
+                </button>
+                <button
+                  onClick={() => setCourseForm(null)}
+                  style={{ background: "transparent", color: C.inkDim, border: `1px solid ${C.line}`, fontSize: 12, letterSpacing: 1.5, borderRadius: 8 }}
+                  className="uppercase px-6 py-2.5"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!loading && courses.length === 0 && !courseForm && (
+            <p style={{ color: C.inkDim, fontSize: 14, lineHeight: 1.7 }}>
+              No courses yet. Add one here — or tell your Conversation what you&apos;re taking.
+            </p>
+          )}
+
+          {/* Course rows, grouped by grade year */}
+          {[
+            ...[9, 10, 11, 12].map((g) => ({ label: `Grade ${g}`, list: courses.filter((c) => c.grade_year === g) })),
+            { label: "Other", list: courses.filter((c) => ![9, 10, 11, 12].includes(c.grade_year)) },
+          ]
+            .filter((grp) => grp.list.length > 0)
+            .map((grp) => (
+              <div key={grp.label} className="mb-5">
+                <p style={{ fontSize: 11, letterSpacing: 2, color: C.gold }} className="uppercase mb-2">
+                  {grp.label}
+                </p>
+                <div style={{ background: C.navyCard, border: `1px solid ${C.line}`, borderRadius: 12, overflow: "hidden" }}>
+                  {grp.list.map((c, i) => (
+                    <div
+                      key={c.id}
+                      style={{ borderTop: i === 0 ? "none" : `1px solid ${C.line}` }}
+                      className="px-5 py-3 flex items-center gap-3"
+                    >
+                      <span
+                        style={{
+                          fontSize: 10, letterSpacing: 1.5,
+                          color: isRigor(c.level) ? C.gold : C.inkDim,
+                          border: `1px solid ${isRigor(c.level) ? C.gold : C.line}`,
+                          borderRadius: 4, padding: "2px 8px", minWidth: 56, textAlign: "center",
+                          whiteSpace: "nowrap",
+                        }}
+                        className="uppercase"
+                      >
+                        {levelLabel[c.level] || c.level}
+                      </span>
+                      <span style={{ fontSize: 14 }}>{c.name}</span>
+                      <button
+                        onClick={() => removeCourse(c.id)}
+                        aria-label={`Remove ${c.name}`}
+                        style={{ marginLeft: "auto", color: C.inkDim, background: "transparent", border: "none", fontSize: 17, lineHeight: 1, cursor: "pointer" }}
+                        className="hover:opacity-70"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
         </div>
       </main>
     </div>

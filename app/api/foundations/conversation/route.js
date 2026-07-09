@@ -16,6 +16,7 @@
 // POST → { messages } → { reply, used, cap }
 
 import { getAuthedUser, getAdminClient } from "@/lib/auth";
+import { buildStudentContext } from "@/lib/foundations-context";
 
 const MODEL = "claude-haiku-4-5-20251001";
 const MAX_TOKENS = 250;
@@ -25,7 +26,7 @@ const NOTES_EVERY = 8; // refresh full notes/summary every N student messages
 const ACTIVITIES_EVERY = 2; // scan for new activities every N student messages
 
 // ─── System prompt ───────────────────────────────────────────────
-function systemPrompt(narrativeSummary, discoveryNotes, grade) {
+function systemPrompt(narrativeSummary, discoveryNotes, grade, studentContext) {
   return `You are the student's personal counselor inside Vantage Foundations, in an ongoing get-to-know-you conversation with a grade ${grade} student. Your job, across many sessions, is to draw out who this kid actually is — the real person behind the transcript. What you learn here shapes everything Vantage does for them.
 
 STUDENT PROFILE:
@@ -33,7 +34,10 @@ ${narrativeSummary}
 
 YOUR NOTES FROM THIS CONVERSATION SO FAR:
 ${discoveryNotes}
-
+${studentContext ? `
+WHAT YOU KNOW ABOUT THIS STUDENT'S CURRENT WORK:
+${studentContext}
+` : ""}
 HOW TO TALK:
 - ONE question at a time. 1-3 short sentences per message. React specifically to what they just said before asking the next thing.
 - Warm, real, curious — a counselor who genuinely wants to know them. Never a quiz, never a form.
@@ -133,6 +137,69 @@ ${transcript}` }],
     }));
 
   if (rows.length) await supabase.from("foundations_activities").insert(rows);
+}
+
+// ─── Course extraction (best-effort) ─────────────────────────────
+// Catches explicit course mentions ("I'm taking AP Bio") into
+// foundations_courses so rigor tracking builds itself as the kid talks.
+// Never invents; never duplicates existing rows (case-insensitive name).
+const COURSE_LEVELS = ["regular", "honors", "ap", "ib", "college"];
+
+async function extractCourses(supabase, userId, messages) {
+  const { data: existing } = await supabase
+    .from("foundations_courses")
+    .select("name")
+    .eq("user_id", userId);
+  const existingNames = (existing || []).map((c) => c.name.toLowerCase().trim());
+
+  const transcript = (Array.isArray(messages) ? messages : [])
+    .map((m) => (m.role === "user" ? "Student" : "Counselor") + ": " + m.content)
+    .join("\n");
+
+  const raw = await callHaiku(
+    "You extract structured data. Reply with ONLY a valid JSON array — no prose, no code fences.",
+    [{ role: "user", content:
+      `From the conversation below, list school courses the student EXPLICITLY says they are taking, have taken, or are signed up to take (e.g. "I'm taking AP Bio"). Already tracked (do NOT repeat): ${existingNames.join("; ") || "(none)"}.
+
+Reply with a JSON array (empty array if none). Each item:
+{"name": "course name, e.g. AP Biology", "level": "regular"|"honors"|"ap"|"ib"|"college", "grade_year": 9-12 if stated or clear from context, else null}
+
+Only include courses the student explicitly mentioned taking — never infer or invent.
+
+CONVERSATION:
+${transcript}` }],
+    400
+  );
+
+  let list;
+  try {
+    list = JSON.parse(raw.replace(/```json|```/gi, "").trim());
+  } catch {
+    return; // model didn't return clean JSON — skip silently
+  }
+  if (!Array.isArray(list)) return;
+
+  const seen = new Set(existingNames);
+  const rows = [];
+  for (const c of list) {
+    if (!c || !c.name) continue;
+    const name = String(c.name).slice(0, 80).trim();
+    const key = name.toLowerCase();
+    if (!name || seen.has(key)) continue;
+    seen.add(key);
+    const gy = parseInt(c.grade_year, 10);
+    rows.push({
+      user_id: userId,
+      name,
+      level: COURSE_LEVELS.includes(String(c.level || "").toLowerCase())
+        ? String(c.level).toLowerCase()
+        : "regular",
+      grade_year: gy >= 9 && gy <= 12 ? gy : null,
+    });
+    if (rows.length >= 8) break;
+  }
+
+  if (rows.length) await supabase.from("foundations_courses").insert(rows);
 }
 
 // ─── Notes refresh (best-effort) ─────────────────────────────────
@@ -251,12 +318,17 @@ export async function POST(req) {
       );
     }
 
-    // Profile + notes
-    const { data: profile } = await supabase
-      .from("user_stats")
-      .select("narrative_summary, discovery_notes, grade")
-      .eq("user_id", userId)
-      .maybeSingle();
+    // Profile + notes, plus the student-context block (activities, roadmap
+    // progress, latest Spark, courses) — the latter is best-effort ('' on
+    // any failure) so it can never block the reply.
+    const [{ data: profile }, studentContext] = await Promise.all([
+      supabase
+        .from("user_stats")
+        .select("narrative_summary, discovery_notes, grade")
+        .eq("user_id", userId)
+        .maybeSingle(),
+      buildStudentContext(supabase, userId),
+    ]);
 
     const narrative =
       profile?.narrative_summary ||
@@ -269,7 +341,7 @@ export async function POST(req) {
     }));
 
     const reply = await callHaiku(
-      systemPrompt(narrative, notes, profile?.grade ?? "9-11"),
+      systemPrompt(narrative, notes, profile?.grade ?? "9-11", studentContext),
       history,
       MAX_TOKENS
     );
@@ -290,6 +362,13 @@ export async function POST(req) {
         await extractActivities(supabase, userId, profile?.discovery_notes || "", recent);
       } catch (e) {
         console.error("activity extraction failed:", e);
+      }
+      // Parallel lightweight pass for course mentions ("I'm taking AP Bio") —
+      // same cadence, same fire-and-forget contract as activities.
+      try {
+        await extractCourses(supabase, userId, recent);
+      } catch (e) {
+        console.error("course extraction failed:", e);
       }
     }
 

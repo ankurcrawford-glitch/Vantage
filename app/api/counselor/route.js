@@ -11,6 +11,7 @@
 // follows the same secure pattern as the rest of the API (never trust a
 // body-supplied userId — see lib/auth.ts).
 import { getAuthedUser, getAdminClient } from "@/lib/auth";
+import { buildStudentContext } from "@/lib/foundations-context";
 
 const MONTHLY_CAP = 40;
 const MODEL = "claude-haiku-4-5-20251001"; // chat tier; exact string (alias can 404)
@@ -51,12 +52,15 @@ function faqMatch(text) {
 }
 
 // ─── System prompt ───────────────────────────────────────────────
-function systemPrompt(narrativeSummary, grade) {
+function systemPrompt(narrativeSummary, grade, studentContext) {
   return `You are the student's private college counselor inside Vantage Foundations — a premium college planning platform. You are warm, direct, and strategic. You have worked with this student for years and know their story.
 
 STUDENT PROFILE (grade ${grade}):
 ${narrativeSummary}
-
+${studentContext ? `
+WHAT YOU KNOW ABOUT THIS STUDENT'S CURRENT WORK:
+${studentContext}
+` : ""}
 RULES:
 - Answer like a seasoned counselor: specific, honest, tight. 2-4 short paragraphs maximum. No bullet lists unless truly necessary.
 - Ground every answer in THIS student's profile, threads, and grade. Generic advice is a failure.
@@ -155,11 +159,16 @@ export async function POST(req) {
 
     // 3) Load the narrative summary (token-saving asset). maybeSingle() so a
     // student with no user_stats row yet doesn't crash the request.
-    const { data: profile, error: profErr } = await supabase
-      .from("user_stats")
-      .select("narrative_summary, grade")
-      .eq("user_id", userId)
-      .maybeSingle();
+    // The student-context block (activities, roadmap progress, latest Spark,
+    // courses) loads in parallel — best-effort, '' on any failure.
+    const [{ data: profile, error: profErr }, studentContext] = await Promise.all([
+      supabase
+        .from("user_stats")
+        .select("narrative_summary, grade")
+        .eq("user_id", userId)
+        .maybeSingle(),
+      buildStudentContext(supabase, userId),
+    ]);
 
     if (profErr) throw profErr;
 
@@ -184,7 +193,7 @@ export async function POST(req) {
       body: JSON.stringify({
         model: MODEL,
         max_tokens: MAX_TOKENS,
-        system: systemPrompt(narrative, profile?.grade ?? "unknown"),
+        system: systemPrompt(narrative, profile?.grade ?? "unknown", studentContext),
         messages: history,
       }),
     });

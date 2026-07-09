@@ -106,6 +106,22 @@ export default function FoundationsRoadmap() {
   const [grade, setGrade] = useState(null);
   const [doneKeys, setDoneKeys] = useState(new Set());
   const [openGrade, setOpenGrade] = useState(null);
+  const [moves, setMoves] = useState([]);
+  const [movesLoading, setMovesLoading] = useState(true);
+
+  // Personalized "next three moves" — generated monthly by the API.
+  // Any failure just hides the block; the static roadmap still works.
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/foundations/roadmap-moves", { headers: await authHeaders() });
+        const data = await res.json();
+        if (Array.isArray(data.moves)) setMoves(data.moves);
+      } catch { /* hide block */ } finally {
+        setMovesLoading(false);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -166,6 +182,47 @@ export default function FoundationsRoadmap() {
             deadlines with official sources.
           </p>
         </div>
+
+        {/* ── Your next three moves (personalized layer) ── */}
+        {(movesLoading || moves.length > 0) && (
+          <div className="mb-12">
+            <p style={{ color: C.gold, fontSize: 11, letterSpacing: 3 }} className="uppercase mb-2">
+              From your counselor
+            </p>
+            <h2 style={{ ...display, fontSize: 28, fontWeight: 500, marginBottom: 12 }}>
+              Your next three moves
+            </h2>
+            {movesLoading ? (
+              <p style={{ color: C.inkDim, fontSize: 13 }}>Thinking about what&apos;s next for you…</p>
+            ) : (
+              <>
+                <div className="grid md:grid-cols-3 gap-4">
+                  {moves.map((m, i) => (
+                    <div
+                      key={i}
+                      style={{ background: C.navyCard, border: `1px solid ${C.gold}`, borderRadius: 12 }}
+                      className="p-5"
+                    >
+                      <span
+                        style={{ fontSize: 9.5, letterSpacing: 1.5, color: C.navy, background: C.gold, borderRadius: 4, padding: "3px 8px", display: "inline-block", marginBottom: 12 }}
+                        className="uppercase"
+                      >
+                        {m.season}
+                      </span>
+                      <p style={{ ...display, fontSize: 21, fontWeight: 600, lineHeight: 1.25, marginBottom: 8 }}>
+                        {m.title}
+                      </p>
+                      <p style={{ fontSize: 12.5, color: C.inkDim, lineHeight: 1.65 }}>{m.why}</p>
+                    </div>
+                  ))}
+                </div>
+                <p style={{ fontSize: 11, color: C.inkDim, marginTop: 10 }}>
+                  Refreshes monthly as your counselor learns more.
+                </p>
+              </>
+            )}
+          </div>
+        )}
 
         {/* ── Timeline ── */}
         <div className="relative">
