@@ -66,3 +66,10 @@ Authed click-throughs: chat quality/latency, activities autosave, roadmap intera
 
 ## E. Carried over from compliance review (you said later — listed so they're not lost)
 AI disclosure in chat UIs, crisis resources (988), parent checkbox at checkout, DPAs, birth-date age gate. See `SECURITY-COMPLIANCE-REVIEW.md`.
+
+## F. Next session queue (July 9 close-out)
+1. **In-app Contact form** (replace footer mailto): small form → API route → Resend to support@my-vantage.app. Students on Chromebooks have no mail app; typing in-browser is the fix. (~1 hr)
+2. **Deadline display**: ED/EA/RD dates are seeded in the colleges table for 39 schools but not shown anywhere — add to SchoolCard/SchoolDetailModal + a "deadlines approaching" section in the Friday brief.
+3. **Safety P0s** from SECURITY-COMPLIANCE-REVIEW.md: AI disclosure in chats, 988 crisis resources, parent checkbox at checkout.
+4. **Foundations persona live test** — needs a grade-9/10 test account logged into my Chrome tab.
+5. College Scorecard sync (net price, earnings, grad rates) per COLLEGE-DECISION-DATA-PLAN.md.
