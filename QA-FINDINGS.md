@@ -73,3 +73,4 @@ AI disclosure in chat UIs, crisis resources (988), parent checkbox at checkout, 
 3. **Safety P0s** from SECURITY-COMPLIANCE-REVIEW.md: AI disclosure in chats, 988 crisis resources, parent checkbox at checkout.
 4. **Foundations persona live test** — needs a grade-9/10 test account logged into my Chrome tab.
 5. College Scorecard sync (net price, earnings, grad rates) per COLLEGE-DECISION-DATA-PLAN.md.
+6. **SAT/ACT test dates in Foundations**: add official 2026-27 sitting dates (+ registration deadlines) to the Roadmap page. Verify dates from collegeboard.org / act.org first — do not seed from memory.
