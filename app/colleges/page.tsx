@@ -185,7 +185,6 @@ export default function CollegesPage() {
   }
 
   const availableColleges = colleges
-    .filter((c) => !userColleges.includes(c.id))
     .filter((c) => {
       if (!searchTerm) return true;
       const q = searchTerm.toLowerCase();
@@ -407,9 +406,34 @@ export default function CollegesPage() {
                         </span>
                       )}
                     </div>
-                    <Button variant="secondary" onClick={() => handleAddCollege(college.id)} style={{ width: '100%' }}>
-                      Add to My Schools
-                    </Button>
+                    {userColleges.includes(college.id) ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span className="font-body" style={{ color: '#C9A977', fontSize: '13px', letterSpacing: '1px', flex: 1 }}>
+                          ✓ In your list
+                        </span>
+                        <button
+                          onClick={() => handleRemoveCollege(college.id)}
+                          className="font-body"
+                          style={{
+                            background: 'transparent',
+                            border: '1px solid rgba(232,221,201,0.3)',
+                            color: 'rgba(232,221,201,0.75)',
+                            fontSize: '13px',
+                            padding: '8px 16px',
+                            borderRadius: '2px',
+                            cursor: 'pointer',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#A35A6A'; e.currentTarget.style.color = '#E8DDC9'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(232,221,201,0.3)'; e.currentTarget.style.color = 'rgba(232,221,201,0.75)'; }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <Button variant="secondary" onClick={() => handleAddCollege(college.id)} style={{ width: '100%' }}>
+                        Add to My Schools
+                      </Button>
+                    )}
                   </Card>
                 ))}
               </div>
