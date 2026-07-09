@@ -67,6 +67,11 @@ interface Prompt {
   sort_order: number;
 }
 
+function fmtDeadline(d: string): string {
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 export default function CollegeDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -382,6 +387,16 @@ export default function CollegeDetailPage() {
             {college.sat_range_low != null && college.sat_range_high != null && (
               <p className="font-body text-base" style={{ color: 'rgba(232,221,201,0.8)' }}>
                 SAT Range: {college.sat_range_low} – {college.sat_range_high}
+              </p>
+            )}
+            {((college as any).deadline_ed || (college as any).deadline_ea || (college as any).deadline_rd) && (
+              <p className="font-body text-base" style={{ color: 'rgba(232,221,201,0.8)' }}>
+                Deadlines:{' '}
+                {[
+                  (college as any).deadline_ed && `ED ${fmtDeadline((college as any).deadline_ed)}`,
+                  (college as any).deadline_ea && `EA ${fmtDeadline((college as any).deadline_ea)}`,
+                  (college as any).deadline_rd && `RD ${fmtDeadline((college as any).deadline_rd)}`,
+                ].filter(Boolean).join(' · ')}
               </p>
             )}
           </div>
