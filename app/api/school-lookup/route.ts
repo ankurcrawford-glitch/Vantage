@@ -28,7 +28,15 @@ export const maxDuration = 30;
 // and the whole task is world-knowledge recall + calibration (is this school
 // actually nationally known?). A wrong tier here directly skews the
 // student's Safety/Target/Reach guidance — worth the bigger model.
-const MODEL = 'claude-sonnet-5'; // verify against your account's available models before deploy
+//
+// Fallback chain: model aliases can 404 depending on the account, so we try
+// Sonnet strings first and fall back to the exact Haiku string the counselor
+// route already uses successfully in production.
+const MODELS = [
+  'claude-sonnet-5',
+  'claude-sonnet-4-5-20250929',
+  'claude-haiku-4-5-20251001',
+];
 
 const VALID_TYPES = ['public', 'private', 'charter', 'magnet', 'parochial', 'homeschool', 'other'] as const;
 const VALID_TIERS = ['top_feeder', 'strong', 'standard'] as const;
@@ -90,26 +98,37 @@ export async function POST(request: NextRequest) {
 
   let parsed: Record<string, unknown> = {};
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 500,
-        temperature: 0,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: userMsg }],
-      }),
-    });
-    if (!res.ok) {
-      console.error('school-lookup: Anthropic error', await res.text());
+    let data: { content?: { type: string; text: string }[] } | null = null;
+    for (const model of MODELS) {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+        },
+        // No temperature param: deprecated on claude-sonnet-5 (400s the
+        // request). Default sampling + strict JSON prompt is fine here.
+        body: JSON.stringify({
+          model,
+          max_tokens: 500,
+          system: SYSTEM_PROMPT,
+          messages: [{ role: 'user', content: userMsg }],
+        }),
+      });
+      if (res.ok) {
+        data = await res.json();
+        break;
+      }
+      const errBody = await res.text();
+      console.error(`school-lookup: Anthropic error (model ${model}, status ${res.status})`, errBody);
+      // Only fall through to the next model on model-availability errors;
+      // anything else (bad key, overloaded) won't be fixed by a model swap.
+      if (res.status !== 404 && !errBody.includes('not_found')) break;
+    }
+    if (!data) {
       return NextResponse.json({ error: 'Lookup failed, try again' }, { status: 502 });
     }
-    const data = await res.json();
     const text = (data.content || [])
       .filter((b: { type: string }) => b.type === 'text')
       .map((b: { text: string }) => b.text)
