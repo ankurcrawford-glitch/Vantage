@@ -172,7 +172,10 @@ function rigorPoints(apCount: number, expected: number): number {
 
 function bumpUp(t: Tier, levels = 1, cap?: Tier): Tier {
   let idx = Math.max(0, TIER_INDEX[t] - levels);
-  if (cap) idx = Math.max(idx, TIER_INDEX[cap]);
+  // The cap limits how HIGH a bump can lift a school — it must never demote
+  // one that's already above the cap (e.g. a Safety "bumped, capped at
+  // Likely" stays a Safety; it doesn't get dragged down to Likely).
+  if (cap) idx = Math.max(idx, Math.min(TIER_INDEX[cap], TIER_INDEX[t]));
   return TIERS[idx];
 }
 function bumpDown(t: Tier, levels = 1): Tier {

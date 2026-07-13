@@ -24,7 +24,11 @@ import { checkRateLimit } from '@/lib/rate-limit';
 
 export const maxDuration = 30;
 
-const MODEL = 'claude-haiku-4-5-20251001'; // same chat tier as counselor route
+// Sonnet, not Haiku: this runs ~once per student, costs fractions of a cent,
+// and the whole task is world-knowledge recall + calibration (is this school
+// actually nationally known?). A wrong tier here directly skews the
+// student's Safety/Target/Reach guidance — worth the bigger model.
+const MODEL = 'claude-sonnet-5'; // verify against your account's available models before deploy
 
 const VALID_TYPES = ['public', 'private', 'charter', 'magnet', 'parochial', 'homeschool', 'other'] as const;
 const VALID_TIERS = ['top_feeder', 'strong', 'standard'] as const;
@@ -123,10 +127,15 @@ export async function POST(request: NextRequest) {
   const recognized = parsed.recognized === true;
   const type = recognized ? pick(VALID_TYPES, parsed.type) : null;
   // Tier only makes sense for private-side schools.
-  const tier =
+  let tier =
     recognized && (type === 'private' || type === 'parochial')
       ? pick(VALID_TIERS, parsed.tier)
       : null;
+  // top_feeder moves classifier tiers, so it needs the highest bar: the
+  // model must be confident it knows THIS school. Anything less → strong.
+  if (tier === 'top_feeder' && parsed.confidence !== 'high') {
+    tier = 'strong';
+  }
   const opportunity = recognized ? pick(VALID_OPPORTUNITY, parsed.opportunity) : null;
   const summary =
     recognized && typeof parsed.summary === 'string' ? parsed.summary.slice(0, 1000) : null;
