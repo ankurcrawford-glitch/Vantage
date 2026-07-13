@@ -66,6 +66,17 @@ export interface College {
  */
 export type GeoPreference = 'in-state' | 'regional' | 'no-preference' | 'out-of-state';
 
+export type SchoolType = 'public' | 'private' | 'charter' | 'magnet' | 'parochial' | 'homeschool' | 'other';
+export type SchoolTier = 'top_feeder' | 'strong' | 'standard';
+export type SchoolOpportunity = 'under_resourced' | 'standard' | 'well_resourced';
+
+/** High-school context — admissions reads applicants against their school's profile. */
+export interface SchoolContext {
+  type: SchoolType | null;
+  tier: SchoolTier | null; // private/parochial only
+  opportunity: SchoolOpportunity | null;
+}
+
 export interface StudentProfile {
   unweightedGpa: number;
   weightedGpa?: number;
@@ -76,6 +87,7 @@ export interface StudentProfile {
   state: string;
   major: Major;
   geoPreference?: GeoPreference;
+  school?: SchoolContext;
   hooks: {
     legacy: { active: boolean; collegeIds: string[] };
     recruitedAthlete: boolean;
@@ -374,6 +386,20 @@ export function classify(
     adjustments.push(`+5 holistic score (${tag} at selective school)`);
   }
 
+  // School opportunity context. Admissions reads achievement relative to
+  // opportunity: a strong record from an under-resourced school reads as
+  // MORE impressive at selective schools. Same magnitude as the other
+  // holistic bumps — context, not a hook.
+  if (profile.school?.opportunity === 'under_resourced' && effectiveAdmit < 0.4) {
+    score += 5;
+    adjustments.push('+5 holistic score (strong record from an under-resourced school)');
+  }
+  // Strong (but not top-feeder) private: rigor/context credit, no tier move.
+  if (profile.school?.tier === 'strong' && effectiveAdmit < 0.4) {
+    score += 3;
+    adjustments.push('+3 holistic score (respected private school context)');
+  }
+
   score = clamp(score, 0, 100);
 
   // 2. Map score → bucket; apply ceiling
@@ -395,6 +421,14 @@ export function classify(
   if (legacyAppliesHere) {
     bucket = bumpUp(bucket, 1);
     adjustments.push('Legacy: +1 tier');
+  }
+  // Top-tier private feeder: these schools' counselors have placement
+  // relationships and actively advocate for their students. Real, but not
+  // magic — capped at Likely, and no bump at sub-5% lotteries where nothing
+  // moves the needle.
+  if (profile.school?.tier === 'top_feeder' && (college.acceptance_rate ?? 0) > 0.05) {
+    bucket = bumpUp(bucket, 1, 'Likely');
+    adjustments.push('Top-tier private feeder: +1 tier (counselor advocacy, capped at Likely)');
   }
   if (
     applicationRound === 'ED' &&
@@ -562,7 +596,12 @@ export function profileFromUserStats(stats: {
   hook_legacy_active: boolean | null;
   hook_legacy_college_ids: string[] | null;
   geo_preference?: string | null;
+  school_type?: string | null;
+  school_tier?: string | null;
+  school_opportunity?: string | null;
 }): StudentProfile {
+  const normalizeEnum = <T extends string>(valid: readonly T[], v?: string | null): T | null =>
+    v && (valid as readonly string[]).includes(v) ? (v as T) : null;
   return {
     unweightedGpa: stats.gpa_unweighted ?? 3.5,
     weightedGpa: stats.gpa_weighted ?? undefined,
@@ -573,6 +612,17 @@ export function profileFromUserStats(stats: {
     state: (stats.state ?? '').toUpperCase(),
     major: normalizeMajor(stats.intended_major),
     geoPreference: normalizeGeoPreference(stats.geo_preference),
+    school: {
+      type: normalizeEnum(
+        ['public', 'private', 'charter', 'magnet', 'parochial', 'homeschool', 'other'] as const,
+        stats.school_type
+      ),
+      tier: normalizeEnum(['top_feeder', 'strong', 'standard'] as const, stats.school_tier),
+      opportunity: normalizeEnum(
+        ['under_resourced', 'standard', 'well_resourced'] as const,
+        stats.school_opportunity
+      ),
+    },
     hooks: {
       legacy: {
         active: !!stats.hook_legacy_active,

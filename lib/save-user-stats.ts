@@ -20,6 +20,8 @@ export type UserStatsStrategyRow = {
   hook_legacy_active: boolean;
   hook_legacy_college_ids: string[];
   geo_preference: string | null;
+  school_name?: string | null;
+  school_city?: string | null;
 };
 
 async function persistUserStatsFields(

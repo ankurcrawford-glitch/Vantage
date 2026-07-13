@@ -8,6 +8,25 @@ import Navigation from '@/components/Navigation';
 import { saveUserStats, saveUserStatsStrategy } from '@/lib/save-user-stats';
 import Card from '@/components/Card';
 
+// Format a date column (stored as YYYY-MM-01) as "Sep 2024". Handles
+// null / undefined / malformed. Returns "" if it can't parse.
+function formatMonthYear(s?: string | null): string {
+  if (!s) return '';
+  const [y, m] = String(s).split('-');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const idx = parseInt(m, 10) - 1;
+  if (!y || Number.isNaN(idx) || idx < 0 || idx > 11) return '';
+  return `${months[idx]} ${y}`;
+}
+
+// Render a "Sep 2024 – present" or "Sep 2024 – May 2025" range. Returns
+// "" when there's nothing to show, so the calling site can omit rendering.
+function formatDateRange(start?: string | null, end?: string | null): string {
+  const s = formatMonthYear(start);
+  if (!s) return '';
+  return `${s} – ${end ? formatMonthYear(end) : 'present'}`;
+}
+
 interface UserStats {
   gpa_weighted: number | null;
   gpa_unweighted: number | null;
@@ -28,6 +47,17 @@ interface StrategyProfile {
   hook_legacy_active: boolean;
   hook_legacy_college_ids: string[];
   geo_preference: '' | 'in-state' | 'regional' | 'no-preference' | 'out-of-state';
+  school_name: string;
+  school_city: string;
+}
+
+// Result of the /api/school-lookup classification (stored on user_stats).
+interface SchoolLookupResult {
+  recognized: boolean;
+  type: string | null;
+  tier: string | null;
+  opportunity: string | null;
+  summary: string | null;
 }
 
 interface APClass {
@@ -43,6 +73,8 @@ interface Extracurricular {
   description: string | null;
   status?: 'accepted' | 'suggested' | 'rejected';
   source_question_id?: string | null;
+  start_date?: string | null; // YYYY-MM-DD (day always 01)
+  end_date?: string | null;   // null = ongoing
 }
 
 interface Award {
@@ -71,11 +103,11 @@ export default function ProfilePage() {
   const [addingExtracurricular, setAddingExtracurricular] = useState(false);
   const [addingAward, setAddingAward] = useState(false);
   const [editingExtracurricular, setEditingExtracurricular] = useState<string | null>(null);
-  const [editExtracurricular, setEditExtracurricular] = useState({ activity_name: '', role: '', description: '' });
+  const [editExtracurricular, setEditExtracurricular] = useState({ activity_name: '', role: '', description: '', start_date: '', end_date: '' });
 
   // Form states
   const [newApClass, setNewApClass] = useState({ class_name: '', score: '' });
-  const [newExtracurricular, setNewExtracurricular] = useState({ activity_name: '', role: '', description: '' });
+  const [newExtracurricular, setNewExtracurricular] = useState({ activity_name: '', role: '', description: '', start_date: '', end_date: '' });
   const [newAward, setNewAward] = useState({ award_name: '', organization: '', year: '' });
 
   // Classifier-specific profile state (separate save button so existing UX is untouched).
@@ -91,8 +123,13 @@ export default function ProfilePage() {
     hook_legacy_active: false,
     hook_legacy_college_ids: [],
     geo_preference: '',
+    school_name: '',
+    school_city: '',
   });
   const [savingStrategy, setSavingStrategy] = useState(false);
+  const [schoolLookup, setSchoolLookup] = useState<SchoolLookupResult | null>(null);
+  const [lookingUpSchool, setLookingUpSchool] = useState(false);
+  const [schoolLookupError, setSchoolLookupError] = useState<string | null>(null);
   const [legacyColleges, setLegacyColleges] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
@@ -142,7 +179,18 @@ export default function ProfilePage() {
           hook_legacy_active: !!statsData.hook_legacy_active,
           hook_legacy_college_ids: statsData.hook_legacy_college_ids ?? [],
           geo_preference: (statsData.geo_preference as StrategyProfile['geo_preference']) ?? '',
+          school_name: statsData.school_name ?? '',
+          school_city: statsData.school_city ?? '',
         });
+        if (statsData.school_looked_up_at) {
+          setSchoolLookup({
+            recognized: !!statsData.school_type,
+            type: statsData.school_type ?? null,
+            tier: statsData.school_tier ?? null,
+            opportunity: statsData.school_opportunity ?? null,
+            summary: statsData.school_context ?? null,
+          });
+        }
       }
 
       // Load colleges the user has marked as legacy candidates from (their portfolio).
@@ -231,6 +279,8 @@ export default function ProfilePage() {
         hook_legacy_active: strategy.hook_legacy_active,
         hook_legacy_college_ids: strategy.hook_legacy_college_ids,
         geo_preference: strategy.geo_preference || null,
+        school_name: strategy.school_name.trim() || null,
+        school_city: strategy.school_city.trim() || null,
       });
       if (error) {
         console.error('Error saving strategy profile:', error);
@@ -243,6 +293,42 @@ export default function ProfilePage() {
       alert('Error saving: ' + (e?.message ?? 'Unknown error'));
     } finally {
       setSavingStrategy(false);
+    }
+  };
+
+  const handleSchoolLookup = async () => {
+    const name = strategy.school_name.trim();
+    if (name.length < 2) {
+      setSchoolLookupError('Enter your school name first.');
+      return;
+    }
+    setLookingUpSchool(true);
+    setSchoolLookupError(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch('/api/school-lookup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({
+          schoolName: name,
+          city: strategy.school_city.trim(),
+          state: strategy.state,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSchoolLookupError(data?.error ?? 'Lookup failed — try again.');
+        return;
+      }
+      setSchoolLookup(data);
+    } catch (e) {
+      console.error(e);
+      setSchoolLookupError('Lookup failed — try again.');
+    } finally {
+      setLookingUpSchool(false);
     }
   };
 
@@ -363,6 +449,8 @@ export default function ProfilePage() {
         activity_name: newExtracurricular.activity_name.trim(),
         role: newExtracurricular.role?.trim() || null,
         description: newExtracurricular.description?.trim() || null,
+        start_date: newExtracurricular.start_date || null,
+        end_date: newExtracurricular.end_date || null,
       }).select();
 
       if (error) {
@@ -372,7 +460,7 @@ export default function ProfilePage() {
       }
 
       await loadProfile();
-      setNewExtracurricular({ activity_name: '', role: '', description: '' });
+      setNewExtracurricular({ activity_name: '', role: '', description: '', start_date: '', end_date: '' });
       alert('Extracurricular added successfully!');
     } catch (error: any) {
       console.error('Error adding extracurricular:', error);
@@ -445,12 +533,14 @@ export default function ProfilePage() {
       activity_name: ec.activity_name,
       role: ec.role || '',
       description: ec.description || '',
+      start_date: ec.start_date || '',
+      end_date: ec.end_date || '',
     });
   };
 
   const handleCancelEditExtracurricular = () => {
     setEditingExtracurricular(null);
-    setEditExtracurricular({ activity_name: '', role: '', description: '' });
+    setEditExtracurricular({ activity_name: '', role: '', description: '', start_date: '', end_date: '' });
   };
 
   const handleSaveExtracurricular = async (id: string) => {
@@ -466,6 +556,8 @@ export default function ProfilePage() {
           activity_name: editExtracurricular.activity_name.trim(),
           role: editExtracurricular.role?.trim() || null,
           description: editExtracurricular.description?.trim() || null,
+          start_date: editExtracurricular.start_date || null,
+          end_date: editExtracurricular.end_date || null,
         })
         .eq('id', id);
 
@@ -477,7 +569,7 @@ export default function ProfilePage() {
 
       await loadProfile();
       setEditingExtracurricular(null);
-      setEditExtracurricular({ activity_name: '', role: '', description: '' });
+      setEditExtracurricular({ activity_name: '', role: '', description: '', start_date: '', end_date: '' });
       alert('Extracurricular updated successfully!');
     } catch (error: any) {
       console.error('Error updating extracurricular:', error);
@@ -792,6 +884,93 @@ export default function ProfilePage() {
                   Used when we suggest schools to balance your list.
                 </p>
               </div>
+            </div>
+
+            {/* High school context — name + city, classified via lookup */}
+            <div style={{ marginBottom: '20px' }}>
+              <div className="font-body" style={{ color: 'rgba(232,221,201,0.85)', fontSize: '13px', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Your High School</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '12px' }}>
+                <div>
+                  <label className="font-body" style={{ display: 'block', color: 'rgba(232,221,201,0.85)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>School Name</label>
+                  <input
+                    type="text"
+                    value={strategy.school_name}
+                    onChange={(e) => setStrategy({ ...strategy, school_name: e.target.value })}
+                    placeholder="e.g. Lincoln High School"
+                    maxLength={120}
+                    style={{ width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(201,169,119,0.2)', color: '#E8DDC9', padding: '12px 14px', fontFamily: 'var(--font-body)', fontSize: '15px', outline: 'none' }}
+                  />
+                </div>
+                <div>
+                  <label className="font-body" style={{ display: 'block', color: 'rgba(232,221,201,0.85)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>City</label>
+                  <input
+                    type="text"
+                    value={strategy.school_city}
+                    onChange={(e) => setStrategy({ ...strategy, school_city: e.target.value })}
+                    placeholder="e.g. San Jose"
+                    maxLength={80}
+                    style={{ width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(201,169,119,0.2)', color: '#E8DDC9', padding: '12px 14px', fontFamily: 'var(--font-body)', fontSize: '15px', outline: 'none' }}
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleSchoolLookup}
+                disabled={lookingUpSchool}
+                className="font-body"
+                style={{
+                  background: 'transparent',
+                  border: '1px solid #C9A977',
+                  color: '#C9A977',
+                  padding: '10px 20px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  cursor: lookingUpSchool ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {lookingUpSchool ? 'Looking up…' : 'Look Up My School'}
+              </button>
+              {schoolLookupError && (
+                <p className="font-body" style={{ color: '#D98880', fontSize: '12.5px', marginTop: '10px' }}>{schoolLookupError}</p>
+              )}
+              {schoolLookup && (
+                <div style={{ marginTop: '14px', padding: '14px', background: 'rgba(11,19,32,0.4)', border: '1px solid rgba(201,169,119,0.18)' }}>
+                  {schoolLookup.recognized && schoolLookup.type ? (
+                    <>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: schoolLookup.summary ? '10px' : 0 }}>
+                        <span className="font-body" style={{ border: '1px solid rgba(201,169,119,0.4)', color: '#C9A977', padding: '4px 12px', fontSize: '11.5px', borderRadius: '999px', textTransform: 'capitalize' }}>
+                          {schoolLookup.type}
+                        </span>
+                        {schoolLookup.tier && (
+                          <span className="font-body" style={{ border: '1px solid rgba(201,169,119,0.4)', color: '#C9A977', padding: '4px 12px', fontSize: '11.5px', borderRadius: '999px' }}>
+                            {schoolLookup.tier === 'top_feeder' ? 'Top-tier feeder' : schoolLookup.tier === 'strong' ? 'Respected private' : 'Standard'}
+                          </span>
+                        )}
+                        {schoolLookup.opportunity && schoolLookup.opportunity !== 'standard' && (
+                          <span className="font-body" style={{ border: '1px solid rgba(201,169,119,0.4)', color: '#C9A977', padding: '4px 12px', fontSize: '11.5px', borderRadius: '999px' }}>
+                            {schoolLookup.opportunity === 'under_resourced' ? 'Under-resourced — excellence here stands out' : 'Well-resourced'}
+                          </span>
+                        )}
+                      </div>
+                      {schoolLookup.summary && (
+                        <p className="font-body" style={{ color: 'rgba(232,221,201,0.75)', fontSize: '12.5px', lineHeight: 1.6, margin: 0 }}>
+                          <span style={{ color: 'rgba(232,221,201,0.5)' }}>How colleges will read your school: </span>
+                          {schoolLookup.summary}
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="font-body" style={{ color: 'rgba(232,221,201,0.6)', fontSize: '12.5px', lineHeight: 1.6, margin: 0 }}>
+                      We couldn&apos;t find enough public information about this school — that&apos;s completely fine and common. Your grades, rigor, and activities stand on their own.
+                    </p>
+                  )}
+                </div>
+              )}
+              <p className="font-body" style={{ color: 'rgba(232,221,201,0.5)', fontSize: '11.5px', marginTop: '10px', lineHeight: 1.4 }}>
+                Colleges evaluate you in the context of your school. A top private feeder&apos;s counselor advocacy, or standout achievement at an under-resourced public school, both change how your application reads — we factor that into your Safety/Target/Reach classifications.
+              </p>
             </div>
 
             <div style={{ marginBottom: '20px' }}>
@@ -1172,6 +1351,58 @@ export default function ProfilePage() {
                   resize: 'vertical',
                 }}
               />
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: '180px' }}>
+                  <label className="font-body" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.14em', color: 'rgba(232,221,201,0.5)', display: 'block', marginBottom: '6px' }}>
+                    Start (month/year)
+                  </label>
+                  <input
+                    type="month"
+                    value={newExtracurricular.start_date ? newExtracurricular.start_date.slice(0, 7) : ''}
+                    onChange={(e) => setNewExtracurricular({
+                      ...newExtracurricular,
+                      start_date: e.target.value ? `${e.target.value}-01` : '',
+                    })}
+                    style={{
+                      width: '100%',
+                      height: '48px',
+                      background: 'rgba(0,0,0,0.2)',
+                      border: '1px solid rgba(201,169,119,0.2)',
+                      color: '#E8DDC9',
+                      padding: '0 16px',
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '15px',
+                      outline: 'none',
+                      borderRadius: '2px',
+                    }}
+                  />
+                </div>
+                <div style={{ flex: 1, minWidth: '180px' }}>
+                  <label className="font-body" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.14em', color: 'rgba(232,221,201,0.5)', display: 'block', marginBottom: '6px' }}>
+                    End <span style={{ textTransform: 'none', letterSpacing: 0.5, opacity: 0.7 }}>(leave blank if ongoing)</span>
+                  </label>
+                  <input
+                    type="month"
+                    value={newExtracurricular.end_date ? newExtracurricular.end_date.slice(0, 7) : ''}
+                    onChange={(e) => setNewExtracurricular({
+                      ...newExtracurricular,
+                      end_date: e.target.value ? `${e.target.value}-01` : '',
+                    })}
+                    style={{
+                      width: '100%',
+                      height: '48px',
+                      background: 'rgba(0,0,0,0.2)',
+                      border: '1px solid rgba(201,169,119,0.2)',
+                      color: '#E8DDC9',
+                      padding: '0 16px',
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '15px',
+                      outline: 'none',
+                      borderRadius: '2px',
+                    }}
+                  />
+                </div>
+              </div>
               <button
                 onClick={handleAddExtracurricular}
                 disabled={addingExtracurricular}
@@ -1301,6 +1532,53 @@ export default function ProfilePage() {
                                   boxSizing: 'border-box',
                                 }}
                               />
+                              <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+                                <input
+                                  type="month"
+                                  value={editExtracurricular.start_date ? editExtracurricular.start_date.slice(0, 7) : ''}
+                                  onChange={(e) => setEditExtracurricular({
+                                    ...editExtracurricular,
+                                    start_date: e.target.value ? `${e.target.value}-01` : '',
+                                  })}
+                                  aria-label="Start"
+                                  style={{
+                                    flex: 1,
+                                    height: '32px',
+                                    background: 'rgba(0,0,0,0.3)',
+                                    border: '1px solid rgba(201,169,119,0.35)',
+                                    color: '#E8DDC9',
+                                    padding: '0 8px',
+                                    fontFamily: 'var(--font-body)',
+                                    fontSize: '12px',
+                                    outline: 'none',
+                                    borderRadius: '2px',
+                                    minWidth: '110px',
+                                  }}
+                                />
+                                <span className="font-body" style={{ color: 'rgba(232,221,201,0.4)', fontSize: '12px', alignSelf: 'center' }}>→</span>
+                                <input
+                                  type="month"
+                                  value={editExtracurricular.end_date ? editExtracurricular.end_date.slice(0, 7) : ''}
+                                  onChange={(e) => setEditExtracurricular({
+                                    ...editExtracurricular,
+                                    end_date: e.target.value ? `${e.target.value}-01` : '',
+                                  })}
+                                  aria-label="End (blank = ongoing)"
+                                  style={{
+                                    flex: 1,
+                                    height: '32px',
+                                    background: 'rgba(0,0,0,0.3)',
+                                    border: '1px solid rgba(201,169,119,0.35)',
+                                    color: '#E8DDC9',
+                                    padding: '0 8px',
+                                    fontFamily: 'var(--font-body)',
+                                    fontSize: '12px',
+                                    outline: 'none',
+                                    borderRadius: '2px',
+                                    minWidth: '110px',
+                                  }}
+                                />
+                              </div>
                             </td>
                             <td style={{ padding: '12px 16px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                               <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
@@ -1349,6 +1627,11 @@ export default function ProfilePage() {
                             </td>
                             <td style={{ padding: '12px 16px', fontFamily: 'var(--font-body)', color: 'rgba(232,221,201,0.7)', wordBreak: 'break-word', maxWidth: '400px', whiteSpace: 'normal' }}>
                               {ec.description || '—'}
+                              {formatDateRange(ec.start_date, ec.end_date) && (
+                                <div style={{ marginTop: '4px', fontSize: '12px', color: 'rgba(232,221,201,0.5)', fontStyle: 'italic' }}>
+                                  {formatDateRange(ec.start_date, ec.end_date)}
+                                </div>
+                              )}
                             </td>
                             <td style={{ padding: '12px 16px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                               <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>

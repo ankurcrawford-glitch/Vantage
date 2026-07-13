@@ -3,6 +3,7 @@ import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
 import { getAuthedUser, getAdminClient } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { checkBudget, recordSpend } from '@/lib/budget';
+import { buildSchoolLine } from '@/lib/school-context';
 
 // Feedback generation with Flash can take 10-20s. Bump the serverless
 // function timeout to 60s so responses don't get cut off mid-generation.
@@ -312,6 +313,7 @@ ${flattened.join('\n\n---\n\n')}`;
       profile.extracurriculars.length > 0 ? `Activities: ${profile.extracurriculars.map((e: any) => `${e.activity}${e.role ? ` (${e.role})` : ''}`).join(', ')}` : '',
       profile.awards.length > 0 ? `Awards: ${profile.awards.join(', ')}` : '',
       userStats?.narrative_summary ? `Counselor's profile of this student (built over their years in Vantage Foundations — draw on it to understand who they are and surface authentic, specific material): ${userStats.narrative_summary}` : '',
+      buildSchoolLine(userStats),
     ].filter(Boolean).join('\n');
 
     // Optional focus block — surfaces the user's specific ask (e.g.

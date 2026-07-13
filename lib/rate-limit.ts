@@ -25,7 +25,7 @@ import { NextResponse } from 'next/server';
  *   // ...proceed with the expensive call
  */
 
-type RouteKey = 'thinking-partner' | 'round-table' | 'extract-activities';
+type RouteKey = 'thinking-partner' | 'round-table' | 'extract-activities' | 'school-lookup';
 
 interface RouteLimits {
   perMinute: number;
@@ -40,6 +40,8 @@ const LIMITS: Record<RouteKey, RouteLimits> = {
   'thinking-partner': { perMinute: 10, perHour: 60, perDay: 200 },
   'round-table':      { perMinute: 2,  perHour: 5,  perDay: 15 },
   'extract-activities': { perMinute: 6, perHour: 30, perDay: 100 },
+  // Cheap Haiku call, and a student only changes schools ~once. Tight.
+  'school-lookup':      { perMinute: 3, perHour: 10, perDay: 20 },
 };
 
 // Lazy-initialize the Upstash client so local dev without env vars still works.
