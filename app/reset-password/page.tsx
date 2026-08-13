@@ -12,6 +12,8 @@ export default function ResetPasswordPage() {
   const router = useRouter();
   const [linkStatus, setLinkStatus] = useState<LinkStatus>('checking');
   const [linkError, setLinkError] = useState('');
+  const [tokenHash, setTokenHash] = useState<string | null>(null);
+  const [hasSession, setHasSession] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -21,14 +23,22 @@ export default function ResetPasswordPage() {
   const settledRef = useRef(false);
 
   useEffect(() => {
-    // The reset email lands here via Supabase's verify endpoint. On success
-    // the browser client (PKCE flow) exchanges the ?code= in the URL for a
-    // recovery session automatically; on failure Supabase appends error
-    // params instead. Handle both, plus a timeout for stragglers.
+    // Two ways a user can arrive here with a valid reset:
+    //
+    // 1. Token-hash link (preferred): the email links directly to
+    //    /reset-password?token_hash=...&type=recovery. The token is NOT
+    //    consumed until the user submits the form (verifyOtp), so the link
+    //    works in any browser/device and survives corporate email scanners
+    //    that prefetch URLs.
+    //
+    // 2. Legacy/PKCE flow: Supabase's verify endpoint redirected here after
+    //    establishing a recovery session (?code= exchange handled
+    //    automatically by the browser client). Same-browser only.
 
-    // 1. Explicit error from Supabase (expired / already-used link).
     const hashParams = new URLSearchParams(window.location.hash.slice(1));
     const queryParams = new URLSearchParams(window.location.search);
+
+    // Explicit error from Supabase (expired / already-used link).
     const errorDescription =
       hashParams.get('error_description') || queryParams.get('error_description');
     const errorCode = hashParams.get('error_code') || queryParams.get('error_code');
@@ -44,32 +54,41 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    // 2. Watch for the recovery session being established.
+    // Path 1: token-hash link — show the form right away. The token is
+    // validated when the user submits.
+    const th = queryParams.get('token_hash');
+    if (th) {
+      settledRef.current = true;
+      setTokenHash(th);
+      setLinkStatus('ready');
+      return;
+    }
+
+    // Path 2: watch for a recovery session being established.
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (settledRef.current) return;
       if (event === 'PASSWORD_RECOVERY' || (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION'))) {
         settledRef.current = true;
+        setHasSession(true);
         setLinkStatus('ready');
       }
     });
 
-    // 3. A session may already exist by the time we mount.
     supabase.auth.getSession().then(({ data }) => {
       if (settledRef.current) return;
       if (data.session) {
         settledRef.current = true;
+        setHasSession(true);
         setLinkStatus('ready');
       }
     });
 
-    // 4. If nothing settles within 5s, the link didn't produce a session.
-    //    (e.g. opened in a different browser than the one that requested it,
-    //    or navigated here directly without a link.)
+    // Neither a token nor a session showed up — bad link or direct visit.
     const timeout = setTimeout(() => {
       if (settledRef.current) return;
       settledRef.current = true;
       setLinkError(
-        'We could not verify your reset link. Make sure you open the link in the same browser you requested it from, or request a new one.'
+        'We could not verify your reset link. Please request a new one from the sign-in page.'
       );
       setLinkStatus('invalid');
     }, 5000);
@@ -97,6 +116,27 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
+      // Redeem the token now, at submit time (works in any browser).
+      // Skipped if a session already exists (legacy flow, or a previous
+      // submit already verified the token but failed on updateUser).
+      if (!hasSession && tokenHash) {
+        const { error: verifyError } = await supabase.auth.verifyOtp({
+          type: 'recovery',
+          token_hash: tokenHash,
+        });
+
+        if (verifyError) {
+          const msg = verifyError.message.toLowerCase();
+          if (msg.includes('expired') || msg.includes('invalid') || msg.includes('not found')) {
+            throw new Error(
+              'This reset link has expired or was already used. Please request a new one from the sign-in page.'
+            );
+          }
+          throw verifyError;
+        }
+        setHasSession(true);
+      }
+
       const { error: updateError } = await supabase.auth.updateUser({ password });
 
       if (updateError) {
