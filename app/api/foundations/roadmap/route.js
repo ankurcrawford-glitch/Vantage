@@ -5,6 +5,7 @@
 // Auth from the session token; writes via service role (RLS select-only).
 
 import { getAuthedUser, getAdminClient } from "@/lib/auth";
+import { effectiveGrade } from "@/lib/grade";
 
 export async function GET(req) {
   try {
@@ -13,13 +14,13 @@ export async function GET(req) {
     const supabase = getAdminClient();
 
     const [{ data: stats }, { data: progress, error }] = await Promise.all([
-      supabase.from("user_stats").select("grade").eq("user_id", auth.userId).maybeSingle(),
+      supabase.from("user_stats").select("grade, class_of").eq("user_id", auth.userId).maybeSingle(),
       supabase.from("roadmap_progress").select("item_key").eq("user_id", auth.userId),
     ]);
     if (error) throw error;
 
     return Response.json({
-      grade: typeof stats?.grade === "number" ? stats.grade : null,
+      grade: effectiveGrade(stats),
       done: (progress || []).map((p) => p.item_key),
     });
   } catch (err) {

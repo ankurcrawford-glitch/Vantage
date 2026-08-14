@@ -12,6 +12,7 @@
 import crypto from "crypto";
 import { Resend } from "resend";
 import { getAdminClient, escapeHtml } from "@/lib/auth";
+import { effectiveGrade } from "@/lib/grade";
 
 const CYCLE = "2026-27";
 const MAX_RECIPIENTS = 500;
@@ -112,14 +113,16 @@ export async function GET(request) {
       (info.released_at >= weekAgo ? fresh : alreadyOut).push({ name, count: info.count });
     }
 
-    // 2) Recipients: grade-12 students who haven't opted out.
-    const { data: seniors, error: sErr } = await supabase
+    // 2) Recipients: current seniors (derived from class_of, with legacy
+    //    grade fallback) who haven't opted out.
+    const { data: allStudents, error: sErr } = await supabase
       .from("user_stats")
-      .select("user_id")
-      .eq("grade", 12)
-      .or("digest_opt_out.is.null,digest_opt_out.eq.false")
-      .limit(MAX_RECIPIENTS);
+      .select("user_id, grade, class_of")
+      .or("digest_opt_out.is.null,digest_opt_out.eq.false");
     if (sErr) throw sErr;
+    const seniors = (allStudents || [])
+      .filter((s) => effectiveGrade(s) === 12)
+      .slice(0, MAX_RECIPIENTS);
 
     const resend = new Resend(process.env.RESEND_API_KEY || "placeholder");
     const site = "https://my-vantage.app";

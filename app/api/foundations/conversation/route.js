@@ -16,6 +16,7 @@
 // POST → { messages } → { reply, used, cap }
 
 import { getAuthedUser, getAdminClient } from "@/lib/auth";
+import { effectiveGrade } from "@/lib/grade";
 import { buildStudentContext } from "@/lib/foundations-context";
 
 const MODEL = "claude-haiku-4-5-20251001";
@@ -324,7 +325,7 @@ export async function POST(req) {
     const [{ data: profile }, studentContext] = await Promise.all([
       supabase
         .from("user_stats")
-        .select("narrative_summary, discovery_notes, grade")
+        .select("narrative_summary, discovery_notes, grade, class_of")
         .eq("user_id", userId)
         .maybeSingle(),
       buildStudentContext(supabase, userId),
@@ -341,7 +342,7 @@ export async function POST(req) {
     }));
 
     const reply = await callHaiku(
-      systemPrompt(narrative, notes, profile?.grade ?? "9-11", studentContext),
+      systemPrompt(narrative, notes, effectiveGrade(profile) ?? "9-11", studentContext),
       history,
       MAX_TOKENS
     );

@@ -9,6 +9,7 @@
 // nothing — the Roadmap page simply hides the block.
 
 import { getAuthedUser, getAdminClient } from "@/lib/auth";
+import { effectiveGrade } from "@/lib/grade";
 
 const MODEL = "claude-haiku-4-5-20251001";
 const MAX_TOKENS = 350;
@@ -41,7 +42,7 @@ export async function GET(req) {
 
     const { data: stats } = await supabase
       .from("user_stats")
-      .select("narrative_summary, grade, roadmap_moves, roadmap_moves_at")
+      .select("narrative_summary, grade, class_of, roadmap_moves, roadmap_moves_at")
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -79,7 +80,8 @@ export async function GET(req) {
 
     const now = new Date();
     const monthName = now.toLocaleString("en-US", { month: "long", year: "numeric" });
-    const grade = typeof stats?.grade === "number" ? stats.grade : "unknown";
+    const eg = effectiveGrade(stats);
+    const grade = typeof eg === "number" ? eg : "unknown";
     const narrative = stats?.narrative_summary || "(no summary yet — student is early in profile building)";
 
     const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {

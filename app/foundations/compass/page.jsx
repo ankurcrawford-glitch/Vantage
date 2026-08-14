@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import FoundationsNav from "@/components/FoundationsNav";
 import { C, display, body } from "@/lib/foundations-theme";
+import { effectiveGrade } from "@/lib/grade";
 
 // ─── Vantage Foundations — Compass (home) ────────────────────────
 // The landing page for every Foundations student. No mock data:
@@ -33,17 +34,18 @@ export default function FoundationsCompass() {
         }
         // All reads are RLS "select own" — safe from the client.
         const [stats, convo, acts, prog] = await Promise.all([
-          supabase.from("user_stats").select("grade").eq("user_id", user.id).maybeSingle(),
+          supabase.from("user_stats").select("grade, class_of").eq("user_id", user.id).maybeSingle(),
           supabase.from("conversation_messages").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("role", "user"),
           supabase.from("foundations_activities").select("confirmed").eq("user_id", user.id),
           supabase.from("roadmap_progress").select("item_key").eq("user_id", user.id),
         ]);
-        if (typeof stats.data?.grade === "number") setGrade(stats.data.grade);
+        const eg = effectiveGrade(stats.data);
+        if (typeof eg === "number") setGrade(eg);
         setConvoCount(convo.count ?? 0);
         const list = acts.data || [];
         setToReview(list.filter((a) => !a.confirmed).length);
         setActivityCount(list.filter((a) => a.confirmed).length);
-        const g = stats.data?.grade;
+        const g = eg;
         setRoadmapDone(
           (prog.data || []).filter((p) => (g ? p.item_key.startsWith(`${g}-`) : true)).length
         );

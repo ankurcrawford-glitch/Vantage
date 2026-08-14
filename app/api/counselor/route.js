@@ -11,6 +11,7 @@
 // follows the same secure pattern as the rest of the API (never trust a
 // body-supplied userId — see lib/auth.ts).
 import { getAuthedUser, getAdminClient } from "@/lib/auth";
+import { effectiveGrade } from "@/lib/grade";
 import { buildStudentContext } from "@/lib/foundations-context";
 
 const MONTHLY_CAP = 40;
@@ -164,7 +165,7 @@ export async function POST(req) {
     const [{ data: profile, error: profErr }, studentContext] = await Promise.all([
       supabase
         .from("user_stats")
-        .select("narrative_summary, grade")
+        .select("narrative_summary, grade, class_of")
         .eq("user_id", userId)
         .maybeSingle(),
       buildStudentContext(supabase, userId),
@@ -193,7 +194,7 @@ export async function POST(req) {
       body: JSON.stringify({
         model: MODEL,
         max_tokens: MAX_TOKENS,
-        system: systemPrompt(narrative, profile?.grade ?? "unknown", studentContext),
+        system: systemPrompt(narrative, effectiveGrade(profile) ?? "unknown", studentContext),
         messages: history,
       }),
     });

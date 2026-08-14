@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { effectiveGrade } from '@/lib/grade';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
 import StatCard from '@/components/StatCard';
@@ -36,7 +37,14 @@ function DashboardContent() {
   const [user, setUser] = useState<any>(null);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [collegeCount, setCollegeCount] = useState(0);
-  const [essayCount, setEssayCount] = useState(0);
+  // Completion metric moved from "essay rows exist" (which counted any
+  // touched prompt regardless of whether the student had actually done
+  // the work) to essays that hit the refinement bar: current version
+  // ≥ 80% of the word limit AND at least 2 saved versions. Same rule
+  // Round Table uses so numbers agree across the product.
+  const [essayCount, setEssayCount] = useState(0);        // finished essays
+  const [essayInProgressCount, setEssayInProgressCount] = useState(0);
+  const [totalPrompts, setTotalPrompts] = useState(0);    // supplementals + Common App the student needs
   const [deadlineGroups, setDeadlineGroups] = useState<{ date: string; items: { name: string; kind: string }[] }[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasSubscription, setHasSubscription] = useState(false);
@@ -76,14 +84,15 @@ function DashboardContent() {
       try {
         const { data: gs } = await supabase
           .from('user_stats')
-          .select('grade')
+          .select('grade, class_of')
           .eq('user_id', user.id)
           .maybeSingle();
+        const g = effectiveGrade(gs);
         if (
-          typeof gs?.grade === 'number' &&
-          gs.grade >= 9 &&
-          gs.grade <= 11 &&
-          !canAccessCollegePrep(gs.grade)
+          typeof g === 'number' &&
+          g >= 9 &&
+          g <= 11 &&
+          !canAccessCollegePrep(g)
         ) {
           router.push('/foundations/compass');
           return;
@@ -223,13 +232,55 @@ function DashboardContent() {
         setDeadlineGroups(groups);
       } catch { /* deadlines are decorative - never block the dashboard */ }
 
-      // Load essay count
-      const { count: essayCountData } = await supabase
-        .from('essays')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
+      // Compute REAL progress. Denominator: total prompts across the
+      // user's colleges plus the Common App essay. Numerator: essays
+      // that meet the same refinement bar as Round Table (≥80% of word
+      // limit and ≥2 saved versions). This makes the Progress card
+      // reflect application readiness, not "did I start typing yet."
+      const COMMON_APP_COLLEGE_ID = 'a0000000-0000-0000-0000-000000000000';
+      const collegeIds = new Set<string>(
+        ((await supabase.from('user_colleges').select('college_id').eq('user_id', user.id)).data ?? [])
+          .map((row: any) => row.college_id)
+      );
+      collegeIds.add(COMMON_APP_COLLEGE_ID);
 
-      setEssayCount(essayCountData || 0);
+      const { data: promptRows } = await supabase
+        .from('college_prompts')
+        .select('id, word_limit')
+        .in('college_id', Array.from(collegeIds));
+      const prompts = promptRows ?? [];
+      setTotalPrompts(prompts.length);
+
+      let finished = 0;
+      let inProgress = 0;
+      if (prompts.length > 0) {
+        const promptWordLimit = new Map<string, number | null>(
+          prompts.map((p: any) => [p.id, p.word_limit ?? null])
+        );
+        const promptIds = prompts.map((p: any) => p.id);
+        const { data: essayRows } = await supabase
+          .from('essays')
+          .select('college_prompt_id, essay_versions(word_count, content, is_current)')
+          .eq('user_id', user.id)
+          .in('college_prompt_id', promptIds);
+
+        for (const essay of (essayRows ?? []) as any[]) {
+          const versions = essay.essay_versions ?? [];
+          const current = versions.find((v: any) => v.is_current);
+          const hasContent = !!(current?.content && current.content.trim().length > 0);
+          if (!hasContent) continue;
+          const wordCount = current.word_count ?? 0;
+          const versionCount = versions.length;
+          const limit = promptWordLimit.get(essay.college_prompt_id) ?? null;
+          const wordTarget = limit ? Math.ceil(limit * 0.8) : null;
+          const meetsWords = wordTarget ? wordCount >= wordTarget : wordCount > 0;
+          const meetsVersions = versionCount >= 2;
+          if (meetsWords && meetsVersions) finished += 1;
+          else inProgress += 1;
+        }
+      }
+      setEssayCount(finished);
+      setEssayInProgressCount(inProgress);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -294,14 +345,16 @@ function DashboardContent() {
           <StatCard
             title="Essays"
             value={essayCount}
-            caption="In progress"
+            caption={totalPrompts > 0
+              ? `Ready · ${essayInProgressCount} in progress`
+              : essayInProgressCount > 0 ? `${essayInProgressCount} in progress` : 'Ready'}
             icon="▲"
           />
           <StatCard
             title="Progress"
-            value={collegeCount > 0 ? Math.round((essayCount / (collegeCount * 2)) * 100) : 0}
+            value={totalPrompts > 0 ? Math.round((essayCount / totalPrompts) * 100) : 0}
             suffix="%"
-            caption="Complete"
+            caption={totalPrompts > 0 ? `${essayCount} of ${totalPrompts} essays refined` : 'Add schools to track progress'}
             icon="■"
           />
         </div>

@@ -4,6 +4,7 @@
 // upserts the single grade field.
 
 import { getAuthedUser, getAdminClient } from "@/lib/auth";
+import { classOfFromGrade } from "@/lib/grade";
 
 export async function POST(req) {
   try {
@@ -27,9 +28,12 @@ export async function POST(req) {
       .maybeSingle();
     if (selErr) throw selErr;
 
+    // class_of is the durable value (auto-rolls every August); grade is
+    // kept in sync for legacy readers.
+    const class_of = classOfFromGrade(g);
     const result = existing
-      ? await supabase.from("user_stats").update({ grade: g }).eq("user_id", userId)
-      : await supabase.from("user_stats").insert({ user_id: userId, grade: g });
+      ? await supabase.from("user_stats").update({ grade: g, class_of }).eq("user_id", userId)
+      : await supabase.from("user_stats").insert({ user_id: userId, grade: g, class_of });
     if (result.error) throw result.error;
 
     return Response.json({ ok: true, grade: g });

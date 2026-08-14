@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { effectiveGrade } from '@/lib/grade';
 
 // ─── Vantage — Gateway ───────────────────────────────────────────
 // Post-login fork. If we already know the student's grade, route them
@@ -30,10 +31,10 @@ export default function Gateway() {
         // Remembered grade → skip the chooser entirely.
         const { data } = await supabase
           .from('user_stats')
-          .select('grade')
+          .select('grade, class_of')
           .eq('user_id', user.id)
           .maybeSingle();
-        const g = data?.grade;
+        const g = effectiveGrade(data);
         if (typeof g === 'number' && g >= 9 && g <= 11) {
           router.replace('/foundations/compass');
           return;

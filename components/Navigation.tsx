@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { canAccessCollegePrep } from '@/lib/college-prep-access';
+import { effectiveGrade } from '@/lib/grade';
 import Button from './Button';
 
 // College-prep-only routes. Foundations students (9/10, and juniors
@@ -44,11 +45,12 @@ export default function Navigation() {
         try {
           const { data, error } = await supabase
             .from('user_stats')
-            .select('grade')
+            .select('grade, class_of')
             .eq('user_id', user.id)
             .single();
-          if (!error && data && typeof data.grade === 'number') {
-            setGrade(data.grade);
+          const g = !error ? effectiveGrade(data) : null;
+          if (g !== null) {
+            setGrade(g);
           }
         } catch {
           /* grade column not present yet - leave hidden */

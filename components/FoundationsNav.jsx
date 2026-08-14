@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { canAccessCollegePrep, collegePrepLockedMessage } from "@/lib/college-prep-access";
+import { effectiveGrade } from "@/lib/grade";
 import { C, display } from "@/lib/foundations-theme";
 
 // Shared top navigation for every Foundations page. Users with no grade
@@ -36,10 +37,10 @@ export default function FoundationsNav() {
         if (!user) return; // each page handles its own login redirect
         const { data } = await supabase
           .from("user_stats")
-          .select("grade")
+          .select("grade, class_of")
           .eq("user_id", user.id)
           .maybeSingle();
-        const g = data?.grade;
+        const g = effectiveGrade(data);
         if (typeof g === "number") setGrade(g);
         else router.replace("/foundations/start");
       } catch {
