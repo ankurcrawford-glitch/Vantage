@@ -133,24 +133,28 @@ export default function FoundationsNav() {
             College Prep →
           </button>
         )}
-        {/* Exit to the main app — styled distinct from the section tabs
-            (gold, right-aligned): it's a door out, not a sibling tab. */}
-        <Link
-          href="/dashboard"
-          style={{
-            fontSize: 12,
-            letterSpacing: 1.5,
-            textTransform: "uppercase",
-            textDecoration: "none",
-            color: C.gold,
-            borderLeft: `1px solid ${C.line}`,
-            paddingLeft: "clamp(14px, 2.5vw, 24px)",
-            paddingBottom: 4,
-            marginLeft: "auto",
-          }}
-        >
-          Vantage →
-        </Link>
+        {/* Exit to the main app — seniors only. Grade 9-11 are fenced out
+            of the college side by the dashboard/nav guards, so showing them
+            this door would just bounce them straight back here. Styled
+            distinct from the section tabs (gold): a door out, not a tab. */}
+        {grade === 12 && (
+          <Link
+            href="/dashboard"
+            style={{
+              fontSize: 12,
+              letterSpacing: 1.5,
+              textTransform: "uppercase",
+              textDecoration: "none",
+              color: C.gold,
+              borderLeft: `1px solid ${C.line}`,
+              paddingLeft: "clamp(14px, 2.5vw, 24px)",
+              paddingBottom: 4,
+              marginLeft: "auto",
+            }}
+          >
+            Vantage →
+          </Link>
+        )}
         <button
           type="button"
           onClick={logout}
@@ -163,6 +167,7 @@ export default function FoundationsNav() {
             color: C.inkDim,
             fontFamily: "inherit",
             paddingBottom: 4,
+            marginLeft: grade === 12 ? 0 : "auto",
           }}
           onMouseEnter={(e) => { e.currentTarget.style.color = C.ink; }}
           onMouseLeave={(e) => { e.currentTarget.style.color = C.inkDim; }}
