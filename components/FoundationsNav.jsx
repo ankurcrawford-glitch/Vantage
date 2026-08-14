@@ -7,9 +7,9 @@ import { supabase } from "@/lib/supabase";
 import { canAccessCollegePrep, collegePrepLockedMessage } from "@/lib/college-prep-access";
 import { C, display } from "@/lib/foundations-theme";
 
-// Shared top navigation for every Foundations page. Also acts as the
-// interface guard: seniors (grade 12) are sent to the Vantage dashboard,
-// users with no grade yet are sent to the grade picker. Fails open on
+// Shared top navigation for every Foundations page. Users with no grade
+// yet are sent to the grade picker. Seniors may browse Foundations and
+// use the "Vantage →" link to return to the main app. Fails open on
 // any error so Foundations never breaks for its own students.
 
 
@@ -41,8 +41,7 @@ export default function FoundationsNav() {
           .maybeSingle();
         const g = data?.grade;
         if (typeof g === "number") setGrade(g);
-        if (g === 12) router.replace("/dashboard");
-        else if (typeof g !== "number") router.replace("/foundations/start");
+        else router.replace("/foundations/start");
       } catch {
         /* fail open */
       }
@@ -134,6 +133,24 @@ export default function FoundationsNav() {
             College Prep →
           </button>
         )}
+        {/* Exit to the main app — styled distinct from the section tabs
+            (gold, right-aligned): it's a door out, not a sibling tab. */}
+        <Link
+          href="/dashboard"
+          style={{
+            fontSize: 12,
+            letterSpacing: 1.5,
+            textTransform: "uppercase",
+            textDecoration: "none",
+            color: C.gold,
+            borderLeft: `1px solid ${C.line}`,
+            paddingLeft: "clamp(14px, 2.5vw, 24px)",
+            paddingBottom: 4,
+            marginLeft: "auto",
+          }}
+        >
+          Vantage →
+        </Link>
         <button
           type="button"
           onClick={logout}
@@ -146,7 +163,6 @@ export default function FoundationsNav() {
             color: C.inkDim,
             fontFamily: "inherit",
             paddingBottom: 4,
-            marginLeft: "auto",
           }}
           onMouseEnter={(e) => { e.currentTarget.style.color = C.ink; }}
           onMouseLeave={(e) => { e.currentTarget.style.color = C.inkDim; }}

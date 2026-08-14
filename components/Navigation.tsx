@@ -27,7 +27,7 @@ export default function Navigation() {
 
   useEffect(() => {
     checkAuth();
-    
+
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
@@ -126,7 +126,9 @@ export default function Navigation() {
             <span style={{ color: 'rgba(232,221,201,0.5)', fontSize: '14px' }}>Loading...</span>
           ) : user ? (
             <>
-              {isFoundations && (
+              {/* Foundations entry for every signed-in user. The env flag is a
+                  deploy switch (NEXT_PUBLIC_FOUNDATIONS_ENABLED), not a user gate. */}
+              {process.env.NEXT_PUBLIC_FOUNDATIONS_ENABLED === 'true' && (
                 <Link href="/foundations/compass" style={getLinkStyle('/foundations')}>Foundations</Link>
               )}
               {/* College-app links. Seniors always; juniors from January
