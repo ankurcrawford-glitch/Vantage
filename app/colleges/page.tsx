@@ -43,6 +43,7 @@ export default function CollegesPage() {
   const [collegesWithPrompts, setCollegesWithPrompts] = useState<Set<string>>(new Set());
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasSession, setHasSession] = useState(false);
   const [tab, setTab] = useState<Tab>('strategy');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -57,6 +58,7 @@ export default function CollegesPage() {
       router.push('/login');
       return;
     }
+    setHasSession(true);
 
     try {
       const [collegesRes, userCollegesRes, promptsRes, statsRes] = await Promise.all([
@@ -165,7 +167,7 @@ export default function CollegesPage() {
 
   /* ------------------------------ render ------------------------------ */
 
-  if (loading) {
+  if (loading || !hasSession) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1320' }}>
         <div style={{ color: '#C9A977', fontFamily: 'var(--font-body)' }}>Loading...</div>
