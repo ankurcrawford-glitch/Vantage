@@ -293,7 +293,10 @@ function DashboardContent() {
     router.push('/');
   };
 
-  if (loading) {
+  // Stay on the loading screen until a session is confirmed. Otherwise
+  // loadDashboardData can finish with no user, flip loading off, and
+  // paint "Welcome back" / empty stats before the login redirect.
+  if (loading || !user) {
     return (
       <div className="min-h-screen bg-midnight flex items-center justify-center">
         <div className="text-gold-leaf font-body">Loading...</div>

@@ -145,12 +145,14 @@ export default function ProfilePage() {
   };
 
   const loadProfile = async () => {
+    let signedIn = false;
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         router.push('/login');
         return;
       }
+      signedIn = true;
 
       // Load stats
       const { data: statsData } = await supabase
@@ -257,7 +259,9 @@ export default function ProfilePage() {
       console.error('Error loading profile:', error);
       alert('Error loading profile data. Please refresh the page.');
     } finally {
-      setLoading(false);
+      // Keep the loading screen up for logged-out visitors so the
+      // profile form never paints before the login redirect.
+      if (signedIn) setLoading(false);
     }
   };
 

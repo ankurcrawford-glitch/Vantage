@@ -259,18 +259,10 @@ export default function TermsPage() {
 
         <Section title="14. Governing law and disputes">
           <p>
-            These Terms are governed by the laws of the State of{' '}
-            <em style={{ color: 'rgba(232,221,201,0.5)' }}>[specify state — consult lawyer]</em>,
-            without regard to conflict-of-laws principles. Any dispute that cannot be
-            resolved informally will be brought in the state or federal courts located in{' '}
-            <em style={{ color: 'rgba(232,221,201,0.5)' }}>[specify venue]</em>, and you
-            consent to that jurisdiction and venue.
-          </p>
-          <p>
-            <em style={{ color: 'rgba(232,221,201,0.5)' }}>
-              [Reserved for arbitration and class-action-waiver clauses if applicable
-              — consult your attorney.]
-            </em>
+            These Terms are governed by the laws of the State of New York, without
+            regard to conflict-of-laws principles. Any dispute that cannot be resolved
+            informally will be brought in the state or federal courts located in the
+            State of New York, and you consent to that jurisdiction and venue.
           </p>
         </Section>
 
@@ -283,14 +275,6 @@ export default function TermsPage() {
           </p>
         </Section>
 
-        <div style={{ marginTop: '48px', padding: '16px', background: 'rgba(201,169,119,0.08)', border: '1px solid rgba(201,169,119,0.3)', borderRadius: '4px' }}>
-          <p style={{ color: 'rgba(232,221,201,0.7)', fontSize: '13px', lineHeight: '1.6' }}>
-            <strong style={{ color: '#C9A977' }}>Note:</strong> This document is a
-            starter template and not a substitute for legal advice. Vantage has had it
-            reviewed by a qualified attorney before publication. If you notice anything
-            unclear, please contact us.
-          </p>
-        </div>
       </article>
     </div>
   );

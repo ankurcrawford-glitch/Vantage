@@ -28,12 +28,14 @@ export default function DiscoveryPage() {
   }, []);
 
   const checkAuthAndSubscription = async () => {
+    let signedIn = false;
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         router.push('/login');
         return;
       }
+      signedIn = true;
 
       setUserId(user.id);
       let subscribed = false;
@@ -66,7 +68,8 @@ export default function DiscoveryPage() {
     } catch (e) {
       console.error(e);
     } finally {
-      setLoading(false);
+      // Stay on loading until login redirect if there is no session.
+      if (signedIn) setLoading(false);
     }
   };
 
@@ -163,7 +166,7 @@ export default function DiscoveryPage() {
     }
   };
 
-  if (loading) {
+  if (loading || !userId) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1320' }}>
         <div style={{ color: '#C9A977' }}>Loading...</div>
