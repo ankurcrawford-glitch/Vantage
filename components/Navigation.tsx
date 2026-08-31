@@ -167,7 +167,7 @@ export default function Navigation() {
             </>
           ) : (
             <Link href="/login">
-              <Button variant="secondary">Client Access</Button>
+              <Button variant="secondary">Sign In</Button>
             </Link>
           )}
         </div>
