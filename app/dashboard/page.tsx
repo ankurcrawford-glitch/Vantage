@@ -56,6 +56,8 @@ function DashboardContent() {
   // ED/REA dates at OTHER schools that a commitment made irrelevant —
   // listed in a footnote under the deadline list instead of shown live.
   const [droppedEarly, setDroppedEarly] = useState<{ name: string; kind: string }[]>([]);
+  // Schools marked Submitted / Decision — off the deadline radar.
+  const [submittedCount, setSubmittedCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [hasSubscription, setHasSubscription] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -222,7 +224,7 @@ function DashboardContent() {
       try {
         const { data: dlRows } = await supabase
           .from('user_colleges')
-          .select('application_plan, colleges:college_id(name, deadline_ed, deadline_ea, deadline_rd)')
+          .select('application_plan, app_status, colleges:college_id(name, deadline_ed, deadline_ea, deadline_rd)')
           .eq('user_id', user.id);
         const byDate = new Map<string, { name: string; kind: string; chosen?: boolean }[]>();
         const today = new Date().toISOString().slice(0, 10);
@@ -231,9 +233,11 @@ function DashboardContent() {
         // It changes what's relevant at every OTHER school.
         let committed: { name: string; plan: string } | null = null;
         let earlyOffers = 0;
+        let doneCount = 0;
         for (const row of (dlRows ?? []) as any[]) {
           const c = row.colleges;
           if (!c) continue;
+          if (row.app_status === 'submitted' || row.app_status === 'decision') doneCount += 1;
           if (c.deadline_ed || c.deadline_ea) earlyOffers += 1;
           const plan: string | null = row.application_plan ?? null;
           if (plan) {
@@ -241,6 +245,7 @@ function DashboardContent() {
             if ((kind === 'ED' || kind === 'REA') && !committed) committed = { name: c.name, plan: kind };
           }
         }
+        setSubmittedCount(doneCount);
 
         // Pass 2: build the list. Once an early commitment exists, other
         // schools' ED and REA dates are no longer live options (one ED
@@ -251,6 +256,8 @@ function DashboardContent() {
         for (const row of (dlRows ?? []) as any[]) {
           const c = row.colleges;
           if (!c) continue;
+          // Submitted (or decided) schools are done — no more deadlines.
+          if (row.app_status === 'submitted' || row.app_status === 'decision') continue;
 
           // A committed round collapses this school to just that date.
           const plan: string | null = row.application_plan ?? null;
@@ -413,7 +420,9 @@ function DashboardContent() {
           <StatCard
             title="Colleges"
             value={collegeCount}
-            caption="In your portfolio"
+            caption={submittedCount > 0
+              ? `${submittedCount} submitted · ${Math.max(collegeCount - submittedCount, 0)} to go`
+              : 'In your portfolio'}
             icon="◆"
           />
           <StatCard
@@ -590,6 +599,11 @@ function DashboardContent() {
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {submittedCount > 0 && (
+                  <p className="font-body text-sm" style={{ color: '#8FB89A', margin: '0 0 8px', fontWeight: 600 }}>
+                    {submittedCount} submitted, {Math.max(collegeCount - submittedCount, 0)} to go — submitted schools are off the deadline radar.
+                  </p>
+                )}
                 <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.45)', margin: '0 0 4px', lineHeight: 1.6 }}>
                   Dates marked ✓ are rounds you've committed to; the rest are every round each school offers.{' '}
                   <span title={PLAN_EXPLAINERS.ED} style={{ color: '#C9A977', cursor: 'help' }}>ED</span> binding ·{' '}

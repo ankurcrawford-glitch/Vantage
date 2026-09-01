@@ -45,6 +45,8 @@ export default function CollegesPage() {
   // absent/null = undecided. ED and REA are treated as one exclusive
   // "early commitment" slot across the whole portfolio.
   const [plans, setPlans] = useState<Record<string, string | null>>({});
+  // college_id -> application status (null = not started).
+  const [statuses, setStatuses] = useState<Record<string, string | null>>({});
   const [collegesWithPrompts, setCollegesWithPrompts] = useState<Set<string>>(new Set());
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,7 +70,7 @@ export default function CollegesPage() {
     try {
       const [collegesRes, userCollegesRes, promptsRes, statsRes] = await Promise.all([
         supabase.from('colleges').select('*').order('name'),
-        supabase.from('user_colleges').select('college_id, application_plan').eq('user_id', user.id),
+        supabase.from('user_colleges').select('college_id, application_plan, app_status').eq('user_id', user.id),
         supabase.from('college_prompts').select('college_id'),
         supabase.from('user_stats').select('*').eq('user_id', user.id).single(),
       ]);
@@ -81,10 +83,13 @@ export default function CollegesPage() {
       if (userCollegesRes.data) {
         setUserColleges(userCollegesRes.data.map((u) => u.college_id));
         const planMap: Record<string, string | null> = {};
+        const statusMap: Record<string, string | null> = {};
         for (const u of userCollegesRes.data as any[]) {
           planMap[u.college_id] = u.application_plan ?? null;
+          statusMap[u.college_id] = u.app_status ?? null;
         }
         setPlans(planMap);
+        setStatuses(statusMap);
       }
       if (promptsRes.data) {
         setCollegesWithPrompts(new Set(promptsRes.data.map((p) => p.college_id)));
@@ -204,6 +209,18 @@ export default function CollegesPage() {
       for (const id of clearedIds) next[id] = null;
       return next;
     });
+  }
+
+  async function handleStatusChange(collegeId: string, status: string) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const value = status === 'not_started' ? null : status;
+    const { error } = await supabase
+      .from('user_colleges')
+      .update({ app_status: value })
+      .eq('user_id', user.id)
+      .eq('college_id', collegeId);
+    if (!error) setStatuses((prev) => ({ ...prev, [collegeId]: value }));
   }
 
   async function handleLogout() {
@@ -407,6 +424,8 @@ export default function CollegesPage() {
                       collegesWithPrompts={collegesWithPrompts}
                       plans={plans}
                       onPlanChange={handlePlanChange}
+                      statuses={statuses}
+                      onStatusChange={handleStatusChange}
                     />
                   ))}
                 </div>
@@ -532,6 +551,8 @@ function TierColumn({
   collegesWithPrompts,
   plans,
   onPlanChange,
+  statuses,
+  onStatusChange,
 }: {
   tier: Tier;
   schools: SchoolClassification[];
@@ -539,6 +560,8 @@ function TierColumn({
   collegesWithPrompts: Set<string>;
   plans: Record<string, string | null>;
   onPlanChange: (collegeId: string, plan: string | null) => void;
+  statuses: Record<string, string | null>;
+  onStatusChange: (collegeId: string, status: string) => void;
 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -590,6 +613,8 @@ function TierColumn({
               planOptions={planOptionsFor(c.college)}
               plan={plans[c.college.id] ?? null}
               onPlanChange={(p) => onPlanChange(c.college.id, p)}
+              status={statuses[c.college.id] ?? null}
+              onStatusChange={(s) => onStatusChange(c.college.id, s)}
             />
           ))
         )}

@@ -8,7 +8,6 @@ import { canAccessCollegePrep } from '@/lib/college-prep-access';
 import { effectiveGrade, schoolYearEnd } from '@/lib/grade';
 import Button from './Button';
 // Shared with FoundationsNav so both headers are visually identical.
-// @ts-expect-error — plain-JS theme module without type declarations
 import { C, display } from '@/lib/foundations-theme';
 
 // College-prep-only routes. Foundations students (9/10, and juniors
