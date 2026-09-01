@@ -21,6 +21,7 @@ import {
   TIERS,
 } from '@/lib/classifier';
 import { computeEdStrategy } from '@/lib/edStrategy';
+import { eaLabel } from '@/lib/earlyPlans';
 import { buildAllTierSuggestions } from '@/lib/geoRecommendations';
 import type { GeoPreference } from '@/lib/classifier';
 
@@ -40,6 +41,10 @@ export default function CollegesPage() {
 
   const [colleges, setColleges] = useState<College[]>([]);
   const [userColleges, setUserColleges] = useState<string[]>([]);
+  // college_id -> committed application round ('ED' | 'REA' | 'EA' | 'RD');
+  // absent/null = undecided. ED and REA are treated as one exclusive
+  // "early commitment" slot across the whole portfolio.
+  const [plans, setPlans] = useState<Record<string, string | null>>({});
   const [collegesWithPrompts, setCollegesWithPrompts] = useState<Set<string>>(new Set());
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,7 +68,7 @@ export default function CollegesPage() {
     try {
       const [collegesRes, userCollegesRes, promptsRes, statsRes] = await Promise.all([
         supabase.from('colleges').select('*').order('name'),
-        supabase.from('user_colleges').select('college_id').eq('user_id', user.id),
+        supabase.from('user_colleges').select('college_id, application_plan').eq('user_id', user.id),
         supabase.from('college_prompts').select('college_id'),
         supabase.from('user_stats').select('*').eq('user_id', user.id).single(),
       ]);
@@ -75,6 +80,11 @@ export default function CollegesPage() {
       }
       if (userCollegesRes.data) {
         setUserColleges(userCollegesRes.data.map((u) => u.college_id));
+        const planMap: Record<string, string | null> = {};
+        for (const u of userCollegesRes.data as any[]) {
+          planMap[u.college_id] = u.application_plan ?? null;
+        }
+        setPlans(planMap);
       }
       if (promptsRes.data) {
         setCollegesWithPrompts(new Set(promptsRes.data.map((p) => p.college_id)));
@@ -158,6 +168,42 @@ export default function CollegesPage() {
       .eq('user_id', user.id)
       .eq('college_id', collegeId);
     if (!error) setUserColleges((prev) => prev.filter((id) => id !== collegeId));
+  }
+
+  async function handlePlanChange(collegeId: string, plan: string | null) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // ED and REA are exclusive: committing early to one school clears any
+    // other school's ED/REA (matches the actual rules — one binding ED,
+    // and REA bars other private early apps).
+    const clearedIds: string[] = [];
+    if (plan === 'ED' || plan === 'REA') {
+      for (const [id, p] of Object.entries(plans)) {
+        if (id !== collegeId && (p === 'ED' || p === 'REA')) clearedIds.push(id);
+      }
+    }
+
+    const { error } = await supabase
+      .from('user_colleges')
+      .update({ application_plan: plan })
+      .eq('user_id', user.id)
+      .eq('college_id', collegeId);
+    if (error) return;
+
+    if (clearedIds.length > 0) {
+      await supabase
+        .from('user_colleges')
+        .update({ application_plan: null })
+        .eq('user_id', user.id)
+        .in('college_id', clearedIds);
+    }
+
+    setPlans((prev) => {
+      const next = { ...prev, [collegeId]: plan };
+      for (const id of clearedIds) next[id] = null;
+      return next;
+    });
   }
 
   async function handleLogout() {
@@ -309,6 +355,8 @@ export default function CollegesPage() {
                       schools={byTier[t]}
                       onRemove={handleRemoveCollege}
                       collegesWithPrompts={collegesWithPrompts}
+                      plans={plans}
+                      onPlanChange={handlePlanChange}
                     />
                   ))}
                 </div>
@@ -416,16 +464,31 @@ export default function CollegesPage() {
 /* ------------------------------ subviews ------------------------------ */
 
 
+// Which rounds does this school actually offer? Derived from its deadline
+// columns; EA is relabeled REA for restrictive-EA schools.
+function planOptionsFor(college: College): string[] {
+  const c = college as any;
+  const opts: string[] = [];
+  if (c.deadline_ed) opts.push('ED');
+  if (c.deadline_ea) opts.push(eaLabel(college.name));
+  opts.push('RD');
+  return opts;
+}
+
 function TierColumn({
   tier,
   schools,
   onRemove,
   collegesWithPrompts,
+  plans,
+  onPlanChange,
 }: {
   tier: Tier;
   schools: SchoolClassification[];
   onRemove: (id: string) => void;
   collegesWithPrompts: Set<string>;
+  plans: Record<string, string | null>;
+  onPlanChange: (collegeId: string, plan: string | null) => void;
 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -474,6 +537,9 @@ function TierColumn({
               classification={c}
               hasPrompts={collegesWithPrompts.has(c.college.id)}
               onRemove={() => onRemove(c.college.id)}
+              planOptions={planOptionsFor(c.college)}
+              plan={plans[c.college.id] ?? null}
+              onPlanChange={(p) => onPlanChange(c.college.id, p)}
             />
           ))
         )}

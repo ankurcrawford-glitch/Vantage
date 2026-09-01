@@ -31,9 +31,15 @@ interface Props {
   classification: SchoolClassification;
   onRemove?: () => void;
   hasPrompts?: boolean;
+  /** Rounds this school actually offers, e.g. ['ED','REA','RD'] (REA/EA already resolved). */
+  planOptions?: string[];
+  /** The student's committed round for this school (null = undecided). */
+  plan?: string | null;
+  /** Set or clear the committed round. */
+  onPlanChange?: (plan: string | null) => void;
 }
 
-export default function SchoolCard({ classification, onRemove, hasPrompts }: Props) {
+export default function SchoolCard({ classification, onRemove, hasPrompts, planOptions, plan, onPlanChange }: Props) {
   const { college, probabilityRange, score, bucket, effectiveAdmitRate, programOverrideTriggered } = classification;
   const barColor = TIER_BAR[bucket];
 
@@ -119,6 +125,54 @@ export default function SchoolCard({ classification, onRemove, hasPrompts }: Pro
           >
             2025 Prompts Available
           </span>
+        )}
+
+        {/* Round commitment picker — inside the Link, so every click must
+            preventDefault or the card navigates. Clicking the active round
+            clears it back to undecided. */}
+        {onPlanChange && planOptions && planOptions.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '12px', flexWrap: 'wrap' }}>
+            <span
+              className="font-body"
+              style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'rgba(232,221,201,0.45)' }}
+            >
+              Applying
+            </span>
+            {planOptions.map((opt) => {
+              const active = plan === opt;
+              return (
+                <button
+                  key={opt}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onPlanChange(active ? null : opt);
+                  }}
+                  className="font-body"
+                  title={active ? 'Click to unset' : `Apply ${opt} to ${college.name}`}
+                  style={{
+                    background: active ? '#C9A977' : 'rgba(201,169,119,0.08)',
+                    color: active ? '#0B1320' : 'rgba(232,221,201,0.7)',
+                    border: active ? '1px solid #C9A977' : '1px solid rgba(201,169,119,0.3)',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    letterSpacing: '0.08em',
+                    padding: '3px 10px',
+                    borderRadius: '999px',
+                    cursor: 'pointer',
+                    transition: 'all 0.12s',
+                  }}
+                >
+                  {opt}
+                </button>
+              );
+            })}
+            {!plan && (
+              <span className="font-body" style={{ fontSize: '10px', color: 'rgba(232,221,201,0.35)', fontStyle: 'italic' }}>
+                undecided
+              </span>
+            )}
+          </div>
         )}
       </Link>
 

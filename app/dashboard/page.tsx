@@ -46,7 +46,12 @@ function DashboardContent() {
   const [essayCount, setEssayCount] = useState(0);        // finished essays
   const [essayInProgressCount, setEssayInProgressCount] = useState(0);
   const [totalPrompts, setTotalPrompts] = useState(0);    // supplementals + Common App the student needs
-  const [deadlineGroups, setDeadlineGroups] = useState<{ date: string; items: { name: string; kind: string }[] }[]>([]);
+  const [deadlineGroups, setDeadlineGroups] = useState<{ date: string; items: { name: string; kind: string; chosen?: boolean }[] }[]>([]);
+  // The student's committed early round (ED or REA school), if any, and
+  // how many of their schools offer an early round — drives the
+  // "where will you apply early?" prompt.
+  const [earlyChoice, setEarlyChoice] = useState<{ name: string; plan: string } | null>(null);
+  const [earlyOptionsCount, setEarlyOptionsCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [hasSubscription, setHasSubscription] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -213,21 +218,40 @@ function DashboardContent() {
       try {
         const { data: dlRows } = await supabase
           .from('user_colleges')
-          .select('colleges:college_id(name, deadline_ed, deadline_ea, deadline_rd)')
+          .select('application_plan, colleges:college_id(name, deadline_ed, deadline_ea, deadline_rd)')
           .eq('user_id', user.id);
-        const byDate = new Map<string, { name: string; kind: string }[]>();
+        const byDate = new Map<string, { name: string; kind: string; chosen?: boolean }[]>();
         const today = new Date().toISOString().slice(0, 10);
+        let committed: { name: string; plan: string } | null = null;
+        let earlyOffers = 0;
         for (const row of (dlRows ?? []) as any[]) {
           const c = row.colleges;
           if (!c) continue;
-          // Label restrictive early action honestly: Harvard/Princeton/
-          // Stanford/Yale/Georgetown/Notre Dame "EA" is really REA/SCEA.
+          if (c.deadline_ed || c.deadline_ea) earlyOffers += 1;
+
+          // A committed round collapses this school to just that date.
+          const plan: string | null = row.application_plan ?? null;
+          if (plan) {
+            const kind = plan === 'EA' ? eaLabel(c.name) : plan;
+            if (kind === 'ED' || kind === 'REA') committed = committed ?? { name: c.name, plan: kind };
+            const d = kind === 'ED' ? c.deadline_ed : (kind === 'EA' || kind === 'REA') ? c.deadline_ea : c.deadline_rd;
+            if (d && d >= today) {
+              if (!byDate.has(d)) byDate.set(d, []);
+              byDate.get(d)!.push({ name: c.name, kind, chosen: true });
+            }
+            continue;
+          }
+
+          // Undecided: show every round the school offers. Restrictive
+          // early action is labeled honestly (REA, not generic EA).
           for (const [kind, d] of [['ED', c.deadline_ed], [eaLabel(c.name), c.deadline_ea], ['RD', c.deadline_rd]] as const) {
             if (!d || d < today) continue;
             if (!byDate.has(d)) byDate.set(d, []);
             byDate.get(d)!.push({ name: c.name, kind });
           }
         }
+        setEarlyChoice(committed);
+        setEarlyOptionsCount(earlyOffers);
         // Every upcoming deadline, no cap — students plan off this list.
         const groups = [...byDate.entries()]
           .sort((a, b) => a[0].localeCompare(b[0]))
@@ -522,46 +546,40 @@ function DashboardContent() {
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {(() => {
-                  // These are every round each school OFFERS, not a plan —
-                  // and the early rounds have rules worth stating plainly.
-                  const edSchools = new Set<string>();
-                  const reaSchools = new Set<string>();
-                  for (const g of deadlineGroups) {
-                    for (const it of g.items) {
-                      if (it.kind === 'ED') edSchools.add(it.name);
-                      if (it.kind === 'REA') reaSchools.add(it.name);
-                    }
-                  }
-                  const showEarlyNote = edSchools.size > 1 || reaSchools.size > 1 || (edSchools.size >= 1 && reaSchools.size >= 1);
-                  return (
-                    <>
-                      <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.45)', margin: '0 0 4px', lineHeight: 1.6 }}>
-                        All dates each of your schools offers.{' '}
-                        <span title={PLAN_EXPLAINERS.ED} style={{ color: '#C9A977', cursor: 'help' }}>ED</span> binding ·{' '}
-                        <span title={PLAN_EXPLAINERS.REA} style={{ color: '#D4A24E', cursor: 'help' }}>REA</span> restrictive ·{' '}
-                        <span title={PLAN_EXPLAINERS.EA} style={{ color: '#C9A977', cursor: 'help' }}>EA</span> open ·{' '}
-                        <span title={PLAN_EXPLAINERS.RD} style={{ color: '#C9A977', cursor: 'help' }}>RD</span> regular
-                      </p>
-                      {showEarlyNote && (
-                        <div style={{
-                          background: 'rgba(212,162,78,0.08)',
-                          border: '1px solid rgba(212,162,78,0.3)',
-                          borderRadius: '4px',
-                          padding: '12px 16px',
-                          margin: '8px 0 12px',
-                        }}>
-                          <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', margin: 0, lineHeight: 1.6 }}>
-                            <span style={{ color: '#D4A24E', fontWeight: 600 }}>Plan your early round deliberately.</span>{' '}
-                            {edSchools.size > 1 && `${edSchools.size} of your schools offer Early Decision, but ED is binding — you can apply ED to only one. `}
-                            {reaSchools.size >= 1 && `Restrictive Early Action (${[...reaSchools].slice(0, 4).join(', ')}${reaSchools.size > 4 ? '…' : ''}) generally rules out applying ED or private-college EA anywhere else. `}
-                            Pick one early strategy; everything else moves to Regular Decision.
-                          </p>
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
+                <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.45)', margin: '0 0 4px', lineHeight: 1.6 }}>
+                  Dates marked ✓ are rounds you've committed to; the rest are every round each school offers.{' '}
+                  <span title={PLAN_EXPLAINERS.ED} style={{ color: '#C9A977', cursor: 'help' }}>ED</span> binding ·{' '}
+                  <span title={PLAN_EXPLAINERS.REA} style={{ color: '#D4A24E', cursor: 'help' }}>REA</span> restrictive ·{' '}
+                  <span title={PLAN_EXPLAINERS.EA} style={{ color: '#C9A977', cursor: 'help' }}>EA</span> open ·{' '}
+                  <span title={PLAN_EXPLAINERS.RD} style={{ color: '#C9A977', cursor: 'help' }}>RD</span> regular
+                </p>
+                {earlyChoice ? (
+                  <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.7)', margin: '8px 0 12px', lineHeight: 1.6 }}>
+                    <span style={{ color: '#C9A977', fontWeight: 600 }}>Your early commitment:</span>{' '}
+                    {earlyChoice.plan} at {earlyChoice.name}.{' '}
+                    <Link href="/colleges" style={{ color: '#C9A977', textDecoration: 'underline' }}>
+                      Change it on My Schools
+                    </Link>
+                  </p>
+                ) : earlyOptionsCount > 0 ? (
+                  <div style={{
+                    background: 'rgba(212,162,78,0.08)',
+                    border: '1px solid rgba(212,162,78,0.35)',
+                    borderRadius: '4px',
+                    padding: '14px 18px',
+                    margin: '8px 0 12px',
+                  }}>
+                    <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.9)', margin: 0, lineHeight: 1.6 }}>
+                      <span style={{ color: '#D4A24E', fontWeight: 600 }}>Where will you apply early?</span>{' '}
+                      {earlyOptionsCount} of your schools offer an early round, but ED is binding at one school only,
+                      and REA rules out other private early applications. Committing to one early strategy is the single
+                      highest-leverage decision on this page.{' '}
+                      <Link href="/colleges" style={{ color: '#C9A977', textDecoration: 'underline', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                        Choose your round on My Schools →
+                      </Link>
+                    </p>
+                  </div>
+                ) : null}
                 {deadlineGroups.map((g, i) => (
                   <div
                     key={g.date}
@@ -582,10 +600,10 @@ function DashboardContent() {
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', alignItems: 'center' }}>
                       {g.items.map((it) => (
-                        <span key={it.name + it.kind} className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)' }}>
+                        <span key={it.name + it.kind} className="font-body text-sm" style={{ color: it.chosen ? '#E8DDC9' : 'rgba(232,221,201,0.85)', fontWeight: it.chosen ? 600 : 400 }}>
                           {it.name}
                           <span
-                            title={PLAN_EXPLAINERS[it.kind] || ''}
+                            title={(it.chosen ? 'Your committed round. ' : '') + (PLAN_EXPLAINERS[it.kind] || '')}
                             style={{
                               color: it.kind === 'REA' ? '#D4A24E' : '#C9A977',
                               marginLeft: '6px',
@@ -594,7 +612,7 @@ function DashboardContent() {
                               cursor: 'help',
                             }}
                           >
-                            {it.kind}
+                            {it.chosen ? '✓ ' : ''}{it.kind}
                           </span>
                         </span>
                       ))}
