@@ -182,10 +182,16 @@ export default function CollegesPage() {
     // ED and REA are exclusive: committing early to one school clears any
     // other school's ED/REA (matches the actual rules — one binding ED,
     // and REA bars other private early apps).
+    // Two exclusive early slots: ED/REA (the November commitment) and
+    // ED2 (the January backup). Kids may legitimately hold one of each.
     const clearedIds: string[] = [];
     if (plan === 'ED' || plan === 'REA') {
       for (const [id, p] of Object.entries(plans)) {
         if (id !== collegeId && (p === 'ED' || p === 'REA')) clearedIds.push(id);
+      }
+    } else if (plan === 'ED2') {
+      for (const [id, p] of Object.entries(plans)) {
+        if (id !== collegeId && p === 'ED2') clearedIds.push(id);
       }
     }
 
@@ -539,6 +545,7 @@ function planOptionsFor(college: College): string[] {
   const c = college as any;
   const opts: string[] = [];
   if (c.deadline_ed) opts.push('ED');
+  if (c.deadline_ed2 || (Array.isArray(c.available_rounds) && c.available_rounds.includes('ED2'))) opts.push('ED2');
   if (c.deadline_ea) opts.push(eaLabel(college.name));
   opts.push('RD');
   return opts;

@@ -45,6 +45,7 @@ export function eaLabel(collegeName: string): 'EA' | 'REA' {
 
 export const PLAN_EXPLAINERS: Record<string, string> = {
   ED: 'Early Decision — binding. If admitted, you attend. You may apply ED to only ONE school.',
+  ED2: 'Early Decision II — binding, January deadline. A second shot after an early deferral or denial. One ED II school only.',
   REA: 'Restrictive Early Action — non-binding, but you generally cannot apply early (ED or private EA) anywhere else.',
   EA: 'Early Action — non-binding, hear back early. Usually combinable with other EA schools.',
   RD: 'Regular Decision — the standard deadline.',

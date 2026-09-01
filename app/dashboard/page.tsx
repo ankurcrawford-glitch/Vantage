@@ -52,6 +52,7 @@ function DashboardContent() {
   // how many of their schools offer an early round — drives the
   // "where will you apply early?" prompt.
   const [earlyChoice, setEarlyChoice] = useState<{ name: string; plan: string } | null>(null);
+  const [ed2Choice, setEd2Choice] = useState<string | null>(null);
   const [earlyOptionsCount, setEarlyOptionsCount] = useState(0);
   // ED/REA dates at OTHER schools that a commitment made irrelevant —
   // listed in a footnote under the deadline list instead of shown live.
@@ -224,7 +225,7 @@ function DashboardContent() {
       try {
         const { data: dlRows } = await supabase
           .from('user_colleges')
-          .select('application_plan, app_status, colleges:college_id(name, deadline_ed, deadline_ea, deadline_rd)')
+          .select('application_plan, app_status, colleges:college_id(name, deadline_ed, deadline_ed2, deadline_ea, deadline_rd)')
           .eq('user_id', user.id);
         const byDate = new Map<string, { name: string; kind: string; chosen?: boolean }[]>();
         const today = new Date().toISOString().slice(0, 10);
@@ -232,6 +233,7 @@ function DashboardContent() {
         // Pass 1: is there an early commitment (ED or REA) anywhere?
         // It changes what's relevant at every OTHER school.
         let committed: { name: string; plan: string } | null = null;
+        let ed2Backup: string | null = null; // school name with chosen ED2
         let earlyOffers = 0;
         let doneCount = 0;
         for (const row of (dlRows ?? []) as any[]) {
@@ -243,6 +245,7 @@ function DashboardContent() {
           if (plan) {
             const kind = plan === 'EA' ? eaLabel(c.name) : plan;
             if ((kind === 'ED' || kind === 'REA') && !committed) committed = { name: c.name, plan: kind };
+            if (kind === 'ED2' && !ed2Backup) ed2Backup = c.name;
           }
         }
         setSubmittedCount(doneCount);
@@ -263,7 +266,7 @@ function DashboardContent() {
           const plan: string | null = row.application_plan ?? null;
           if (plan) {
             const kind = plan === 'EA' ? eaLabel(c.name) : plan;
-            const d = kind === 'ED' ? c.deadline_ed : (kind === 'EA' || kind === 'REA') ? c.deadline_ea : c.deadline_rd;
+            const d = kind === 'ED' ? c.deadline_ed : kind === 'ED2' ? (c.deadline_ed2 || c.deadline_rd) : (kind === 'EA' || kind === 'REA') ? c.deadline_ea : c.deadline_rd;
             if (d && d >= today) {
               if (!byDate.has(d)) byDate.set(d, []);
               byDate.get(d)!.push({ name: c.name, kind, chosen: true });
@@ -273,9 +276,14 @@ function DashboardContent() {
 
           // Undecided school: show its rounds — minus early rounds made
           // irrelevant by a commitment elsewhere.
-          for (const [kind, d] of [['ED', c.deadline_ed], [eaLabel(c.name), c.deadline_ea], ['RD', c.deadline_rd]] as const) {
+          const ed2Date = c.deadline_ed2 && c.deadline_ed2 !== c.deadline_rd ? c.deadline_ed2 : null;
+          for (const [kind, d] of [['ED', c.deadline_ed], ['ED2', ed2Date], [eaLabel(c.name), c.deadline_ea], ['RD', c.deadline_rd]] as const) {
             if (!d || d < today) continue;
             if (committed && (kind === 'ED' || kind === 'REA')) {
+              dropped.push({ name: c.name, kind });
+              continue;
+            }
+            if (ed2Backup && kind === 'ED2') {
               dropped.push({ name: c.name, kind });
               continue;
             }
@@ -284,6 +292,7 @@ function DashboardContent() {
           }
         }
         setEarlyChoice(committed);
+        setEd2Choice(ed2Backup);
         setEarlyOptionsCount(earlyOffers);
         setDroppedEarly(dropped);
         // Every upcoming deadline, no cap — students plan off this list.
@@ -607,6 +616,7 @@ function DashboardContent() {
                 <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.45)', margin: '0 0 4px', lineHeight: 1.6 }}>
                   Dates marked ✓ are rounds you've committed to; the rest are every round each school offers.{' '}
                   <span title={PLAN_EXPLAINERS.ED} style={{ color: '#C9A977', cursor: 'help' }}>ED</span> binding ·{' '}
+                  <span title={PLAN_EXPLAINERS.ED2} style={{ color: '#C9A977', cursor: 'help' }}>ED II</span> January binding ·{' '}
                   <span title={PLAN_EXPLAINERS.REA} style={{ color: '#D4A24E', cursor: 'help' }}>REA</span> restrictive ·{' '}
                   <span title={PLAN_EXPLAINERS.EA} style={{ color: '#C9A977', cursor: 'help' }}>EA</span> open ·{' '}
                   <span title={PLAN_EXPLAINERS.RD} style={{ color: '#C9A977', cursor: 'help' }}>RD</span> regular
@@ -614,7 +624,8 @@ function DashboardContent() {
                 {earlyChoice ? (
                   <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)', margin: '8px 0 12px', lineHeight: 1.6 }}>
                     <span style={{ color: '#C9A977', fontWeight: 600 }}>Your early commitment:</span>{' '}
-                    {earlyChoice.plan} at {earlyChoice.name} — other schools' ED/REA dates no longer apply
+                    {earlyChoice.plan} at {earlyChoice.name}
+                    {ed2Choice ? ` · ED II backup: ${ed2Choice}` : ''} — other schools' ED/REA dates no longer apply
                     {earlyChoice.plan === 'REA' ? ' (and EA is generally limited to public universities)' : ''}.{' '}
                     <Link href="/colleges" style={{ color: '#C9A977', textDecoration: 'underline' }}>
                       Change it on My Schools

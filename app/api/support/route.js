@@ -7,6 +7,7 @@
 // + length caps keep drive-by spam out.
 
 import { Resend } from "resend";
+import { getAdminClient } from "@/lib/auth";
 
 const ADMIN_EMAIL = process.env.SUPPORT_EMAIL || process.env.DIGEST_ADMIN_EMAIL || "ankur.crawford@gmail.com";
 
@@ -37,6 +38,15 @@ export async function POST(request) {
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     if (!emailOk) {
       return Response.json({ error: "Add an email address so we can get back to you." }, { status: 400 });
+    }
+
+    // Persist first (best-effort) so /admin/support never misses one
+    // even if the email hiccups.
+    try {
+      const supabase = getAdminClient();
+      await supabase.from("support_requests").insert({ email, message, page });
+    } catch (e) {
+      console.error("support insert failed:", e);
     }
 
     const resend = new Resend(process.env.RESEND_API_KEY || "placeholder");
