@@ -66,12 +66,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Two stages — stacked full-width, Foundations then Applications */}
+      {/* Two stages — side by side on desktop, stacked on small screens */}
       <section
         className="px-6 sm:px-8"
         style={{ background: '#0F1828', borderTop: '1px solid #1B2740', borderBottom: '1px solid #1B2740', paddingTop: '72px', paddingBottom: '72px' }}
       >
-        <div style={{ width: '100%', maxWidth: '40rem', marginLeft: 'auto', marginRight: 'auto' }}>
+        <div className="max-w-6xl mx-auto">
           <p
             className="font-body text-center mb-3"
             style={{ color: '#C9A977', fontSize: '11px', letterSpacing: '0.2em', textTransform: 'uppercase' }}
@@ -82,8 +82,8 @@ export default function Home() {
             Start where you are
           </h2>
 
-          <div className="flex flex-col gap-8">
-            <Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="flex flex-col h-full">
               <p
                 className="font-body mb-3"
                 style={{ color: '#C9A977', fontSize: '11px', letterSpacing: '0.18em', textTransform: 'uppercase' }}
@@ -93,7 +93,7 @@ export default function Home() {
               <h3 className="font-heading text-2xl sm:text-3xl font-semibold mb-4" style={{ color: '#E8DDC9' }}>
                 Vantage Foundations
               </h3>
-              <p className="font-body font-light leading-relaxed mb-8" style={{ color: 'rgba(232,221,201,0.85)' }}>
+              <p className="font-body font-light leading-relaxed mb-8" style={{ color: 'rgba(232,221,201,0.85)', flex: 1 }}>
                 Explore your interests, understand your strengths, and make thoughtful
                 choices about classes, activities, and experiences. Vantage Foundations
                 helps you develop a meaningful high-school journey without turning every
@@ -104,7 +104,7 @@ export default function Home() {
               </Link>
             </Card>
 
-            <Card>
+            <Card className="flex flex-col h-full">
               <p
                 className="font-body mb-3"
                 style={{ color: '#C9A977', fontSize: '11px', letterSpacing: '0.18em', textTransform: 'uppercase' }}
@@ -114,7 +114,7 @@ export default function Home() {
               <h3 className="font-heading text-2xl sm:text-3xl font-semibold mb-4" style={{ color: '#E8DDC9' }}>
                 Vantage Applications
               </h3>
-              <p className="font-body font-light leading-relaxed mb-8" style={{ color: 'rgba(232,221,201,0.85)' }}>
+              <p className="font-body font-light leading-relaxed mb-8" style={{ color: 'rgba(232,221,201,0.85)', flex: 1 }}>
                 Bring your experiences together and prepare for the college application
                 process. Vantage Applications helps you develop your strategy, organize
                 your college list, identify the stories that matter, and strengthen your
@@ -193,8 +193,8 @@ export default function Home() {
             work stays in your account.
           </p>
           <p className="font-body font-light leading-relaxed mb-10" style={{ color: 'rgba(232,221,201,0.85)' }}>
-            Create an account for free. AI features have monthly usage caps. A $100
-            one-time upgrade is available when you want full access.
+            Create an account for free. AI features have monthly usage caps. Obtain a
+            one-time code for access.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link href="/signup">
