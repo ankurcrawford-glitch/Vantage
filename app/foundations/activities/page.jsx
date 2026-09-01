@@ -412,6 +412,26 @@ export default function FoundationsActivities() {
               a club, a project, a fundraiser, a small business. Start it here.
             </p>
           </button>
+
+          {/* The hobby slot — no title, no role, no résumé voice. Just the
+              thing they actually do. Prefills with an empty role on purpose. */}
+          <button
+            onClick={() => {
+              setForm({ ...EMPTY_FORM, role: "", depth: 2, thread: "Personal passion" });
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            style={{ border: `1px dashed ${C.line}`, borderRadius: 12, background: "transparent", textAlign: "left", cursor: "pointer" }}
+            className="p-6 flex flex-col justify-center hover:bg-[rgba(197,165,106,0.08)] transition-colors"
+          >
+            <p style={{ ...display, fontSize: 22, fontWeight: 600, color: C.ink, marginBottom: 6 }}>
+              + A hobby you love
+            </p>
+            <p style={{ fontSize: 12.5, color: C.inkDim, lineHeight: 1.65 }}>
+              Reading, drawing, chess, baking, birdwatching. No title, no role required —
+              if you do it regularly and it matters to you, it belongs here. Depth counts
+              more than a résumé word ever will.
+            </p>
+          </button>
         </div>
 
         {/* ── Courses ── */}

@@ -7,6 +7,9 @@ import { supabase } from '@/lib/supabase';
 import { canAccessCollegePrep } from '@/lib/college-prep-access';
 import { effectiveGrade, schoolYearEnd } from '@/lib/grade';
 import Button from './Button';
+// Shared with FoundationsNav so both headers are visually identical.
+// @ts-expect-error — plain-JS theme module without type declarations
+import { C, display } from '@/lib/foundations-theme';
 
 // College-prep-only routes. Foundations students (9/10, and juniors
 // before January) are routed back to their own home if they land here.
@@ -92,20 +95,17 @@ export default function Navigation() {
     return false;
   };
 
-  // Same treatment as the Foundations header tabs: small caps, tracked
-  // out, gold underline on the active section.
+  // Identical to the Foundations header tabs (same values, same theme).
   const getLinkStyle = (path: string): React.CSSProperties => {
     const active = isActive(path);
     return {
-      color: active ? '#C9A977' : 'rgba(232,221,201,0.7)',
-      textDecoration: 'none',
-      fontSize: '12px',
-      letterSpacing: '1.5px',
+      fontSize: 12,
+      letterSpacing: 1.5,
       textTransform: 'uppercase',
-      fontFamily: 'var(--font-body)',
-      fontWeight: active ? 600 : 400,
-      borderBottom: active ? '1px solid #C9A977' : '1px solid transparent',
-      paddingBottom: '4px',
+      textDecoration: 'none',
+      color: active ? C.gold : C.inkDim,
+      borderBottom: active ? `1px solid ${C.gold}` : '1px solid transparent',
+      paddingBottom: 4,
     };
   };
 
@@ -129,13 +129,32 @@ export default function Navigation() {
   }, [loading, user, collegeSideAllowed, pathname, router]);
 
   return (
-    <nav style={{ borderBottom: '1px solid rgba(232,221,201,0.1)', padding: '24px 32px' }}>
-      <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href={user ? (isFoundations ? "/foundations/compass" : "/dashboard") : "/"} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-          <span className="font-heading text-2xl font-semibold" style={{ color: '#E8DDC9' }}>VANTAGE</span>
-          <span className="text-2xl" style={{ color: '#C9A977' }}>.</span>
-        </Link>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+    // Mirrors FoundationsNav's <header> exactly — same border, padding,
+    // wordmark treatment, and tab styling — so crossing between the two
+    // sides of the product feels like one house.
+    <header
+      style={{
+        borderBottom: `1px solid ${C.line}`,
+        padding: '18px clamp(16px, 4vw, 48px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 12,
+      }}
+    >
+      <Link
+        href={user ? (isFoundations ? "/foundations/compass" : "/dashboard") : "/"}
+        style={{ display: 'flex', alignItems: 'baseline', gap: 12, textDecoration: 'none' }}
+      >
+        <span style={{ ...display, fontSize: 24, fontWeight: 600, color: C.ink, letterSpacing: 0.5 }}>
+          Vantage
+        </span>
+        <span style={{ color: C.gold, fontSize: 11, letterSpacing: 3, fontWeight: 500, textTransform: 'uppercase' }}>
+          Applications
+        </span>
+      </Link>
+      <nav style={{ display: 'flex', gap: 'clamp(14px, 2.5vw, 30px)', flexWrap: 'wrap', alignItems: 'center' }}>
           {loading ? (
             <span style={{ color: 'rgba(232,221,201,0.5)', fontSize: '14px' }}>Loading...</span>
           ) : user ? (
@@ -160,15 +179,14 @@ export default function Navigation() {
                 <Link
                   href="/foundations/compass"
                   style={{
-                    fontSize: '12px',
-                    letterSpacing: '1.5px',
+                    fontSize: 12,
+                    letterSpacing: 1.5,
                     textTransform: 'uppercase',
                     textDecoration: 'none',
-                    fontFamily: 'var(--font-body)',
-                    color: '#C9A977',
-                    borderLeft: collegeSideAllowed ? '1px solid rgba(201,169,119,0.35)' : 'none',
-                    paddingLeft: collegeSideAllowed ? '24px' : 0,
-                    paddingBottom: '4px',
+                    color: C.gold,
+                    borderLeft: collegeSideAllowed ? `1px solid ${C.line}` : 'none',
+                    paddingLeft: collegeSideAllowed ? 'clamp(14px, 2.5vw, 24px)' : 0,
+                    paddingBottom: 4,
                   }}
                 >
                   Foundations →
@@ -182,17 +200,17 @@ export default function Navigation() {
                   background: 'transparent',
                   border: 'none',
                   cursor: 'pointer',
-                  fontSize: '12px',
-                  letterSpacing: '1px',
-                  color: 'rgba(232,221,201,0.6)',
-                  fontFamily: 'var(--font-body)',
-                  padding: 0,
+                  fontSize: 12,
+                  letterSpacing: 1,
+                  color: C.inkDim,
+                  fontFamily: 'inherit',
+                  paddingBottom: 4,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#E8DDC9';
+                  e.currentTarget.style.color = C.ink;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'rgba(232,221,201,0.6)';
+                  e.currentTarget.style.color = C.inkDim;
                 }}
               >
                 Log out
@@ -203,8 +221,7 @@ export default function Navigation() {
               <Button variant="secondary">Sign In</Button>
             </Link>
           )}
-        </div>
-      </div>
-    </nav>
+      </nav>
+    </header>
   );
 }
