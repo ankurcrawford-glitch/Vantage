@@ -101,7 +101,7 @@ async function extractActivities(supabase, userId, notes, messages) {
       `From the counselor notes and conversation below, list the student's concrete activities: sports, instruments, clubs, volunteering, jobs, self-started projects, serious hobbies. Already tracked (do NOT repeat): ${existingNames.join("; ") || "(none)"}.
 
 Reply with a JSON array (empty array if nothing new). Each item:
-{"name": "short title", "role": "their role, e.g. Member / Goalie / First chair", "since": "when they started if stated, else \\"\\"", "hours": "weekly hours if stated, else \\"\\"", "depth": 1-5 (1 tried it, 2 committed, 3 deep, 4 leading, 5 defining), "thread": "2-4 word theme", "trajectory": "one sentence on a natural next step"}
+{"name": "short title", "role": "their ACTUAL role or title only if they have one (e.g. Goalie / First chair / Treasurer / Section editor). Personal hobbies like reading, drawing, or gaming have no role — use \\"\\". NEVER invent a label such as 'Enthusiast', 'Practitioner', or 'Hobbyist'.", "since": "when they started if stated, else \\"\\"", "hours": "weekly hours if stated, else \\"\\"", "depth": 1-5 (1 tried it, 2 committed, 3 deep, 4 leading, 5 defining), "thread": "2-4 word theme", "trajectory": "one sentence on a natural next step"}
 
 Only include activities the student explicitly mentioned doing — never infer or invent.
 
@@ -121,13 +121,18 @@ ${transcript}` }],
   }
   if (!Array.isArray(list)) return;
 
+  // Safety net: the model sometimes invents pseudo-roles for hobbies
+  // ("Reading Enthusiast", "Drawing Practitioner"). A hobby has no role —
+  // strip any such label rather than showing it to a student.
+  const INVENTED_ROLE = /\b(enthusiast|practitioner|hobbyist|aficionado|lover|fan)\b/i;
+
   const rows = list
     .filter((a) => a && a.name && !existingNames.includes(String(a.name).toLowerCase().trim()))
     .slice(0, 8)
     .map((a) => ({
       user_id: userId,
       name: String(a.name).slice(0, 80),
-      role: String(a.role || "").slice(0, 80),
+      role: INVENTED_ROLE.test(String(a.role || "")) ? "" : String(a.role || "").slice(0, 80),
       since: String(a.since || "").slice(0, 40),
       hours: String(a.hours || "").slice(0, 20),
       depth: Math.min(5, Math.max(1, parseInt(a.depth, 10) || 1)),

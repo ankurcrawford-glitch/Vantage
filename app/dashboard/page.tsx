@@ -10,6 +10,7 @@ import Card from '@/components/Card';
 import StatCard from '@/components/StatCard';
 import Navigation from '@/components/Navigation';
 import { canAccessCollegePrep } from '@/lib/college-prep-access';
+import { eaLabel, PLAN_EXPLAINERS } from '@/lib/earlyPlans';
 
 interface UserStats {
   gpa_weighted: number | null;
@@ -219,15 +220,17 @@ function DashboardContent() {
         for (const row of (dlRows ?? []) as any[]) {
           const c = row.colleges;
           if (!c) continue;
-          for (const [kind, d] of [['ED', c.deadline_ed], ['EA', c.deadline_ea], ['RD', c.deadline_rd]] as const) {
+          // Label restrictive early action honestly: Harvard/Princeton/
+          // Stanford/Yale/Georgetown/Notre Dame "EA" is really REA/SCEA.
+          for (const [kind, d] of [['ED', c.deadline_ed], [eaLabel(c.name), c.deadline_ea], ['RD', c.deadline_rd]] as const) {
             if (!d || d < today) continue;
             if (!byDate.has(d)) byDate.set(d, []);
             byDate.get(d)!.push({ name: c.name, kind });
           }
         }
+        // Every upcoming deadline, no cap — students plan off this list.
         const groups = [...byDate.entries()]
           .sort((a, b) => a[0].localeCompare(b[0]))
-          .slice(0, 6)
           .map(([date, items]) => ({ date, items }));
         setDeadlineGroups(groups);
       } catch { /* deadlines are decorative - never block the dashboard */ }
@@ -519,6 +522,46 @@ function DashboardContent() {
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {(() => {
+                  // These are every round each school OFFERS, not a plan —
+                  // and the early rounds have rules worth stating plainly.
+                  const edSchools = new Set<string>();
+                  const reaSchools = new Set<string>();
+                  for (const g of deadlineGroups) {
+                    for (const it of g.items) {
+                      if (it.kind === 'ED') edSchools.add(it.name);
+                      if (it.kind === 'REA') reaSchools.add(it.name);
+                    }
+                  }
+                  const showEarlyNote = edSchools.size > 1 || reaSchools.size > 1 || (edSchools.size >= 1 && reaSchools.size >= 1);
+                  return (
+                    <>
+                      <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.45)', margin: '0 0 4px', lineHeight: 1.6 }}>
+                        All dates each of your schools offers.{' '}
+                        <span title={PLAN_EXPLAINERS.ED} style={{ color: '#C9A977', cursor: 'help' }}>ED</span> binding ·{' '}
+                        <span title={PLAN_EXPLAINERS.REA} style={{ color: '#D4A24E', cursor: 'help' }}>REA</span> restrictive ·{' '}
+                        <span title={PLAN_EXPLAINERS.EA} style={{ color: '#C9A977', cursor: 'help' }}>EA</span> open ·{' '}
+                        <span title={PLAN_EXPLAINERS.RD} style={{ color: '#C9A977', cursor: 'help' }}>RD</span> regular
+                      </p>
+                      {showEarlyNote && (
+                        <div style={{
+                          background: 'rgba(212,162,78,0.08)',
+                          border: '1px solid rgba(212,162,78,0.3)',
+                          borderRadius: '4px',
+                          padding: '12px 16px',
+                          margin: '8px 0 12px',
+                        }}>
+                          <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', margin: 0, lineHeight: 1.6 }}>
+                            <span style={{ color: '#D4A24E', fontWeight: 600 }}>Plan your early round deliberately.</span>{' '}
+                            {edSchools.size > 1 && `${edSchools.size} of your schools offer Early Decision, but ED is binding — you can apply ED to only one. `}
+                            {reaSchools.size >= 1 && `Restrictive Early Action (${[...reaSchools].slice(0, 4).join(', ')}${reaSchools.size > 4 ? '…' : ''}) generally rules out applying ED or private-college EA anywhere else. `}
+                            Pick one early strategy; everything else moves to Regular Decision.
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
                 {deadlineGroups.map((g, i) => (
                   <div
                     key={g.date}
@@ -541,7 +584,18 @@ function DashboardContent() {
                       {g.items.map((it) => (
                         <span key={it.name + it.kind} className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)' }}>
                           {it.name}
-                          <span style={{ color: '#C9A977', marginLeft: '6px', fontSize: '11px', letterSpacing: '1px' }}>{it.kind}</span>
+                          <span
+                            title={PLAN_EXPLAINERS[it.kind] || ''}
+                            style={{
+                              color: it.kind === 'REA' ? '#D4A24E' : '#C9A977',
+                              marginLeft: '6px',
+                              fontSize: '11px',
+                              letterSpacing: '1px',
+                              cursor: 'help',
+                            }}
+                          >
+                            {it.kind}
+                          </span>
                         </span>
                       ))}
                     </div>

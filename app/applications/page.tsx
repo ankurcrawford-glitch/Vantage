@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import Navigation from '@/components/Navigation';
 import ApplicationsSubNav from '@/components/ApplicationsSubNav';
 import Card from '@/components/Card';
+import { THEMES, classifyPrompt } from '@/lib/essayThemes';
 
 interface Essay {
   // Present only for started essays
@@ -33,6 +34,10 @@ export default function PersonalStatementPage() {
   // section with a placeholder, instead of disappearing entirely.
   const [userColleges, setUserColleges] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  // "college" = one section per school (default). "theme" = the leverage
+  // map: prompts asking essentially the same question grouped together,
+  // so one strong draft can be adapted across schools.
+  const [viewMode, setViewMode] = useState<'college' | 'theme'>('college');
 
   useEffect(() => {
     checkAuth();
@@ -154,6 +159,97 @@ export default function PersonalStatementPage() {
     }
   };
 
+  // One essay card, shared by both views. In the theme view the college
+  // name is shown on the card (the section header no longer carries it).
+  const renderEssayCard = (essay: Essay, showCollege = false) => (
+    <Card key={essay.prompt_id}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', flexWrap: 'wrap' }}>
+            {showCollege && (
+              <p className="font-heading text-lg" style={{ color: '#C9A977', margin: 0 }}>
+                {essay.college_name}
+              </p>
+            )}
+            <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
+              Prompt {essay.prompt_sort_order}
+            </p>
+            {essay.word_limit && (
+              <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.35)' }}>
+                · {essay.word_limit} word limit
+              </span>
+            )}
+            {!essay.started && (
+              <span
+                className="font-body"
+                style={{
+                  color: '#C9A977',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  border: '1px solid rgba(201,169,119,0.4)',
+                  padding: '2px 8px',
+                  borderRadius: '2px',
+                }}
+              >
+                Not started
+              </span>
+            )}
+          </div>
+          <p className="font-body mb-4" style={{ color: 'rgba(232,221,201,0.9)', lineHeight: '1.6' }}>
+            {essay.prompt_text.length > 200
+              ? `${essay.prompt_text.substring(0, 200)}...`
+              : essay.prompt_text}
+          </p>
+          {essay.started && (
+            <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+              <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
+                Version {essay.latest_version ?? 0} • {essay.latest_word_count ?? 0} words
+              </span>
+              {essay.updated_at && (
+                <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
+                  Updated {new Date(essay.updated_at).toLocaleDateString()}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+        <Link href={`/essays/${essay.college_id}/${essay.prompt_id}`}>
+          <button
+            style={{
+              background: '#C9A977',
+              color: '#0B1320',
+              padding: '12px 24px',
+              fontFamily: 'var(--font-body)',
+              fontSize: '14px',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              border: 'none',
+              borderRadius: '2px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              whiteSpace: 'nowrap',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.color = '#C9A977';
+              e.currentTarget.style.border = '1px solid #C9A977';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#C9A977';
+              e.currentTarget.style.color = '#0B1320';
+              e.currentTarget.style.border = 'none';
+            }}
+          >
+            {essay.started ? 'Continue Writing' : 'Start Writing'}
+          </button>
+        </Link>
+      </div>
+    </Card>
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1320' }}>
@@ -168,11 +264,40 @@ export default function PersonalStatementPage() {
       <ApplicationsSubNav />
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '64px 32px' }}>
-        <div style={{ marginBottom: '48px' }}>
-          <h1 className="font-heading text-5xl mb-4" style={{ color: '#E8DDC9' }}>My Essays</h1>
-          <p className="font-body text-lg" style={{ color: '#E8DDC9' }}>
-            Manage and continue writing your college application essays
-          </p>
+        <div style={{ marginBottom: '48px', display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px' }}>
+          <div>
+            <h1 className="font-heading text-5xl mb-4" style={{ color: '#E8DDC9' }}>My Essays</h1>
+            <p className="font-body text-lg" style={{ color: '#E8DDC9' }}>
+              {viewMode === 'college'
+                ? 'Manage and continue writing your college application essays'
+                : 'Similar questions grouped together — write one strong draft, adapt it across schools'}
+            </p>
+          </div>
+          {essays.length > 0 && (
+            <div style={{ display: 'flex', border: '1px solid rgba(201,169,119,0.4)', borderRadius: '2px', overflow: 'hidden' }}>
+              {([['college', 'By College'], ['theme', 'By Question']] as const).map(([mode, label]) => (
+                <button
+                  key={mode}
+                  onClick={() => setViewMode(mode)}
+                  className="font-body"
+                  style={{
+                    background: viewMode === mode ? '#C9A977' : 'transparent',
+                    color: viewMode === mode ? '#0B1320' : '#C9A977',
+                    padding: '10px 18px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {essays.length === 0 ? (
@@ -217,6 +342,58 @@ export default function PersonalStatementPage() {
             // follow alphabetically. Within each section, essays are ordered
             // by prompt sort order.
             const COMMON_APP_COLLEGE_ID = 'a0000000-0000-0000-0000-000000000000';
+
+            // ── Theme view (the leverage map) ─────────────────────────
+            // Supplemental prompts only — the Common App personal
+            // statement is its own animal and stays in the college view.
+            if (viewMode === 'theme') {
+              const supplementals = essays.filter((e) => e.college_id !== COMMON_APP_COLLEGE_ID);
+              const byTheme = new Map<string, Essay[]>();
+              for (const e of supplementals) {
+                const key = classifyPrompt(e.prompt_text);
+                if (!byTheme.has(key)) byTheme.set(key, []);
+                byTheme.get(key)!.push(e);
+              }
+              // THEMES order = presentation order; skip empty themes.
+              const themedGroups = THEMES
+                .filter((t) => (byTheme.get(t.key) || []).length > 0)
+                .map((t) => ({
+                  theme: t,
+                  essays: (byTheme.get(t.key) || []).sort((a, b) =>
+                    a.college_name.localeCompare(b.college_name) || a.prompt_sort_order - b.prompt_sort_order),
+                }));
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
+                  {themedGroups.length === 0 && (
+                    <Card>
+                      <p className="font-body text-center" style={{ color: 'rgba(232,221,201,0.7)', padding: '48px 32px' }}>
+                        No supplemental prompts yet — add schools to your portfolio and their essays will appear here.
+                      </p>
+                    </Card>
+                  )}
+                  {themedGroups.map(({ theme, essays: themeEssays }) => (
+                    <section key={theme.key}>
+                      <div style={{ marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px solid rgba(201,169,119,0.25)' }}>
+                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '16px' }}>
+                          <h2 className="font-heading text-3xl" style={{ color: '#E8DDC9' }}>{theme.name}</h2>
+                          <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.4)', whiteSpace: 'nowrap' }}>
+                            {themeEssays.length} {themeEssays.length === 1 ? 'essay' : 'essays'} · {themeEssays.filter((e) => e.started).length} started
+                          </span>
+                        </div>
+                        <p className="font-body text-sm" style={{ color: 'rgba(201,169,119,0.8)', margin: '6px 0 0', lineHeight: 1.5 }}>
+                          {theme.hint}
+                        </p>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                        {themeEssays.map((essay) => renderEssayCard(essay, true))}
+                      </div>
+                    </section>
+                  ))}
+                </div>
+              );
+            }
+
+            // ── College view (default) ────────────────────────────────
             // Seed a group for every selected college so colleges without
             // any loaded prompts still appear with a placeholder card.
             const groupsMap = new Map<string, { collegeId: string; collegeName: string; noSupplement?: boolean; essays: Essay[] }>();
@@ -363,89 +540,7 @@ export default function PersonalStatementPage() {
                           </div>
                         </Card>
                       ) : (
-                        group.essays.map((essay) => (
-              <Card key={essay.prompt_id}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                      <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
-                        Prompt {essay.prompt_sort_order}
-                      </p>
-                      {essay.word_limit && (
-                        <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.35)' }}>
-                          · {essay.word_limit} word limit
-                        </span>
-                      )}
-                      {!essay.started && (
-                        <span
-                          className="font-body"
-                          style={{
-                            color: '#C9A977',
-                            fontSize: '11px',
-                            fontWeight: 600,
-                            letterSpacing: '0.08em',
-                            textTransform: 'uppercase',
-                            border: '1px solid rgba(201,169,119,0.4)',
-                            padding: '2px 8px',
-                            borderRadius: '2px',
-                          }}
-                        >
-                          Not started
-                        </span>
-                      )}
-                    </div>
-                    <p className="font-body mb-4" style={{ color: 'rgba(232,221,201,0.9)', lineHeight: '1.6' }}>
-                      {essay.prompt_text.length > 200
-                        ? `${essay.prompt_text.substring(0, 200)}...`
-                        : essay.prompt_text}
-                    </p>
-                    {essay.started && (
-                      <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-                        <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
-                          Version {essay.latest_version ?? 0} • {essay.latest_word_count ?? 0} words
-                        </span>
-                        {essay.updated_at && (
-                          <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
-                            Updated {new Date(essay.updated_at).toLocaleDateString()}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <Link href={`/essays/${essay.college_id}/${essay.prompt_id}`}>
-                    <button
-                      style={{
-                        background: '#C9A977',
-                        color: '#0B1320',
-                        padding: '12px 24px',
-                        fontFamily: 'var(--font-body)',
-                        fontSize: '14px',
-                        fontWeight: 600,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                        border: 'none',
-                        borderRadius: '2px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        whiteSpace: 'nowrap',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.color = '#C9A977';
-                        e.currentTarget.style.border = '1px solid #C9A977';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#C9A977';
-                        e.currentTarget.style.color = '#0B1320';
-                        e.currentTarget.style.border = 'none';
-                      }}
-                    >
-                      {essay.started ? 'Continue Writing' : 'Start Writing'}
-                    </button>
-                  </Link>
-                </div>
-              </Card>
-                        ))
+                        group.essays.map((essay) => renderEssayCard(essay))
                       )}
                     </div>
                   </section>
