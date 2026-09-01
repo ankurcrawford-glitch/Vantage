@@ -325,6 +325,56 @@ export default function CollegesPage() {
               </Card>
             ) : (
               <>
+                {/* Early commitment status — the single most consequential
+                    choice on this page, so it sits with the headline stats. */}
+                {(() => {
+                  const committedId = Object.keys(plans).find((id) => plans[id] === 'ED' || plans[id] === 'REA');
+                  const committedCollege = committedId ? colleges.find((c) => c.id === committedId) : null;
+                  const committedPlan = committedId ? plans[committedId] : null;
+                  return committedCollege ? (
+                    <div style={{
+                      background: 'rgba(201,169,119,0.1)',
+                      border: '1px solid rgba(201,169,119,0.35)',
+                      borderLeft: '4px solid #C9A977',
+                      padding: '16px 24px',
+                      marginBottom: '24px',
+                      display: 'flex',
+                      alignItems: 'baseline',
+                      gap: '12px',
+                      flexWrap: 'wrap',
+                    }}>
+                      <span className="font-body" style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#C9A977' }}>
+                        Early commitment
+                      </span>
+                      <span className="font-heading" style={{ color: '#E8DDC9', fontSize: '20px', fontWeight: 600 }}>
+                        {committedPlan} · {committedCollege.name}
+                      </span>
+                      <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.6)' }}>
+                        {committedPlan === 'ED'
+                          ? 'Binding if admitted. Other schools move to EA/RD.'
+                          : 'Non-binding, but no ED or private EA elsewhere.'}
+                        {' '}Change it on any card below.
+                      </span>
+                    </div>
+                  ) : (
+                    <div style={{
+                      background: 'rgba(212,162,78,0.08)',
+                      border: '1px solid rgba(212,162,78,0.35)',
+                      borderLeft: '4px solid #D4A24E',
+                      padding: '16px 24px',
+                      marginBottom: '24px',
+                    }}>
+                      <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.9)', margin: 0, lineHeight: 1.6 }}>
+                        <span style={{ color: '#D4A24E', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: '11px', marginRight: '10px' }}>
+                          Early round not chosen
+                        </span>
+                        Applying early is your biggest lever — the ED Strategy panel below shows where it pays most.
+                        Commit with the <strong style={{ color: '#C9A977' }}>Applying</strong> pills on a school card.
+                      </p>
+                    </div>
+                  );
+                })()}
+
                 {/* Balance diagnostic card */}
                 <BalanceDiagnostic
                   data={diagnostic}

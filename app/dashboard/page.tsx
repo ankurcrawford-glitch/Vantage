@@ -52,6 +52,9 @@ function DashboardContent() {
   // "where will you apply early?" prompt.
   const [earlyChoice, setEarlyChoice] = useState<{ name: string; plan: string } | null>(null);
   const [earlyOptionsCount, setEarlyOptionsCount] = useState(0);
+  // ED/REA dates at OTHER schools that a commitment made irrelevant —
+  // listed in a footnote under the deadline list instead of shown live.
+  const [droppedEarly, setDroppedEarly] = useState<{ name: string; kind: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasSubscription, setHasSubscription] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -222,18 +225,36 @@ function DashboardContent() {
           .eq('user_id', user.id);
         const byDate = new Map<string, { name: string; kind: string; chosen?: boolean }[]>();
         const today = new Date().toISOString().slice(0, 10);
+
+        // Pass 1: is there an early commitment (ED or REA) anywhere?
+        // It changes what's relevant at every OTHER school.
         let committed: { name: string; plan: string } | null = null;
         let earlyOffers = 0;
         for (const row of (dlRows ?? []) as any[]) {
           const c = row.colleges;
           if (!c) continue;
           if (c.deadline_ed || c.deadline_ea) earlyOffers += 1;
+          const plan: string | null = row.application_plan ?? null;
+          if (plan) {
+            const kind = plan === 'EA' ? eaLabel(c.name) : plan;
+            if ((kind === 'ED' || kind === 'REA') && !committed) committed = { name: c.name, plan: kind };
+          }
+        }
+
+        // Pass 2: build the list. Once an early commitment exists, other
+        // schools' ED and REA dates are no longer live options (one ED
+        // max; REA excludes other early commitments) — they drop out of
+        // the list and are reported in a footnote instead. EA and RD at
+        // other schools stay.
+        const dropped: { name: string; kind: string }[] = [];
+        for (const row of (dlRows ?? []) as any[]) {
+          const c = row.colleges;
+          if (!c) continue;
 
           // A committed round collapses this school to just that date.
           const plan: string | null = row.application_plan ?? null;
           if (plan) {
             const kind = plan === 'EA' ? eaLabel(c.name) : plan;
-            if (kind === 'ED' || kind === 'REA') committed = committed ?? { name: c.name, plan: kind };
             const d = kind === 'ED' ? c.deadline_ed : (kind === 'EA' || kind === 'REA') ? c.deadline_ea : c.deadline_rd;
             if (d && d >= today) {
               if (!byDate.has(d)) byDate.set(d, []);
@@ -242,16 +263,21 @@ function DashboardContent() {
             continue;
           }
 
-          // Undecided: show every round the school offers. Restrictive
-          // early action is labeled honestly (REA, not generic EA).
+          // Undecided school: show its rounds — minus early rounds made
+          // irrelevant by a commitment elsewhere.
           for (const [kind, d] of [['ED', c.deadline_ed], [eaLabel(c.name), c.deadline_ea], ['RD', c.deadline_rd]] as const) {
             if (!d || d < today) continue;
+            if (committed && (kind === 'ED' || kind === 'REA')) {
+              dropped.push({ name: c.name, kind });
+              continue;
+            }
             if (!byDate.has(d)) byDate.set(d, []);
             byDate.get(d)!.push({ name: c.name, kind });
           }
         }
         setEarlyChoice(committed);
         setEarlyOptionsCount(earlyOffers);
+        setDroppedEarly(dropped);
         // Every upcoming deadline, no cap — students plan off this list.
         const groups = [...byDate.entries()]
           .sort((a, b) => a[0].localeCompare(b[0]))
@@ -556,7 +582,8 @@ function DashboardContent() {
                 {earlyChoice ? (
                   <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.7)', margin: '8px 0 12px', lineHeight: 1.6 }}>
                     <span style={{ color: '#C9A977', fontWeight: 600 }}>Your early commitment:</span>{' '}
-                    {earlyChoice.plan} at {earlyChoice.name}.{' '}
+                    {earlyChoice.plan} at {earlyChoice.name} — other schools' ED/REA dates no longer apply
+                    {earlyChoice.plan === 'REA' ? ' (and EA is generally limited to public universities)' : ''}.{' '}
                     <Link href="/colleges" style={{ color: '#C9A977', textDecoration: 'underline' }}>
                       Change it on My Schools
                     </Link>
@@ -619,6 +646,19 @@ function DashboardContent() {
                     </div>
                   </div>
                 ))}
+                {earlyChoice && droppedEarly.length > 0 && (
+                  <p className="font-body text-xs" style={{
+                    color: 'rgba(232,221,201,0.4)',
+                    margin: 0,
+                    padding: '14px 8px 2px',
+                    borderTop: '1px solid rgba(201,169,119,0.15)',
+                    lineHeight: 1.7,
+                  }}>
+                    Set aside by your {earlyChoice.plan} at {earlyChoice.name}:{' '}
+                    {droppedEarly.map((d) => `${d.name} ${d.kind}`).join(' · ')}
+                    {' '}— these schools now show EA/RD dates only.
+                  </p>
+                )}
               </div>
             )}
           </Card>
