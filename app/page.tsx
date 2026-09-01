@@ -208,6 +208,15 @@ export default function Home() {
               the table — your reflections become essay ideas, your threads become your story.
             </p>
           </div>
+
+          <p className="font-body text-center" style={{ marginTop: '32px' }}>
+            <Link
+              href="/how-it-works"
+              style={{ color: '#C9A977', textDecoration: 'none', fontSize: '14px', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}
+            >
+              The full story: how Vantage works →
+            </Link>
+          </p>
         </div>
       </section>
 

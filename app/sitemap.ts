@@ -5,6 +5,7 @@ const BASE = 'https://www.my-vantage.app';
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: BASE },
+    { url: `${BASE}/how-it-works` },
     { url: `${BASE}/login` },
     { url: `${BASE}/signup` },
     { url: `${BASE}/terms` },
