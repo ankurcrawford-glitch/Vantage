@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { canAccessCollegePrep } from '@/lib/college-prep-access';
-import { effectiveGrade } from '@/lib/grade';
+import { effectiveGrade, schoolYearEnd } from '@/lib/grade';
 import Button from './Button';
 
 // College-prep-only routes. Foundations students (9/10, and juniors
@@ -45,12 +45,18 @@ export default function Navigation() {
         try {
           const { data, error } = await supabase
             .from('user_stats')
-            .select('grade, class_of')
+            .select('grade, class_of, grade_confirmed_for')
             .eq('user_id', user.id)
             .single();
           const g = !error ? effectiveGrade(data) : null;
           if (g !== null) {
             setGrade(g);
+            // Annual grade confirmation — catches students who deep-link
+            // past the gateway. The confirm page stamps grade_confirmed_for.
+            if ((data as { grade_confirmed_for?: number } | null)?.grade_confirmed_for !== schoolYearEnd()) {
+              router.replace('/confirm-grade');
+              return;
+            }
           }
         } catch {
           /* grade column not present yet - leave hidden */

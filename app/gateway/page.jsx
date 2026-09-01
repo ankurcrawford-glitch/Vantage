@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { effectiveGrade } from '@/lib/grade';
+import { effectiveGrade, schoolYearEnd } from '@/lib/grade';
 
 // ─── Vantage — Gateway ───────────────────────────────────────────
 // Post-login fork. If we already know the student's grade, route them
@@ -31,10 +31,17 @@ export default function Gateway() {
         // Remembered grade → skip the chooser entirely.
         const { data } = await supabase
           .from('user_stats')
-          .select('grade, class_of')
+          .select('grade, class_of, grade_confirmed_for')
           .eq('user_id', user.id)
           .maybeSingle();
         const g = effectiveGrade(data);
+        // Annual checkpoint: every student re-confirms their grade once per
+        // school year (first visit after Aug 1) so a stale grade never
+        // steers a year's worth of guidance.
+        if (typeof g === 'number' && data?.grade_confirmed_for !== schoolYearEnd()) {
+          router.replace('/confirm-grade');
+          return;
+        }
         if (typeof g === 'number' && g >= 9 && g <= 11) {
           router.replace('/foundations/compass');
           return;

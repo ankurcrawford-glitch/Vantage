@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { canAccessCollegePrep, collegePrepLockedMessage } from "@/lib/college-prep-access";
-import { effectiveGrade } from "@/lib/grade";
+import { effectiveGrade, schoolYearEnd } from "@/lib/grade";
 import { C, display } from "@/lib/foundations-theme";
 
 // Shared top navigation for every Foundations page. Users with no grade
@@ -37,12 +37,18 @@ export default function FoundationsNav() {
         if (!user) return; // each page handles its own login redirect
         const { data } = await supabase
           .from("user_stats")
-          .select("grade, class_of")
+          .select("grade, class_of, grade_confirmed_for")
           .eq("user_id", user.id)
           .maybeSingle();
         const g = effectiveGrade(data);
-        if (typeof g === "number") setGrade(g);
-        else router.replace("/foundations/start");
+        if (typeof g === "number") {
+          setGrade(g);
+          // Annual grade confirmation — catches deep links into Foundations.
+          if (data?.grade_confirmed_for !== schoolYearEnd()) {
+            router.replace("/confirm-grade");
+            return;
+          }
+        } else router.replace("/foundations/start");
       } catch {
         /* fail open */
       }

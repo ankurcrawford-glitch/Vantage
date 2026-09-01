@@ -4,7 +4,7 @@
 // upserts the single grade field.
 
 import { getAuthedUser, getAdminClient } from "@/lib/auth";
-import { classOfFromGrade } from "@/lib/grade";
+import { classOfFromGrade, schoolYearEnd } from "@/lib/grade";
 
 export async function POST(req) {
   try {
@@ -31,9 +31,11 @@ export async function POST(req) {
     // class_of is the durable value (auto-rolls every August); grade is
     // kept in sync for legacy readers.
     const class_of = classOfFromGrade(g);
+    // Saving a grade IS confirming it for the current school year.
+    const grade_confirmed_for = schoolYearEnd();
     const result = existing
-      ? await supabase.from("user_stats").update({ grade: g, class_of }).eq("user_id", userId)
-      : await supabase.from("user_stats").insert({ user_id: userId, grade: g, class_of });
+      ? await supabase.from("user_stats").update({ grade: g, class_of, grade_confirmed_for }).eq("user_id", userId)
+      : await supabase.from("user_stats").insert({ user_id: userId, grade: g, class_of, grade_confirmed_for });
     if (result.error) throw result.error;
 
     return Response.json({ ok: true, grade: g });
