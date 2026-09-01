@@ -134,20 +134,37 @@ export default function Navigation() {
             <span style={{ color: 'rgba(232,221,201,0.5)', fontSize: '14px' }}>Loading...</span>
           ) : user ? (
             <>
-              {/* Foundations entry for every signed-in user. The env flag is a
-                  deploy switch (NEXT_PUBLIC_FOUNDATIONS_ENABLED), not a user gate. */}
-              {process.env.NEXT_PUBLIC_FOUNDATIONS_ENABLED === 'true' && (
-                <Link href="/foundations/compass" style={getLinkStyle('/foundations')}>Foundations</Link>
-              )}
-              {/* College-app links. Seniors always; juniors from January
-                  (canAccessCollegePrep). Grade 9/10 stay in Foundations. */}
+              {/* College-app links, Dashboard first. Seniors always; juniors
+                  from January (canAccessCollegePrep). Grade 9/10 stay in
+                  Foundations. */}
               {collegeSideAllowed && (
                 <>
+                  <Link href="/dashboard" style={getLinkStyle('/dashboard')}>Dashboard</Link>
                   <Link href="/story-builder" style={getLinkStyle('/story-builder')}>Story Builder</Link>
                   <Link href="/applications" style={getLinkStyle('/applications')}>Essays</Link>
                   <Link href="/colleges" style={getLinkStyle('/colleges')}>Strategy</Link>
                   <Link href="/profile" style={getLinkStyle('/profile')}>My Profile</Link>
-                  <Link href="/dashboard" style={getLinkStyle('/dashboard')}>Dashboard</Link>
+                </>
+              )}
+              {/* Foundations is the other world — set apart by a divider,
+                  mirroring the gold "Vantage →" crossover in FoundationsNav.
+                  The env flag is a deploy switch (NEXT_PUBLIC_FOUNDATIONS_ENABLED),
+                  not a user gate. */}
+              {process.env.NEXT_PUBLIC_FOUNDATIONS_ENABLED === 'true' && (
+                <>
+                  {collegeSideAllowed && (
+                    <span aria-hidden style={{ width: '1px', height: '18px', background: 'rgba(201,169,119,0.35)' }} />
+                  )}
+                  <Link
+                    href="/foundations/compass"
+                    style={{
+                      ...getLinkStyle('/foundations'),
+                      color: isActive('/foundations') ? '#C9A977' : 'rgba(201,169,119,0.85)',
+                    }}
+                  >
+                    Foundations
+                  </Link>
+                  <span aria-hidden style={{ width: '1px', height: '18px', background: 'rgba(201,169,119,0.35)' }} />
                 </>
               )}
               <button
