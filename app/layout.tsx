@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Footer from "@/components/Footer";
+import SupportWidget from "@/components/SupportWidget";
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +28,7 @@ export default function RootLayout({
       <body className="antialiased" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1 }}>{children}</div>
         <Footer />
+        <SupportWidget />
       </body>
     </html>
   );
