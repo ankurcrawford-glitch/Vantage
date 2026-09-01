@@ -24,7 +24,7 @@ export default function AdminSupportPage() {
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
 
-  const authHeaders = async () => {
+  const authHeaders = async (): Promise<Record<string, string>> => {
     const { data: { session } } = await supabase.auth.getSession();
     return session ? { Authorization: `Bearer ${session.access_token}` } : {};
   };
