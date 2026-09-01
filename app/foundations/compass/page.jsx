@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import FoundationsNav from "@/components/FoundationsNav";
-import JourneyStrip from "@/components/JourneyStrip";
+import Link from "next/link";
 import { C, display, body } from "@/lib/foundations-theme";
 import { effectiveGrade } from "@/lib/grade";
 
@@ -102,26 +102,56 @@ export default function FoundationsCompass() {
           </p>
         </div>
 
-        {/* ── The Foundations loop — how it all connects, with the
-            student's own position lit so the first thing they see after
-            login is where they are in the journey. ── */}
-        <JourneyStrip
-          title="How Foundations works"
-          activeIndex={
-            !started ? 0
-              : activityCount === 0 && toReview === 0 ? 2
-              : roadmapDone === 0 ? 3
-              : 4
-          }
-          steps={[
-            { label: "Conversation", href: "/foundations/conversation", desc: "Talk with your counselor — everything else is built from what you share here." },
-            { label: "Story", href: "/foundations/story", desc: "What we've learned about you, written down — your narrative so far." },
-            { label: "Activities", href: "/foundations/activities", desc: "Your commitments, tracked over years — depth beats breadth." },
-            { label: "Roadmap", href: "/foundations/roadmap", desc: "The right moves for your grade, checked off as you go." },
-            { label: "Spark", href: "/foundations/spark", desc: "A monthly reflection — raw material that becomes essay gold senior year." },
-          ]}
-          tail="→ your application"
-        />
+        {/* ── The loop — how it all connects, told as a rhythm rather
+            than a pipeline, with ONE next action computed from live data. ── */}
+        {(() => {
+          const next = !started
+            ? { href: "/foundations/conversation", label: "Start the conversation" }
+            : toReview > 0
+              ? { href: "/foundations/activities", label: `Review ${toReview} suggested ${toReview === 1 ? "activity" : "activities"}` }
+              : activityCount === 0
+                ? { href: "/foundations/activities", label: "Add your first activity — hobbies count" }
+                : roadmapDone === 0
+                  ? { href: "/foundations/roadmap", label: "Check your roadmap" }
+                  : { href: "/foundations/spark", label: "Write this month's Spark" };
+          const rows = [
+            { href: "/foundations/conversation", label: "You talk", detail: "with a counselor who remembers everything" },
+            { href: "/foundations/story", label: "It writes your story", detail: "who you are, kept current as you grow" },
+            { href: "/foundations/activities", label: "Your threads build", detail: "activities and hobbies, tracked over years" },
+            { href: "/foundations/roadmap", label: "Your moves fit your grade", detail: "the right next steps, never generic" },
+            { href: "/foundations/spark", label: "Once a month, five honest minutes", detail: "small true moments, banked" },
+          ];
+          return (
+            <div
+              style={{ border: `1px solid ${C.line}`, borderRadius: 12, padding: "22px 26px", marginBottom: 32, background: "rgba(197,165,106,0.04)" }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
+                <p style={{ fontSize: 10, letterSpacing: 2.5, color: C.gold, fontWeight: 600 }} className="uppercase">
+                  How Foundations works
+                </p>
+                <Link
+                  href={next.href}
+                  style={{ fontSize: 12, letterSpacing: 1, color: C.navy, background: C.gold, borderRadius: 999, padding: "6px 14px", textDecoration: "none", fontWeight: 700 }}
+                  className="uppercase"
+                >
+                  Right now → {next.label}
+                </Link>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {rows.map((r, i) => (
+                  <Link key={r.href} href={r.href} style={{ display: "flex", alignItems: "baseline", gap: 10, textDecoration: "none" }}>
+                    <span style={{ color: C.gold, fontSize: 12, width: 14, flexShrink: 0 }}>{i === rows.length - 1 ? "↻" : "↓"}</span>
+                    <span style={{ ...display, fontSize: 17, fontWeight: 600, color: C.ink, whiteSpace: "nowrap" }}>{r.label}</span>
+                    <span style={{ fontSize: 12.5, color: C.inkDim, lineHeight: 1.5 }}>— {r.detail}</span>
+                  </Link>
+                ))}
+              </div>
+              <p style={{ fontSize: 12.5, color: C.gold, marginTop: 14, lineHeight: 1.6 }}>
+                Senior year, all of it walks into your applications with you — your reflections become essay ideas, your threads become your story.
+              </p>
+            </div>
+          );
+        })()}
 
         {/* ── Primary: the Conversation ── */}
         <button
