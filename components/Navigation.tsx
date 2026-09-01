@@ -151,41 +151,44 @@ export default function Navigation() {
                   The env flag is a deploy switch (NEXT_PUBLIC_FOUNDATIONS_ENABLED),
                   not a user gate. */}
               {process.env.NEXT_PUBLIC_FOUNDATIONS_ENABLED === 'true' && (
-                <>
-                  {collegeSideAllowed && (
-                    <span aria-hidden style={{ width: '1px', height: '18px', background: 'rgba(201,169,119,0.35)' }} />
-                  )}
-                  <Link
-                    href="/foundations/compass"
-                    style={{
-                      ...getLinkStyle('/foundations'),
-                      color: isActive('/foundations') ? '#C9A977' : 'rgba(201,169,119,0.85)',
-                    }}
-                  >
-                    Foundations
-                  </Link>
-                  <span aria-hidden style={{ width: '1px', height: '18px', background: 'rgba(201,169,119,0.35)' }} />
-                </>
+                <Link
+                  href="/foundations/compass"
+                  style={{
+                    fontSize: '12px',
+                    letterSpacing: '1.5px',
+                    textTransform: 'uppercase',
+                    textDecoration: 'none',
+                    fontFamily: 'var(--font-body)',
+                    color: '#C9A977',
+                    borderLeft: collegeSideAllowed ? '1px solid rgba(201,169,119,0.35)' : 'none',
+                    paddingLeft: collegeSideAllowed ? '24px' : 0,
+                  }}
+                >
+                  Foundations →
+                </Link>
               )}
+              {/* Same treatment as the Foundations header's "Log out". */}
               <button
+                type="button"
                 onClick={handleLogout}
                 style={{
                   background: 'transparent',
-                  color: 'rgba(232,221,201,0.7)',
                   border: 'none',
-                  fontFamily: 'var(--font-body)',
-                  fontSize: '14px',
                   cursor: 'pointer',
+                  fontSize: '12px',
+                  letterSpacing: '1px',
+                  color: 'rgba(232,221,201,0.6)',
+                  fontFamily: 'var(--font-body)',
                   padding: 0,
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.color = '#E8DDC9';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'rgba(232,221,201,0.7)';
+                  e.currentTarget.style.color = 'rgba(232,221,201,0.6)';
                 }}
               >
-                Logout
+                Log out
               </button>
             </>
           ) : (
