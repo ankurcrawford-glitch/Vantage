@@ -99,6 +99,13 @@ export default function Home() {
                 helps you develop a meaningful high-school journey without turning every
                 decision into an admissions calculation.
               </p>
+              <p
+                className="font-body leading-relaxed mb-8"
+                style={{ color: '#C9A977', fontSize: '15px', fontStyle: 'italic', borderLeft: '2px solid rgba(201,169,119,0.4)', paddingLeft: '16px' }}
+              >
+                We meet you in 9th grade, bank four years of your story — then spend it
+                when it matters most.
+              </p>
               <Link href="/signup" className="inline-block">
                 <Button className="px-6">Explore Vantage Foundations</Button>
               </Link>
@@ -119,6 +126,13 @@ export default function Home() {
                 process. Vantage Applications helps you develop your strategy, organize
                 your college list, identify the stories that matter, and strengthen your
                 essays while keeping the work authentically yours.
+              </p>
+              <p
+                className="font-body leading-relaxed mb-8"
+                style={{ color: '#C9A977', fontSize: '15px', fontStyle: 'italic', borderLeft: '2px solid rgba(201,169,119,0.4)', paddingLeft: '16px' }}
+              >
+                Starting as a senior? A few honest questions rebuild your story fast — so
+                every essay starts from who you are, never from a blank page.
               </p>
               <Link href="/signup" className="inline-block">
                 <Button className="px-6">Explore Vantage Applications</Button>
