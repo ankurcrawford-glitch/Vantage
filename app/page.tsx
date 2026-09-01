@@ -20,20 +20,20 @@ export default function Home() {
               <span className="text-7xl md:text-8xl lg:text-9xl" style={{ color: '#C9A977' }}>.</span>
             </div>
             <p className="font-body text-lg md:text-xl" style={{ color: '#E8DDC9', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
-              Strategic Admissions Intelligence
+              Thoughtful guidance for every step toward college
             </p>
           </div>
 
           <h1 className="font-heading text-5xl md:text-6xl lg:text-7xl font-semibold mb-8 leading-tight" style={{ color: '#E8DDC9', maxWidth: '100%' }}>
-            Admissions Strategy.<br />
-            Elevated by Intelligence.
+            Your path to college.<br />
+            Thoughtfully guided.
           </h1>
           <p className="font-body text-xl md:text-2xl mb-12 mx-auto font-light leading-relaxed" style={{ color: '#E8DDC9', maxWidth: '900px' }}>
-            A secure, private platform that learns your history to architect your future.
+            A private, personalized platform that meets students where they are—from grade 9 through grade 12—and helps them move forward with clarity and confidence.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link href="/signup">
-              <Button>Begin Assessment</Button>
+              <Button>Get Started</Button>
             </Link>
             <Link href="/login">
               <Button variant="secondary">Sign In</Button>
@@ -46,33 +46,33 @@ export default function Home() {
       <section className="py-32 px-8" style={{ background: '#0F1828', borderTop: '1px solid #1B2740', borderBottom: '1px solid #1B2740' }}>
         <div className="max-w-7xl mx-auto">
           <h2 className="font-heading text-5xl font-semibold text-center mb-16" style={{ color: '#E8DDC9' }}>
-            Why VANTAGE
+            Guidance that grows with you
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
             <Card>
               <h3 className="font-heading text-2xl font-semibold mb-4" style={{ color: '#C9A977' }}>
-                Intelligent Analysis
+                Vantage Foundations
               </h3>
               <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.9)' }}>
-                Our platform learns from your academic history, achievements, and aspirations to create a personalized admissions strategy.
+                From grade 9 through the middle of grade 11, explore your interests, shape meaningful goals, and build a strong foundation—one step at a time.
               </p>
             </Card>
 
             <Card>
               <h3 className="font-heading text-2xl font-semibold mb-4" style={{ color: '#C9A977' }}>
-                Secure & Private
+                Vantage
               </h3>
               <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.9)' }}>
-                Your data is encrypted and protected with bank-level security. Your journey remains completely confidential.
+                From the middle of grade 11 through grade 12, bring your story, college list, applications, and essays together with guidance tailored to you.
               </p>
             </Card>
 
             <Card>
               <h3 className="font-heading text-2xl font-semibold mb-4" style={{ color: '#C9A977' }}>
-                Strategic Guidance
+                Personal and private
               </h3>
               <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.9)' }}>
-                Receive expert insights and recommendations tailored to maximize your chances of admission to top institutions.
+                Your experience reflects your goals, your progress, and your questions. Your information stays secure and confidential along the way.
               </p>
             </Card>
           </div>
@@ -87,7 +87,7 @@ export default function Home() {
             <span className="text-xl" style={{ color: '#C9A977' }}>.</span>
           </div>
           <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
-            Strategic Admissions Intelligence
+            Thoughtful guidance for every step toward college
           </p>
         </div>
       </footer>
