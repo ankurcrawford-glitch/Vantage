@@ -25,25 +25,10 @@ export default function Home() {
           style={{ background: 'linear-gradient(to bottom, transparent, rgba(201,169,119,0.1), transparent)' }}
         />
 
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-8 text-center">
-          {/* Prominent VANTAGE Branding */}
-          <div className="mb-12">
-            <div className="flex items-center justify-center gap-3 mb-6">
-              <span className="font-heading text-7xl md:text-8xl lg:text-9xl font-semibold" style={{ color: '#E8DDC9', letterSpacing: '-0.02em' }}>VANTAGE</span>
-              <span className="text-7xl md:text-8xl lg:text-9xl" style={{ color: '#C9A977' }}>.</span>
-            </div>
-            <p className="font-body text-lg md:text-xl" style={{ color: '#E8DDC9', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
-              Thoughtful guidance for every step toward college
-            </p>
-          </div>
-
-          <h1 className="font-heading text-5xl md:text-6xl lg:text-7xl font-semibold mb-8 leading-tight" style={{ color: '#E8DDC9', maxWidth: '100%' }}>
-            Your path to college.<br />
-            Thoughtfully guided.
-          </h1>
-          <p className="font-body text-xl md:text-2xl mb-12 mx-auto font-light leading-relaxed" style={{ color: '#E8DDC9', maxWidth: '900px' }}>
-            A private, personalized platform that meets students where they are—from grade 9 through grade 12—and helps them move forward with clarity and confidence.
-        <div className="relative z-10 w-full max-w-4xl mx-auto text-center">
+        <div
+          className="relative z-10 text-center"
+          style={{ width: '100%', maxWidth: '40rem', marginLeft: 'auto', marginRight: 'auto' }}
+        >
           <div className="flex items-center justify-center gap-2 mb-8">
             <span
               className="font-heading text-5xl sm:text-6xl md:text-7xl font-semibold"
@@ -72,7 +57,7 @@ export default function Home() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link href="/signup">
-              <Button>Get Started</Button>
+              <Button>Begin Assessment</Button>
             </Link>
             <Link href="/login">
               <Button variant="secondary">Sign In</Button>
@@ -81,25 +66,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-32 px-8" style={{ background: '#0F1828', borderTop: '1px solid #1B2740', borderBottom: '1px solid #1B2740' }}>
-        <div className="max-w-7xl mx-auto">
-          <h2 className="font-heading text-5xl font-semibold text-center mb-16" style={{ color: '#E8DDC9' }}>
-            Guidance that grows with you
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card>
-              <h3 className="font-heading text-2xl font-semibold mb-4" style={{ color: '#C9A977' }}>
-                Vantage Foundations
-              </h3>
-              <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.9)' }}>
-                From grade 9 through the middle of grade 11, explore your interests, shape meaningful goals, and build a strong foundation—one step at a time.
-      {/* Two stages */}
+      {/* Two stages — stacked full-width, Foundations then Applications */}
       <section
         className="px-6 sm:px-8"
         style={{ background: '#0F1828', borderTop: '1px solid #1B2740', borderBottom: '1px solid #1B2740', paddingTop: '72px', paddingBottom: '72px' }}
       >
-        <div className="max-w-6xl mx-auto">
+        <div style={{ width: '100%', maxWidth: '40rem', marginLeft: 'auto', marginRight: 'auto' }}>
           <p
             className="font-body text-center mb-3"
             style={{ color: '#C9A977', fontSize: '11px', letterSpacing: '0.2em', textTransform: 'uppercase' }}
@@ -110,8 +82,8 @@ export default function Home() {
             Start where you are
           </h2>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            <Card className="flex flex-col h-full">
+          <div className="flex flex-col gap-8">
+            <Card>
               <p
                 className="font-body mb-3"
                 style={{ color: '#C9A977', fontSize: '11px', letterSpacing: '0.18em', textTransform: 'uppercase' }}
@@ -121,7 +93,7 @@ export default function Home() {
               <h3 className="font-heading text-2xl sm:text-3xl font-semibold mb-4" style={{ color: '#E8DDC9' }}>
                 Vantage Foundations
               </h3>
-              <p className="font-body font-light leading-relaxed mb-8" style={{ color: 'rgba(232,221,201,0.85)', flex: 1 }}>
+              <p className="font-body font-light leading-relaxed mb-8" style={{ color: 'rgba(232,221,201,0.85)' }}>
                 Explore your interests, understand your strengths, and make thoughtful
                 choices about classes, activities, and experiences. Vantage Foundations
                 helps you develop a meaningful high-school journey without turning every
@@ -133,12 +105,6 @@ export default function Home() {
             </Card>
 
             <Card>
-              <h3 className="font-heading text-2xl font-semibold mb-4" style={{ color: '#C9A977' }}>
-                Vantage
-              </h3>
-              <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.9)' }}>
-                From the middle of grade 11 through grade 12, bring your story, college list, applications, and essays together with guidance tailored to you.
-            <Card className="flex flex-col h-full">
               <p
                 className="font-body mb-3"
                 style={{ color: '#C9A977', fontSize: '11px', letterSpacing: '0.18em', textTransform: 'uppercase' }}
@@ -148,7 +114,7 @@ export default function Home() {
               <h3 className="font-heading text-2xl sm:text-3xl font-semibold mb-4" style={{ color: '#E8DDC9' }}>
                 Vantage Applications
               </h3>
-              <p className="font-body font-light leading-relaxed mb-8" style={{ color: 'rgba(232,221,201,0.85)', flex: 1 }}>
+              <p className="font-body font-light leading-relaxed mb-8" style={{ color: 'rgba(232,221,201,0.85)' }}>
                 Bring your experiences together and prepare for the college application
                 process. Vantage Applications helps you develop your strategy, organize
                 your college list, identify the stories that matter, and strengthen your
@@ -162,13 +128,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* What you get — facts already in the product and legal pages */}
+      {/* What you do here — single stacked column so prose stays readable */}
       <section className="px-6 sm:px-8" style={{ background: '#0B1320', paddingTop: '72px', paddingBottom: '72px' }}>
-        <div className="max-w-6xl mx-auto">
+        <div style={{ width: '100%', maxWidth: '40rem', marginLeft: 'auto', marginRight: 'auto' }}>
           <h2 className="font-heading text-3xl sm:text-4xl font-semibold text-center mb-12" style={{ color: '#E8DDC9' }}>
             What you do here
           </h2>
-          <div className="grid sm:grid-cols-2 gap-8">
+          <div className="flex flex-col gap-8">
             <Card>
               <h3 className="font-heading text-2xl font-semibold mb-3" style={{ color: '#C9A977' }}>
                 Build your story
@@ -188,11 +154,6 @@ export default function Home() {
               </p>
             </Card>
             <Card>
-              <h3 className="font-heading text-2xl font-semibold mb-4" style={{ color: '#C9A977' }}>
-                Personal and private
-              </h3>
-              <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.9)' }}>
-                Your experience reflects your goals, your progress, and your questions. Your information stays secure and confidential along the way.
               <h3 className="font-heading text-2xl font-semibold mb-3" style={{ color: '#C9A977' }}>
                 Essay feedback, not ghostwriting
               </h3>
@@ -215,21 +176,15 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-16 px-8" style={{ background: '#0B1320' }}>
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <span className="font-heading text-xl font-semibold" style={{ color: '#E8DDC9' }}>VANTAGE</span>
-            <span className="text-xl" style={{ color: '#C9A977' }}>.</span>
-          </div>
-          <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
-            Thoughtful guidance for every step toward college
       {/* Privacy + access */}
       <section
         className="px-6 sm:px-8"
         style={{ background: '#0F1828', borderTop: '1px solid #1B2740', borderBottom: '1px solid #1B2740', paddingTop: '64px', paddingBottom: '64px' }}
       >
-        <div className="max-w-3xl mx-auto text-center">
+        <div
+          className="text-center"
+          style={{ width: '100%', maxWidth: '40rem', marginLeft: 'auto', marginRight: 'auto' }}
+        >
           <h2 className="font-heading text-3xl sm:text-4xl font-semibold mb-6" style={{ color: '#E8DDC9' }}>
             Private, and free to start
           </h2>
