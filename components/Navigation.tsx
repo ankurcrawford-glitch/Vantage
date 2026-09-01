@@ -92,14 +92,20 @@ export default function Navigation() {
     return false;
   };
 
-  const getLinkStyle = (path: string) => {
+  // Same treatment as the Foundations header tabs: small caps, tracked
+  // out, gold underline on the active section.
+  const getLinkStyle = (path: string): React.CSSProperties => {
     const active = isActive(path);
     return {
-      color: active ? '#E8DDC9' : 'rgba(232,221,201,0.7)',
+      color: active ? '#C9A977' : 'rgba(232,221,201,0.7)',
       textDecoration: 'none',
-      fontSize: '14px',
+      fontSize: '12px',
+      letterSpacing: '1.5px',
+      textTransform: 'uppercase',
       fontFamily: 'var(--font-body)',
       fontWeight: active ? 600 : 400,
+      borderBottom: active ? '1px solid #C9A977' : '1px solid transparent',
+      paddingBottom: '4px',
     };
   };
 
@@ -162,6 +168,7 @@ export default function Navigation() {
                     color: '#C9A977',
                     borderLeft: collegeSideAllowed ? '1px solid rgba(201,169,119,0.35)' : 'none',
                     paddingLeft: collegeSideAllowed ? '24px' : 0,
+                    paddingBottom: '4px',
                   }}
                 >
                   Foundations →

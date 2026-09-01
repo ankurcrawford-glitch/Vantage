@@ -4,6 +4,7 @@ import { getAuthedUser, getAdminClient } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { checkBudget, recordSpend } from '@/lib/budget';
 import { buildSchoolLine } from '@/lib/school-context';
+import { buildFoundationsBridge } from '@/lib/foundationsBridge';
 
 // Feedback generation with Flash can take 10-20s. Bump the serverless
 // function timeout to 60s so responses don't get cut off mid-generation.
@@ -281,6 +282,11 @@ If a submitted essay uses content that also appears in these brainstorming notes
 ${flattened.join('\n\n---\n\n')}`;
       }
     }
+
+    // Foundations bridge: multi-year background (counselor narrative,
+    // activity threads, Spark reflections) flows into the essay
+    // intelligence. Same private-scaffolding rules as discovery notes.
+    discoveryContext += await buildFoundationsBridge(supabase, userId);
 
     // Get previous guidance for this prompt (so AI can build on it)
     const { data: prevGuidance } = await supabase

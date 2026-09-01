@@ -4,6 +4,7 @@ import { getAuthedUser, getAdminClient } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { checkBudget, recordSpend } from '@/lib/budget';
 import { buildSchoolLine } from '@/lib/school-context';
+import { buildFoundationsBridge } from '@/lib/foundationsBridge';
 import {
   evaluatePromptReadiness,
   allReady,
@@ -286,6 +287,11 @@ If a submitted essay uses content that also appears here, that is correct and de
 ${flattened.join('\n\n---\n\n')}`;
       }
     }
+
+    // Foundations bridge: multi-year background (counselor narrative,
+    // activity threads, Spark reflections) flows into the essay
+    // intelligence. Same private-scaffolding rules as discovery notes.
+    discoveryContext += await buildFoundationsBridge(supabase, userId);
 
     // Format profile
     const profileContext = [

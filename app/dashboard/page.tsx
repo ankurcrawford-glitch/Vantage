@@ -11,6 +11,7 @@ import StatCard from '@/components/StatCard';
 import Navigation from '@/components/Navigation';
 import { canAccessCollegePrep } from '@/lib/college-prep-access';
 import { eaLabel, PLAN_EXPLAINERS } from '@/lib/earlyPlans';
+import JourneyStrip from '@/components/JourneyStrip';
 
 interface UserStats {
   gpa_weighted: number | null;
@@ -389,6 +390,23 @@ function DashboardContent() {
             Your work, in one place.
           </p>
         </div>
+
+        {/* How Vantage works — the journey, with the student's position lit */}
+        <JourneyStrip
+          title="How Vantage works"
+          activeIndex={
+            !(stats && (stats.gpa_unweighted || stats.gpa_weighted || stats.sat_score || stats.act_score)) ? 0
+              : collegeCount === 0 ? 1
+              : essayCount === 0 ? 2
+              : 3
+          }
+          steps={[
+            { label: 'Profile', href: '/profile', desc: 'Your stats and activities — the raw inputs every other stage builds on.' },
+            { label: 'Strategy', href: '/colleges', desc: 'Build a balanced list, see your real odds at each school, and commit to an early round.' },
+            { label: 'Essays', href: '/applications', desc: 'Write every essay with Strategic Intelligence — per-essay coaching that knows your story.' },
+            { label: 'Round Table', href: '/colleges', desc: 'The final read: open any school on My Schools and convene the Round Table — a full-committee review of your whole application for that college.' },
+          ]}
+        />
 
         {/* Stats Overview */}
         <div className="grid md:grid-cols-3 gap-8 mb-12">

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import FoundationsNav from "@/components/FoundationsNav";
+import JourneyStrip from "@/components/JourneyStrip";
 import { C, display, body } from "@/lib/foundations-theme";
 import { effectiveGrade } from "@/lib/grade";
 
@@ -100,6 +101,27 @@ export default function FoundationsCompass() {
               : "Before plans and lists, we get to know you — who you are, what you love, and where you dream of going. Everything else builds from that."}
           </p>
         </div>
+
+        {/* ── The Foundations loop — how it all connects, with the
+            student's own position lit so the first thing they see after
+            login is where they are in the journey. ── */}
+        <JourneyStrip
+          title="How Foundations works"
+          activeIndex={
+            !started ? 0
+              : activityCount === 0 && toReview === 0 ? 2
+              : roadmapDone === 0 ? 3
+              : 4
+          }
+          steps={[
+            { label: "Conversation", href: "/foundations/conversation", desc: "Talk with your counselor — everything else is built from what you share here." },
+            { label: "Story", href: "/foundations/story", desc: "What we've learned about you, written down — your narrative so far." },
+            { label: "Activities", href: "/foundations/activities", desc: "Your commitments, tracked over years — depth beats breadth." },
+            { label: "Roadmap", href: "/foundations/roadmap", desc: "The right moves for your grade, checked off as you go." },
+            { label: "Spark", href: "/foundations/spark", desc: "A monthly reflection — raw material that becomes essay gold senior year." },
+          ]}
+          tail="→ your application"
+        />
 
         {/* ── Primary: the Conversation ── */}
         <button
