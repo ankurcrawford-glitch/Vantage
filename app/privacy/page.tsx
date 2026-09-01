@@ -22,15 +22,15 @@ export default function PrivacyPage() {
   const pathname = usePathname();
   return (
     <div className="min-h-screen" style={{ background: '#0B1320' }}>
-      <nav style={{ borderBottom: '1px solid rgba(232,221,201,0.1)', padding: '24px 32px' }}>
+      <nav style={{ borderBottom: '1px solid rgba(232,221,201,0.12)', padding: '24px 32px' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
             <span className="font-heading text-2xl font-semibold" style={{ color: '#E8DDC9' }}>VANTAGE</span>
             <span className="text-2xl" style={{ color: '#C9A977' }}>.</span>
           </Link>
           <div style={{ display: 'flex', gap: '24px' }}>
-            <Link href="/privacy" style={{ color: pathname === '/privacy' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px' }}>Privacy</Link>
-            <Link href="/terms" style={{ color: pathname === '/terms' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px' }}>Terms</Link>
+            <Link href="/privacy" style={{ color: pathname === '/privacy' ? '#E8DDC9' : 'rgba(232,221,201,0.68)', textDecoration: 'none', fontSize: '14px' }}>Privacy</Link>
+            <Link href="/terms" style={{ color: pathname === '/terms' ? '#E8DDC9' : 'rgba(232,221,201,0.68)', textDecoration: 'none', fontSize: '14px' }}>Terms</Link>
           </div>
         </div>
       </nav>
@@ -39,7 +39,7 @@ export default function PrivacyPage() {
         <h1 className="font-heading" style={{ color: '#E8DDC9', fontSize: '42px', marginBottom: '12px' }}>
           Privacy Policy
         </h1>
-        <p style={{ color: 'rgba(232,221,201,0.5)', fontSize: '14px', marginBottom: '40px' }}>
+        <p style={{ color: 'rgba(232,221,201,0.45)', fontSize: '14px', marginBottom: '40px' }}>
           Effective: {EFFECTIVE_DATE}
         </p>
 
@@ -273,7 +273,7 @@ export default function PrivacyPage() {
         </Section>
 
         <div style={{ marginTop: '48px', padding: '16px', background: 'rgba(201,169,119,0.08)', border: '1px solid rgba(201,169,119,0.3)', borderRadius: '4px' }}>
-          <p style={{ color: 'rgba(232,221,201,0.7)', fontSize: '13px', lineHeight: '1.6' }}>
+          <p style={{ color: 'rgba(232,221,201,0.68)', fontSize: '13px', lineHeight: '1.6' }}>
             <strong style={{ color: '#C9A977' }}>Note:</strong> This document is a
             starter template, not legal advice. Vantage has had it reviewed by a
             qualified attorney before publication. If anything here is unclear or
@@ -308,7 +308,7 @@ const ulStyle: React.CSSProperties = {
 };
 
 const subheadingStyle: React.CSSProperties = {
-  color: 'rgba(232,221,201,0.85)',
+  color: 'rgba(232,221,201,0.68)',
   fontSize: '16px',
   marginTop: '20px',
   marginBottom: '8px',

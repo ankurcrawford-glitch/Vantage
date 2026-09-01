@@ -207,7 +207,7 @@ export default function DiscoveryPage() {
             >
               {checkoutLoading ? 'Redirecting...' : 'Obtain a one-time code for access'}
             </button>
-            <p className="font-body text-sm mt-4" style={{ color: 'rgba(232,221,201,0.5)' }}>
+            <p className="font-body text-sm mt-4" style={{ color: 'rgba(232,221,201,0.45)' }}>
               One-time payment. Full access to Story Builder and Strategic Intelligence.
             </p>
 
@@ -218,7 +218,7 @@ export default function DiscoveryPage() {
                 borderTop: '1px solid rgba(232,221,201,0.12)',
               }}
             >
-              <p className="font-body text-sm mb-3" style={{ color: 'rgba(232,221,201,0.75)' }}>
+              <p className="font-body text-sm mb-3" style={{ color: 'rgba(232,221,201,0.68)' }}>
                 Have an access code? Redeem it here to unlock without paying.
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', maxWidth: '440px' }}>
@@ -338,7 +338,7 @@ export default function DiscoveryPage() {
                                 onClick={handleCancelEditAnswer}
                                 style={{
                                   background: 'transparent',
-                                  color: 'rgba(232,221,201,0.7)',
+                                  color: 'rgba(232,221,201,0.68)',
                                   border: '1px solid rgba(232,221,201,0.3)',
                                   padding: '8px 16px',
                                   fontFamily: 'var(--font-body)',
@@ -376,7 +376,7 @@ export default function DiscoveryPage() {
                               </>
                             ) : (
                               <>
-                                <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)', fontStyle: 'italic', marginBottom: '12px' }}>Not answered yet</p>
+                                <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)', fontStyle: 'italic', marginBottom: '12px' }}>Not answered yet</p>
                                 <button
                                   onClick={() => handleEditAnswer(question.id)}
                                   style={{

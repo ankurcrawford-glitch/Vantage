@@ -60,7 +60,7 @@ export default function JourneyStrip({ title, steps, activeIndex, tail }: Props)
                   style={{
                     width: 'clamp(16px, 3vw, 36px)',
                     height: '1px',
-                    background: isDone || isActive ? 'rgba(201,169,119,0.5)' : 'rgba(232,221,201,0.15)',
+                    background: isDone || isActive ? 'rgba(201,169,119,0.5)' : 'rgba(232,221,201,0.12)',
                     margin: '0 10px',
                   }}
                 />
@@ -78,7 +78,7 @@ export default function JourneyStrip({ title, steps, activeIndex, tail }: Props)
                   letterSpacing: '1.2px',
                   textTransform: 'uppercase',
                   fontWeight: isActive ? 700 : 500,
-                  color: isActive ? '#C9A977' : isDone ? 'rgba(232,221,201,0.75)' : 'rgba(232,221,201,0.4)',
+                  color: isActive ? '#C9A977' : isDone ? 'rgba(232,221,201,0.68)' : 'rgba(232,221,201,0.45)',
                   background: isActive ? 'rgba(201,169,119,0.12)' : 'transparent',
                   border: isActive ? '1px solid rgba(201,169,119,0.5)' : '1px solid transparent',
                   borderRadius: '999px',
@@ -105,7 +105,7 @@ export default function JourneyStrip({ title, steps, activeIndex, tail }: Props)
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <span
               aria-hidden
-              style={{ width: 'clamp(16px, 3vw, 36px)', height: '1px', background: 'rgba(232,221,201,0.15)', margin: '0 10px' }}
+              style={{ width: 'clamp(16px, 3vw, 36px)', height: '1px', background: 'rgba(232,221,201,0.12)', margin: '0 10px' }}
             />
             <span className="font-body" style={{ fontSize: '12px', letterSpacing: '1.2px', textTransform: 'uppercase', color: 'rgba(201,169,119,0.6)', whiteSpace: 'nowrap' }}>
               {tail}
@@ -114,7 +114,7 @@ export default function JourneyStrip({ title, steps, activeIndex, tail }: Props)
         )}
       </div>
       {activeIndex >= 0 && steps[activeIndex] && (
-        <p className="font-body" style={{ fontSize: '13px', color: 'rgba(232,221,201,0.6)', margin: '10px 0 0', lineHeight: 1.5 }}>
+        <p className="font-body" style={{ fontSize: '13px', color: 'rgba(232,221,201,0.68)', margin: '10px 0 0', lineHeight: 1.5 }}>
           <span style={{ color: '#C9A977', fontWeight: 600 }}>You are here:</span> {steps[activeIndex].desc}
         </p>
       )}

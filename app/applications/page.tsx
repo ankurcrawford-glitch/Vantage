@@ -171,11 +171,11 @@ export default function PersonalStatementPage() {
                 {essay.college_name}
               </p>
             )}
-            <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
+            <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)' }}>
               Prompt {essay.prompt_sort_order}
             </p>
             {essay.word_limit && (
-              <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.35)' }}>
+              <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)' }}>
                 · {essay.word_limit} word limit
               </span>
             )}
@@ -204,11 +204,11 @@ export default function PersonalStatementPage() {
           </p>
           {essay.started && (
             <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-              <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
+              <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)' }}>
                 Version {essay.latest_version ?? 0} • {essay.latest_word_count ?? 0} words
               </span>
               {essay.updated_at && (
-                <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
+                <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)' }}>
                   Updated {new Date(essay.updated_at).toLocaleDateString()}
                 </span>
               )}
@@ -304,7 +304,7 @@ export default function PersonalStatementPage() {
           <Card>
             <div style={{ textAlign: 'center', padding: '64px 32px' }}>
               <h3 className="font-heading text-2xl mb-4" style={{ color: '#C9A977' }}>No Essays Yet</h3>
-              <p className="font-body mb-8" style={{ color: 'rgba(232,221,201,0.7)' }}>
+              <p className="font-body mb-8" style={{ color: 'rgba(232,221,201,0.68)' }}>
                 Start writing essays by visiting a college in your portfolio and clicking "Write Essay" on any prompt.
               </p>
               <Link href="/colleges">
@@ -366,7 +366,7 @@ export default function PersonalStatementPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
                   {themedGroups.length === 0 && (
                     <Card>
-                      <p className="font-body text-center" style={{ color: 'rgba(232,221,201,0.7)', padding: '48px 32px' }}>
+                      <p className="font-body text-center" style={{ color: 'rgba(232,221,201,0.68)', padding: '48px 32px' }}>
                         No supplemental prompts yet — add schools to your portfolio and their essays will appear here.
                       </p>
                     </Card>
@@ -376,7 +376,7 @@ export default function PersonalStatementPage() {
                       <div style={{ marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px solid rgba(201,169,119,0.25)' }}>
                         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '16px' }}>
                           <h2 className="font-heading text-3xl" style={{ color: '#E8DDC9' }}>{theme.name}</h2>
-                          <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.4)', whiteSpace: 'nowrap' }}>
+                          <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)', whiteSpace: 'nowrap' }}>
                             {themeEssays.length} {themeEssays.length === 1 ? 'essay' : 'essays'} · {themeEssays.filter((e) => e.started).length} started
                           </span>
                         </div>
@@ -464,13 +464,13 @@ export default function PersonalStatementPage() {
                       <h2 className="font-heading text-3xl" style={{ color: '#E8DDC9' }}>
                         {group.collegeName}
                         {group.collegeId === COMMON_APP_COLLEGE_ID && (
-                          <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)', fontWeight: 400, marginLeft: '12px', letterSpacing: '0.05em' }}>
+                          <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)', fontWeight: 400, marginLeft: '12px', letterSpacing: '0.05em' }}>
                             2026–27
                           </span>
                         )}
                       </h2>
                       {!(commonAppNeedsPlaceholder && group.collegeId === COMMON_APP_COLLEGE_ID) && group.essays.length > 0 && (
-                        <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.4)' }}>
+                        <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)' }}>
                           {(() => {
                             const total = group.essays.length;
                             const started = group.essays.filter((e) => e.started).length;
@@ -486,7 +486,7 @@ export default function PersonalStatementPage() {
                             <h3 className="font-heading text-2xl mb-3" style={{ color: '#C9A977' }}>
                               Choose a Common App Prompt
                             </h3>
-                            <p className="font-body mb-8" style={{ color: 'rgba(232,221,201,0.7)', maxWidth: '520px', margin: '0 auto 32px' }}>
+                            <p className="font-body mb-8" style={{ color: 'rgba(232,221,201,0.68)', maxWidth: '520px', margin: '0 auto 32px' }}>
                               Pick one of the seven Common App prompts to tackle — it will appear here once you start writing.
                             </p>
                             <Link href="/common-app">
@@ -523,7 +523,7 @@ export default function PersonalStatementPage() {
                             <h3 className="font-heading text-2xl mb-3" style={{ color: '#C9A977' }}>
                               No Supplemental Essays
                             </h3>
-                            <p className="font-body" style={{ color: 'rgba(232,221,201,0.7)', maxWidth: '520px', margin: '0 auto' }}>
+                            <p className="font-body" style={{ color: 'rgba(232,221,201,0.68)', maxWidth: '520px', margin: '0 auto' }}>
                               {group.collegeName} asks only for your Common App personal statement this year — one less essay, one more reason to make that statement sing.
                             </p>
                           </div>
@@ -534,7 +534,7 @@ export default function PersonalStatementPage() {
                             <h3 className="font-heading text-2xl mb-3" style={{ color: '#C9A977' }}>
                               Awaiting This Year&apos;s Prompts
                             </h3>
-                            <p className="font-body" style={{ color: 'rgba(232,221,201,0.7)', maxWidth: '520px', margin: '0 auto' }}>
+                            <p className="font-body" style={{ color: 'rgba(232,221,201,0.68)', maxWidth: '520px', margin: '0 auto' }}>
                               {group.collegeName} hasn&apos;t published its 2026–27 supplemental essays yet. We check every week — the moment they&apos;re released, they&apos;ll appear here and in your Friday brief.
                             </p>
                           </div>

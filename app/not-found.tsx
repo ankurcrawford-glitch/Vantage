@@ -26,7 +26,7 @@ export default function NotFound() {
         </h1>
         <p
           className="font-body mb-10"
-          style={{ color: 'rgba(232,221,201,0.7)', lineHeight: 1.7 }}
+          style={{ color: 'rgba(232,221,201,0.68)', lineHeight: 1.7 }}
         >
           The path you followed is not part of Vantage. Return home to continue.
         </p>

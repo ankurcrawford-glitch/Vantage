@@ -13,7 +13,7 @@ export default function Input({ label, className = '', ...props }: InputProps) {
           fontFamily: 'var(--font-body)', 
           fontSize: '14px', 
           fontWeight: 500, 
-          color: 'rgba(232,221,201,0.7)', 
+          color: 'rgba(232,221,201,0.68)', 
           marginBottom: '8px' 
         }}>
           {label}

@@ -20,15 +20,15 @@ export default function TermsPage() {
   const pathname = usePathname();
   return (
     <div className="min-h-screen" style={{ background: '#0B1320' }}>
-      <nav style={{ borderBottom: '1px solid rgba(232,221,201,0.1)', padding: '24px 32px' }}>
+      <nav style={{ borderBottom: '1px solid rgba(232,221,201,0.12)', padding: '24px 32px' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
             <span className="font-heading text-2xl font-semibold" style={{ color: '#E8DDC9' }}>VANTAGE</span>
             <span className="text-2xl" style={{ color: '#C9A977' }}>.</span>
           </Link>
           <div style={{ display: 'flex', gap: '24px' }}>
-            <Link href="/privacy" style={{ color: pathname === '/privacy' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px' }}>Privacy</Link>
-            <Link href="/terms" style={{ color: pathname === '/terms' ? '#E8DDC9' : 'rgba(232,221,201,0.7)', textDecoration: 'none', fontSize: '14px' }}>Terms</Link>
+            <Link href="/privacy" style={{ color: pathname === '/privacy' ? '#E8DDC9' : 'rgba(232,221,201,0.68)', textDecoration: 'none', fontSize: '14px' }}>Privacy</Link>
+            <Link href="/terms" style={{ color: pathname === '/terms' ? '#E8DDC9' : 'rgba(232,221,201,0.68)', textDecoration: 'none', fontSize: '14px' }}>Terms</Link>
           </div>
         </div>
       </nav>
@@ -37,7 +37,7 @@ export default function TermsPage() {
         <h1 className="font-heading" style={{ color: '#E8DDC9', fontSize: '42px', marginBottom: '12px' }}>
           Terms of Service
         </h1>
-        <p style={{ color: 'rgba(232,221,201,0.5)', fontSize: '14px', marginBottom: '40px' }}>
+        <p style={{ color: 'rgba(232,221,201,0.45)', fontSize: '14px', marginBottom: '40px' }}>
           Effective: {EFFECTIVE_DATE}
         </p>
 

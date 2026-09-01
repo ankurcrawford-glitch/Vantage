@@ -269,7 +269,7 @@ export default function AcceptInvitationPage() {
             <h1 className="font-heading text-2xl mb-2" style={{ color: '#C9A977' }}>
               You&apos;re Invited to Review
             </h1>
-            <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.7)' }}>
+            <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)' }}>
               {invitation.invitee_name
                 ? `${invitation.invitee_name}, you've been invited as a ${roleLabel}`
                 : `You've been invited as a ${roleLabel}`}
@@ -287,13 +287,13 @@ export default function AcceptInvitationPage() {
               {isCommonApp ? 'Common Application Essay' : collegeName}
             </p>
             {promptPreview && (
-              <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.6)', lineHeight: '1.5' }}>
+              <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)', lineHeight: '1.5' }}>
                 {promptPreview}
               </p>
             )}
           </div>
 
-          <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.7)', marginBottom: '24px', lineHeight: '1.6' }}>
+          <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)', marginBottom: '24px', lineHeight: '1.6' }}>
             As a {roleLabel}, you&apos;ll be able to read the essay and leave comments with feedback, suggestions, and encouragement.
           </p>
 
@@ -333,13 +333,13 @@ export default function AcceptInvitationPage() {
             /* User is NOT logged in — show auth form */
             <div>
               <div style={{
-                borderTop: '1px solid rgba(232,221,201,0.1)',
+                borderTop: '1px solid rgba(232,221,201,0.12)',
                 paddingTop: '24px',
               }}>
                 <h3 className="font-heading text-lg" style={{ color: '#E8DDC9', textAlign: 'center', marginBottom: '4px' }}>
                   {authMode === 'signup' ? 'Create Your Reviewer Account' : 'Sign In'}
                 </h3>
-                <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.5)', textAlign: 'center', marginBottom: '20px' }}>
+                <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.45)', textAlign: 'center', marginBottom: '20px' }}>
                   {authMode === 'signup'
                     ? 'Quick sign-up to start reviewing — no student account needed'
                     : 'Already have an account? Sign in below'}
@@ -432,7 +432,7 @@ export default function AcceptInvitationPage() {
                   </button>
                 </form>
 
-                <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.5)', textAlign: 'center', marginTop: '16px' }}>
+                <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.45)', textAlign: 'center', marginTop: '16px' }}>
                   {authMode === 'signup' ? (
                     <>Already have an account?{' '}
                       <button

@@ -146,7 +146,7 @@ export default function LoginPage() {
               fontFamily: 'var(--font-body)', 
               fontSize: '14px', 
               fontWeight: 500, 
-              color: 'rgba(232,221,201,0.7)', 
+              color: 'rgba(232,221,201,0.68)', 
               marginBottom: '8px' 
             }}>
               Password
@@ -189,7 +189,7 @@ export default function LoginPage() {
                   transform: 'translateY(-50%)',
                   background: 'transparent',
                   border: 'none',
-                  color: 'rgba(232,221,201,0.7)',
+                  color: 'rgba(232,221,201,0.68)',
                   cursor: 'pointer',
                   padding: '4px',
                   display: 'flex',
@@ -201,7 +201,7 @@ export default function LoginPage() {
                   e.currentTarget.style.color = '#C9A977';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'rgba(232,221,201,0.7)';
+                  e.currentTarget.style.color = 'rgba(232,221,201,0.68)';
                 }}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
@@ -249,7 +249,7 @@ export default function LoginPage() {
         </form>
 
         <div style={{ marginTop: '32px', textAlign: 'center' }}>
-          <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
+          <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)' }}>
             Don't have an account?{' '}
             <Link href="/signup" style={{ color: '#C9A977', textDecoration: 'none' }}>
               Sign up

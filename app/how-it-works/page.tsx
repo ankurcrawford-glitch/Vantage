@@ -25,7 +25,7 @@ const pill: React.CSSProperties = {
   letterSpacing: '1.2px',
   textTransform: 'uppercase',
   fontWeight: 600,
-  color: 'rgba(232,221,201,0.85)',
+  color: 'rgba(232,221,201,0.68)',
   border: '1px solid rgba(201,169,119,0.35)',
   borderRadius: '999px',
   padding: '6px 14px',
@@ -57,7 +57,7 @@ function Stage({ n, title, children }: { n: string; title: string; children: Rea
         <h3 className="font-heading text-xl font-semibold mb-2" style={{ color: '#E8DDC9' }}>
           {title}
         </h3>
-        <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.75)', fontSize: '15px' }}>
+        <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.68)', fontSize: '15px' }}>
           {children}
         </p>
       </div>
@@ -78,7 +78,7 @@ export default function HowItWorksPage() {
           <h1 className="font-heading text-4xl sm:text-5xl font-semibold mt-10 mb-6" style={{ color: '#E8DDC9', lineHeight: 1.15 }}>
             One counselor, all four years.
           </h1>
-          <p className="font-body font-light text-lg leading-relaxed" style={{ color: 'rgba(232,221,201,0.8)' }}>
+          <p className="font-body font-light text-lg leading-relaxed" style={{ color: 'rgba(232,221,201,0.68)' }}>
             The best college counselor isn&apos;t the one you meet senior year. It&apos;s the
             one who has known you since 9th grade — who remembers the small stuff that shaped
             how you see the world and how you express yourself. That&apos;s what Vantage is.
@@ -194,7 +194,7 @@ export default function HowItWorksPage() {
           <h2 className="font-heading text-3xl font-semibold mb-4" style={{ color: '#E8DDC9' }}>
             Start where you are
           </h2>
-          <p className="font-body font-light leading-relaxed mb-10" style={{ color: 'rgba(232,221,201,0.75)' }}>
+          <p className="font-body font-light leading-relaxed mb-10" style={{ color: 'rgba(232,221,201,0.68)' }}>
             9th grade or 12th — the best time to give your counselor a head start is today.
             Free to start, and your work stays yours.
           </p>

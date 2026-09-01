@@ -317,7 +317,7 @@ export default function ReviewEssayPage() {
   return (
     <div className="min-h-screen" style={{ background: '#0B1320' }}>
       {/* Reviewer Nav — simple, no student links */}
-      <nav style={{ borderBottom: '1px solid rgba(232,221,201,0.1)', padding: '16px 32px' }}>
+      <nav style={{ borderBottom: '1px solid rgba(232,221,201,0.12)', padding: '16px 32px' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <span className="font-heading text-xl font-semibold" style={{ color: '#E8DDC9' }}>VANTAGE</span>
@@ -338,7 +338,7 @@ export default function ReviewEssayPage() {
             onClick={handleLogout}
             style={{
               background: 'transparent',
-              color: 'rgba(232,221,201,0.5)',
+              color: 'rgba(232,221,201,0.45)',
               border: 'none',
               fontFamily: 'var(--font-body)',
               fontSize: '13px',
@@ -355,11 +355,11 @@ export default function ReviewEssayPage() {
         {/* Header */}
         <div style={{ marginBottom: '32px' }}>
           <h1 className="font-heading text-3xl mb-2" style={{ color: '#E8DDC9' }}>{collegeName}</h1>
-          <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)', marginBottom: '4px' }}>
+          <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)', marginBottom: '4px' }}>
             Essay for {studentName}
           </p>
           {reviewerName && (
-            <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.4)' }}>
+            <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.45)' }}>
               Reviewing as {reviewerName} ({roleLabel})
             </p>
           )}
@@ -368,7 +368,7 @@ export default function ReviewEssayPage() {
         {/* Other Reviews */}
         {otherReviews.length > 0 && (
           <div style={{ marginBottom: '24px', padding: '12px 16px', background: 'rgba(201,169,119,0.08)', border: '1px solid rgba(201,169,119,0.15)', borderRadius: '4px' }}>
-            <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.6)', marginBottom: '8px' }}>
+            <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.68)', marginBottom: '8px' }}>
               You have other essays waiting for your review:
             </p>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -401,7 +401,7 @@ export default function ReviewEssayPage() {
               <p className="font-body text-xs font-semibold" style={{ color: '#C9A977', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Essay Prompt
               </p>
-              <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.8)', lineHeight: '1.6' }}>
+              <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)', lineHeight: '1.6' }}>
                 {promptText}
               </p>
             </Card>
@@ -415,7 +415,7 @@ export default function ReviewEssayPage() {
               <p className="font-body text-xs font-semibold" style={{ color: '#C9A977', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Essay
               </p>
-              <span className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.4)' }}>
+              <span className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.45)' }}>
                 {wordCount} words
               </span>
             </div>
@@ -436,7 +436,7 @@ export default function ReviewEssayPage() {
                 {essayContent}
               </div>
             ) : (
-              <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.4)' }}>
+              <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)' }}>
                 The student hasn&apos;t written their essay yet.
               </p>
             )}
@@ -447,7 +447,7 @@ export default function ReviewEssayPage() {
         <div style={{ marginBottom: '32px' }}>
           <Card>
             <h2 className="font-heading text-xl mb-2" style={{ color: '#C9A977' }}>Leave Your Feedback</h2>
-            <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.5)', marginBottom: '20px' }}>
+            <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.45)', marginBottom: '20px' }}>
               Share your thoughts, suggestions, and encouragement. {studentName !== 'the student' ? studentName : 'The student'} will see your name and feedback type.
             </p>
 
@@ -549,7 +549,7 @@ export default function ReviewEssayPage() {
                         <p className="font-body font-semibold text-sm" style={{ color: '#C9A977', marginBottom: '4px' }}>
                           {comment.counselor_name}
                         </p>
-                        <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.4)' }}>
+                        <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.45)' }}>
                           {new Date(comment.created_at).toLocaleDateString()} at {new Date(comment.created_at).toLocaleTimeString()}
                         </p>
                       </div>

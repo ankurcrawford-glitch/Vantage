@@ -290,7 +290,7 @@ export default function CollegesPage() {
         )}
 
         {/* Tab switcher */}
-        <div style={{ display: 'flex', gap: '4px', marginBottom: '32px', borderBottom: '1px solid rgba(232,221,201,0.1)' }}>
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '32px', borderBottom: '1px solid rgba(232,221,201,0.12)' }}>
           {(
             [
               { k: 'strategy' as Tab, label: 'My List' },
@@ -311,7 +311,7 @@ export default function CollegesPage() {
                   fontWeight: 600,
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  color: active ? '#C9A977' : 'rgba(232,221,201,0.55)',
+                  color: active ? '#C9A977' : 'rgba(232,221,201,0.68)',
                   borderBottom: active ? '2px solid #C9A977' : '2px solid transparent',
                   marginBottom: '-1px',
                   cursor: 'pointer',
@@ -332,7 +332,7 @@ export default function CollegesPage() {
                   <h3 className="font-heading" style={{ color: '#E8DDC9', fontSize: '22px', marginBottom: '8px' }}>
                     Your portfolio is empty.
                   </h3>
-                  <p className="font-body" style={{ color: 'rgba(232,221,201,0.65)', fontSize: '14px', marginBottom: '20px' }}>
+                  <p className="font-body" style={{ color: 'rgba(232,221,201,0.68)', fontSize: '14px', marginBottom: '20px' }}>
                     Add schools you're considering and we'll show you exactly where each one falls.
                   </p>
                   <Button variant="primary" onClick={() => setTab('add')}>
@@ -366,7 +366,7 @@ export default function CollegesPage() {
                       <span className="font-heading" style={{ color: '#E8DDC9', fontSize: '20px', fontWeight: 600 }}>
                         {committedPlan} · {committedCollege.name}
                       </span>
-                      <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.6)' }}>
+                      <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)' }}>
                         {committedPlan === 'ED'
                           ? 'Binding if admitted. Other schools move to EA/RD.'
                           : 'Non-binding, but no ED or private EA elsewhere.'}
@@ -459,7 +459,7 @@ export default function CollegesPage() {
 
             {availableColleges.length === 0 ? (
               <Card>
-                <p className="font-body text-center" style={{ color: 'rgba(232,221,201,0.65)', padding: '24px' }}>
+                <p className="font-body text-center" style={{ color: 'rgba(232,221,201,0.68)', padding: '24px' }}>
                   {searchTerm ? 'No colleges found matching your search.' : 'No additional colleges available.'}
                 </p>
               </Card>
@@ -476,17 +476,17 @@ export default function CollegesPage() {
                     <h3 className="font-heading" style={{ color: '#C9A977', fontSize: '22px', marginBottom: '6px' }}>
                       {college.name}
                     </h3>
-                    <p className="font-body" style={{ color: 'rgba(232,221,201,0.65)', fontSize: '13px', marginBottom: '14px' }}>
+                    <p className="font-body" style={{ color: 'rgba(232,221,201,0.68)', fontSize: '13px', marginBottom: '14px' }}>
                       {college.location}
                     </p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '16px' }}>
                       {college.acceptance_rate != null && (
-                        <span className="font-body" style={{ color: 'rgba(232,221,201,0.7)', fontSize: '13px' }}>
+                        <span className="font-body" style={{ color: 'rgba(232,221,201,0.68)', fontSize: '13px' }}>
                           Acceptance: {(college.acceptance_rate * 100).toFixed(1)}%
                         </span>
                       )}
                       {college.sat_range_low != null && college.sat_range_high != null && (
-                        <span className="font-body" style={{ color: 'rgba(232,221,201,0.7)', fontSize: '13px' }}>
+                        <span className="font-body" style={{ color: 'rgba(232,221,201,0.68)', fontSize: '13px' }}>
                           SAT: {college.sat_range_low} – {college.sat_range_high}
                         </span>
                       )}
@@ -502,14 +502,14 @@ export default function CollegesPage() {
                           style={{
                             background: 'transparent',
                             border: '1px solid rgba(232,221,201,0.3)',
-                            color: 'rgba(232,221,201,0.75)',
+                            color: 'rgba(232,221,201,0.68)',
                             fontSize: '13px',
                             padding: '8px 16px',
                             borderRadius: '2px',
                             cursor: 'pointer',
                           }}
                           onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#A35A6A'; e.currentTarget.style.color = '#E8DDC9'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(232,221,201,0.3)'; e.currentTarget.style.color = 'rgba(232,221,201,0.75)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(232,221,201,0.3)'; e.currentTarget.style.color = 'rgba(232,221,201,0.68)'; }}
                         >
                           Remove
                         </button>
@@ -581,7 +581,7 @@ function TierColumn({
           className="font-body"
           style={{
             fontSize: '12px',
-            color: 'rgba(232,221,201,0.6)',
+            color: 'rgba(232,221,201,0.68)',
             fontVariantNumeric: 'tabular-nums',
           }}
         >
@@ -594,11 +594,11 @@ function TierColumn({
             className="font-body"
             style={{
               fontSize: '12px',
-              color: 'rgba(232,221,201,0.35)',
+              color: 'rgba(232,221,201,0.45)',
               fontStyle: 'italic',
               padding: '20px 8px',
               textAlign: 'center',
-              border: '1px dashed rgba(232,221,201,0.08)',
+              border: '1px dashed rgba(232,221,201,0.12)',
             }}
           >
             None yet

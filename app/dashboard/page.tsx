@@ -380,7 +380,7 @@ function DashboardContent() {
               </div>
               <button
                 onClick={() => setShowPaymentSuccess(false)}
-                style={{ background: 'transparent', border: 'none', color: 'rgba(232,221,201,0.5)', cursor: 'pointer', fontSize: '18px' }}
+                style={{ background: 'transparent', border: 'none', color: 'rgba(232,221,201,0.45)', cursor: 'pointer', fontSize: '18px' }}
               >
                 ×
               </button>
@@ -542,8 +542,8 @@ function DashboardContent() {
                   {checkoutLoading ? 'Redirecting...' : 'Upgrade Now'}
                 </button>
               </div>
-              <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(232,221,201,0.1)' }}>
-                <p className="font-body text-sm mb-3" style={{ color: 'rgba(232,221,201,0.7)' }}>Have an access code?</p>
+              <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(232,221,201,0.12)' }}>
+                <p className="font-body text-sm mb-3" style={{ color: 'rgba(232,221,201,0.68)' }}>Have an access code?</p>
                 <div style={{ display: 'flex', gap: '8px', maxWidth: '400px' }}>
                   <input
                     type="text"
@@ -612,7 +612,7 @@ function DashboardContent() {
                   <span title={PLAN_EXPLAINERS.RD} style={{ color: '#C9A977', cursor: 'help' }}>RD</span> regular
                 </p>
                 {earlyChoice ? (
-                  <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.7)', margin: '8px 0 12px', lineHeight: 1.6 }}>
+                  <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)', margin: '8px 0 12px', lineHeight: 1.6 }}>
                     <span style={{ color: '#C9A977', fontWeight: 600 }}>Your early commitment:</span>{' '}
                     {earlyChoice.plan} at {earlyChoice.name} — other schools' ED/REA dates no longer apply
                     {earlyChoice.plan === 'REA' ? ' (and EA is generally limited to public universities)' : ''}.{' '}
@@ -653,13 +653,13 @@ function DashboardContent() {
                       <p className="font-heading text-xl" style={{ color: '#C9A977', margin: 0 }}>
                         {new Date(g.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </p>
-                      <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.5)', margin: 0 }}>
+                      <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.45)', margin: 0 }}>
                         {new Date(g.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric' })}
                       </p>
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', alignItems: 'center' }}>
                       {g.items.map((it) => (
-                        <span key={it.name + it.kind} className="font-body text-sm" style={{ color: it.chosen ? '#E8DDC9' : 'rgba(232,221,201,0.85)', fontWeight: it.chosen ? 600 : 400 }}>
+                        <span key={it.name + it.kind} className="font-body text-sm" style={{ color: it.chosen ? '#E8DDC9' : 'rgba(232,221,201,0.68)', fontWeight: it.chosen ? 600 : 400 }}>
                           {it.name}
                           <span
                             title={(it.chosen ? 'Your committed round. ' : '') + (PLAN_EXPLAINERS[it.kind] || '')}
@@ -680,7 +680,7 @@ function DashboardContent() {
                 ))}
                 {earlyChoice && droppedEarly.length > 0 && (
                   <p className="font-body text-xs" style={{
-                    color: 'rgba(232,221,201,0.4)',
+                    color: 'rgba(232,221,201,0.45)',
                     margin: 0,
                     padding: '14px 8px 2px',
                     borderTop: '1px solid rgba(201,169,119,0.15)',

@@ -160,7 +160,7 @@ export default function SignupPage() {
           {/* Age attestation. The 13+ checkbox is the legally-required
               COPPA gate. The under-18 checkbox is optional (no data gate)
               and just triggers a soft parental-guidance banner. */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '4px', padding: '14px 16px', background: 'rgba(232,221,201,0.03)', border: '1px solid rgba(232,221,201,0.08)', borderRadius: '4px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '4px', padding: '14px 16px', background: 'rgba(232,221,201,0.03)', border: '1px solid rgba(232,221,201,0.12)', borderRadius: '4px' }}>
             <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
               <input
                 type="checkbox"
@@ -169,7 +169,7 @@ export default function SignupPage() {
                 required
                 style={{ marginTop: '3px', cursor: 'pointer' }}
               />
-              <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', lineHeight: '1.5' }}>
+              <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)', lineHeight: '1.5' }}>
                 I am at least 13 years old.
               </span>
             </label>
@@ -181,14 +181,14 @@ export default function SignupPage() {
                 onChange={(e) => setIsUnder18(e.target.checked)}
                 style={{ marginTop: '3px', cursor: 'pointer' }}
               />
-              <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.7)', lineHeight: '1.5' }}>
+              <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)', lineHeight: '1.5' }}>
                 I am under 18. (Optional — just so we can show you age-appropriate information.)
               </span>
             </label>
 
             {isUnder18 && (
               <div style={{ marginTop: '4px', padding: '10px 12px', background: 'rgba(201,169,119,0.08)', borderLeft: '2px solid rgba(201,169,119,0.5)', borderRadius: '2px' }}>
-                <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.8)', lineHeight: '1.6' }}>
+                <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.68)', lineHeight: '1.6' }}>
                   Since you're under 18, we recommend you review our{' '}
                   <Link href="/terms" style={{ color: '#C9A977', textDecoration: 'underline' }}>Terms of Service</Link>
                   {' '}and{' '}
@@ -209,7 +209,7 @@ export default function SignupPage() {
                 required
                 style={{ marginTop: '3px', cursor: 'pointer' }}
               />
-              <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', lineHeight: '1.5' }}>
+              <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)', lineHeight: '1.5' }}>
                 I agree to the{' '}
                 <Link href="/terms" target="_blank" style={{ color: '#C9A977', textDecoration: 'underline' }}>Terms of Service</Link>
                 {' '}and{' '}
@@ -226,7 +226,7 @@ export default function SignupPage() {
         </form>
 
         <div style={{ marginTop: '32px', textAlign: 'center' }}>
-          <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
+          <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)' }}>
             Already have an account?{' '}
             <Link href="/login" style={{ color: '#C9A977', textDecoration: 'none' }}>
               Sign in

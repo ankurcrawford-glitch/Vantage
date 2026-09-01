@@ -7,8 +7,8 @@
 
   /* Colors — Strategy palette (cream / muted gold / dusty rose / deep navy) */
   --midnight: #0B1320;            /* page background — deep navy near-black */
-  --royal-blue: #0F1828;          /* card / elevation fill */
-  --hairline: #1B2740;            /* subtle card border */
+  --royal-blue: #101a2b;          /* card / elevation fill */
+  --hairline: rgba(232,221,201,0.12);            /* subtle card border */
   --cream: #E8DDC9;               /* primary text — warm parchment */
   --cream-muted: #C9BFA9;         /* secondary text */
   --cream-dim: #8C8473;           /* tertiary / hint text */

@@ -674,7 +674,7 @@ export default function ProfilePage() {
                 fontFamily: 'var(--font-body)', 
                 fontSize: '14px', 
                 fontWeight: 500, 
-                color: 'rgba(232,221,201,0.7)', 
+                color: 'rgba(232,221,201,0.68)', 
                 marginBottom: '8px' 
               }}>
                 Weighted GPA
@@ -708,7 +708,7 @@ export default function ProfilePage() {
                 fontFamily: 'var(--font-body)', 
                 fontSize: '14px', 
                 fontWeight: 500, 
-                color: 'rgba(232,221,201,0.7)', 
+                color: 'rgba(232,221,201,0.68)', 
                 marginBottom: '8px' 
               }}>
                 Unweighted GPA
@@ -742,7 +742,7 @@ export default function ProfilePage() {
                 fontFamily: 'var(--font-body)', 
                 fontSize: '14px', 
                 fontWeight: 500, 
-                color: 'rgba(232,221,201,0.7)', 
+                color: 'rgba(232,221,201,0.68)', 
                 marginBottom: '8px' 
               }}>
                 SAT Score
@@ -775,7 +775,7 @@ export default function ProfilePage() {
                 fontFamily: 'var(--font-body)', 
                 fontSize: '14px', 
                 fontWeight: 500, 
-                color: 'rgba(232,221,201,0.7)', 
+                color: 'rgba(232,221,201,0.68)', 
                 marginBottom: '8px' 
               }}>
                 ACT Score
@@ -828,13 +828,13 @@ export default function ProfilePage() {
         <div style={{ marginTop: '32px' }}>
           <Card>
             <h2 className="font-heading text-2xl mb-2" style={{ color: '#C9A977' }}>Strategy Profile</h2>
-            <p className="font-body" style={{ color: 'rgba(232,221,201,0.7)', fontSize: '13px', marginBottom: '24px', lineHeight: 1.6 }}>
+            <p className="font-body" style={{ color: 'rgba(232,221,201,0.68)', fontSize: '13px', marginBottom: '24px', lineHeight: 1.6 }}>
               These power your Strategy view in My Schools. We use them to classify each school as Safety / Likely / Target / Reach / Hard Reach and to recommend an ED play.
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '20px' }}>
               <div>
-                <label className="font-body" style={{ display: 'block', color: 'rgba(232,221,201,0.85)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>State (2-letter)</label>
+                <label className="font-body" style={{ display: 'block', color: 'rgba(232,221,201,0.68)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>State (2-letter)</label>
                 <input
                   type="text"
                   value={strategy.state}
@@ -845,7 +845,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="font-body" style={{ display: 'block', color: 'rgba(232,221,201,0.85)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Intended Major</label>
+                <label className="font-body" style={{ display: 'block', color: 'rgba(232,221,201,0.68)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Intended Major</label>
                 <select
                   value={strategy.intended_major}
                   onChange={(e) => setStrategy({ ...strategy, intended_major: e.target.value })}
@@ -860,7 +860,7 @@ export default function ProfilePage() {
                 </select>
               </div>
               <div>
-                <label className="font-body" style={{ display: 'block', color: 'rgba(232,221,201,0.85)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>AP Course Count</label>
+                <label className="font-body" style={{ display: 'block', color: 'rgba(232,221,201,0.68)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>AP Course Count</label>
                 <input
                   type="number"
                   min={0}
@@ -872,7 +872,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="font-body" style={{ display: 'block', color: 'rgba(232,221,201,0.85)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Geographic Preference</label>
+                <label className="font-body" style={{ display: 'block', color: 'rgba(232,221,201,0.68)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Geographic Preference</label>
                 <select
                   value={strategy.geo_preference}
                   onChange={(e) => setStrategy({ ...strategy, geo_preference: e.target.value as StrategyProfile['geo_preference'] })}
@@ -884,7 +884,7 @@ export default function ProfilePage() {
                   <option value="no-preference">No preference</option>
                   <option value="out-of-state">Prefer out-of-state</option>
                 </select>
-                <p className="font-body" style={{ color: 'rgba(232,221,201,0.5)', fontSize: '11.5px', marginTop: '6px', lineHeight: 1.4 }}>
+                <p className="font-body" style={{ color: 'rgba(232,221,201,0.45)', fontSize: '11.5px', marginTop: '6px', lineHeight: 1.4 }}>
                   Used when we suggest schools to balance your list.
                 </p>
               </div>
@@ -892,10 +892,10 @@ export default function ProfilePage() {
 
             {/* High school context — name + city, classified via lookup */}
             <div style={{ marginBottom: '20px' }}>
-              <div className="font-body" style={{ color: 'rgba(232,221,201,0.85)', fontSize: '13px', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Your High School</div>
+              <div className="font-body" style={{ color: 'rgba(232,221,201,0.68)', fontSize: '13px', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Your High School</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '12px' }}>
                 <div>
-                  <label className="font-body" style={{ display: 'block', color: 'rgba(232,221,201,0.85)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>School Name</label>
+                  <label className="font-body" style={{ display: 'block', color: 'rgba(232,221,201,0.68)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>School Name</label>
                   <input
                     type="text"
                     value={strategy.school_name}
@@ -906,7 +906,7 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div>
-                  <label className="font-body" style={{ display: 'block', color: 'rgba(232,221,201,0.85)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>City</label>
+                  <label className="font-body" style={{ display: 'block', color: 'rgba(232,221,201,0.68)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>City</label>
                   <input
                     type="text"
                     value={strategy.school_city}
@@ -959,31 +959,31 @@ export default function ProfilePage() {
                         )}
                       </div>
                       {schoolLookup.summary && (
-                        <p className="font-body" style={{ color: 'rgba(232,221,201,0.75)', fontSize: '12.5px', lineHeight: 1.6, margin: 0 }}>
-                          <span style={{ color: 'rgba(232,221,201,0.5)' }}>How colleges will read your school: </span>
+                        <p className="font-body" style={{ color: 'rgba(232,221,201,0.68)', fontSize: '12.5px', lineHeight: 1.6, margin: 0 }}>
+                          <span style={{ color: 'rgba(232,221,201,0.45)' }}>How colleges will read your school: </span>
                           {schoolLookup.summary}
                         </p>
                       )}
                     </>
                   ) : (
-                    <p className="font-body" style={{ color: 'rgba(232,221,201,0.6)', fontSize: '12.5px', lineHeight: 1.6, margin: 0 }}>
+                    <p className="font-body" style={{ color: 'rgba(232,221,201,0.68)', fontSize: '12.5px', lineHeight: 1.6, margin: 0 }}>
                       We couldn&apos;t find enough public information about this school — that&apos;s completely fine and common. Your grades, rigor, and activities stand on their own.
                     </p>
                   )}
                 </div>
               )}
-              <p className="font-body" style={{ color: 'rgba(232,221,201,0.5)', fontSize: '11.5px', marginTop: '10px', lineHeight: 1.4 }}>
+              <p className="font-body" style={{ color: 'rgba(232,221,201,0.45)', fontSize: '11.5px', marginTop: '10px', lineHeight: 1.4 }}>
                 Colleges evaluate you in the context of your school. A top private feeder&apos;s counselor advocacy, or standout achievement at an under-resourced public school, both change how your application reads — we factor that into your Safety/Target/Reach classifications.
               </p>
             </div>
 
             <div style={{ marginBottom: '20px' }}>
-              <div className="font-body" style={{ color: 'rgba(232,221,201,0.85)', fontSize: '13px', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Application Strategy</div>
+              <div className="font-body" style={{ color: 'rgba(232,221,201,0.68)', fontSize: '13px', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Application Strategy</div>
               <ProfileToggle label="Applying test-optional" hint="We'll weight GPA + rigor at 100% if you skip SAT/ACT." checked={strategy.test_optional} onChange={(v) => setStrategy({ ...strategy, test_optional: v })} />
             </div>
 
             <div style={{ marginBottom: '20px' }}>
-              <div className="font-body" style={{ color: 'rgba(232,221,201,0.85)', fontSize: '13px', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Hooks</div>
+              <div className="font-body" style={{ color: 'rgba(232,221,201,0.68)', fontSize: '13px', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Hooks</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '8px' }}>
                 <ProfileToggle label="Recruited athlete" hint="Sets matching schools to Likely once a coach offers." checked={strategy.hook_recruited_athlete} onChange={(v) => setStrategy({ ...strategy, hook_recruited_athlete: v })} />
                 <ProfileToggle label="First-generation college student" hint="+5 holistic score at selective schools." checked={strategy.hook_first_gen} onChange={(v) => setStrategy({ ...strategy, hook_first_gen: v })} />
@@ -993,7 +993,7 @@ export default function ProfilePage() {
             </div>
 
             <div style={{ marginBottom: '20px' }}>
-              <div className="font-body" style={{ color: 'rgba(232,221,201,0.85)', fontSize: '13px', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Legacy Status</div>
+              <div className="font-body" style={{ color: 'rgba(232,221,201,0.68)', fontSize: '13px', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Legacy Status</div>
               <ProfileToggle
                 label="I have legacy connections"
                 hint="Bumps matching schools (admit rate above 15%) by one tier."
@@ -1002,7 +1002,7 @@ export default function ProfilePage() {
               />
               {strategy.hook_legacy_active && (
                 <div style={{ marginTop: '14px', padding: '14px', background: 'rgba(11,19,32,0.4)', border: '1px solid rgba(201,169,119,0.18)' }}>
-                  <div className="font-body" style={{ color: 'rgba(232,221,201,0.7)', fontSize: '12px', marginBottom: '10px' }}>
+                  <div className="font-body" style={{ color: 'rgba(232,221,201,0.68)', fontSize: '12px', marginBottom: '10px' }}>
                     Select the colleges where you have legacy status (a parent or grandparent attended).
                   </div>
                   {legacyColleges.length === 0 ? (
@@ -1022,7 +1022,7 @@ export default function ProfilePage() {
                             style={{
                               background: checked ? 'rgba(201,169,119,0.18)' : 'transparent',
                               border: `1px solid ${checked ? '#C9A977' : 'rgba(232,221,201,0.18)'}`,
-                              color: checked ? '#E8DDC9' : 'rgba(232,221,201,0.75)',
+                              color: checked ? '#E8DDC9' : 'rgba(232,221,201,0.68)',
                               padding: '6px 12px',
                               fontSize: '12px',
                               cursor: 'pointer',
@@ -1171,7 +1171,7 @@ export default function ProfilePage() {
                   </thead>
                   <tbody>
                     {apClasses.map((apClass) => (
-                      <tr key={apClass.id} style={{ borderBottom: '1px solid rgba(232,221,201,0.1)' }}>
+                      <tr key={apClass.id} style={{ borderBottom: '1px solid rgba(232,221,201,0.12)' }}>
                         <td style={{ padding: '12px 16px', fontFamily: 'var(--font-body)', color: '#E8DDC9', wordBreak: 'break-word' }}>
                           {apClass.class_name}
                         </td>
@@ -1200,7 +1200,7 @@ export default function ProfilePage() {
                 </table>
               </div>
             ) : (
-              <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)', padding: '16px 0' }}>
+              <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)', padding: '16px 0' }}>
                 No AP classes added yet. Add your first AP class above.
               </p>
             )}
@@ -1226,7 +1226,7 @@ export default function ProfilePage() {
                   <p className="font-body text-sm" style={{ color: '#C9A977', fontWeight: 600, margin: 0, marginBottom: '4px' }}>
                     Suggested from your Story Builder
                   </p>
-                  <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.6)', lineHeight: '1.6', margin: 0 }}>
+                  <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.68)', lineHeight: '1.6', margin: 0 }}>
                     We noticed these in what you wrote. Add the ones you want in your activities list — skip the rest.
                   </p>
                 </div>
@@ -1240,7 +1240,7 @@ export default function ProfilePage() {
                         gap: '12px',
                         padding: '12px 14px',
                         background: 'rgba(11,19,32,0.4)',
-                        border: '1px solid rgba(232,221,201,0.08)',
+                        border: '1px solid rgba(232,221,201,0.12)',
                         borderRadius: '4px',
                       }}
                     >
@@ -1248,13 +1248,13 @@ export default function ProfilePage() {
                         <div className="font-body" style={{ color: '#E8DDC9', fontSize: '14px', fontWeight: 600 }}>
                           {sug.activity_name}
                           {sug.role && (
-                            <span style={{ color: 'rgba(232,221,201,0.55)', fontWeight: 400, marginLeft: '8px', fontSize: '12px' }}>
+                            <span style={{ color: 'rgba(232,221,201,0.68)', fontWeight: 400, marginLeft: '8px', fontSize: '12px' }}>
                               · {sug.role}
                             </span>
                           )}
                         </div>
                         {sug.description && (
-                          <p className="font-body" style={{ color: 'rgba(232,221,201,0.7)', fontSize: '12px', lineHeight: '1.5', margin: '4px 0 0 0' }}>
+                          <p className="font-body" style={{ color: 'rgba(232,221,201,0.68)', fontSize: '12px', lineHeight: '1.5', margin: '4px 0 0 0' }}>
                             {sug.description}
                           </p>
                         )}
@@ -1283,7 +1283,7 @@ export default function ProfilePage() {
                           className="font-body"
                           style={{
                             background: 'transparent',
-                            color: 'rgba(232,221,201,0.55)',
+                            color: 'rgba(232,221,201,0.68)',
                             border: '1px solid rgba(232,221,201,0.2)',
                             padding: '6px 14px',
                             fontSize: '11px',
@@ -1357,7 +1357,7 @@ export default function ProfilePage() {
               />
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: '180px' }}>
-                  <label className="font-body" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.14em', color: 'rgba(232,221,201,0.5)', display: 'block', marginBottom: '6px' }}>
+                  <label className="font-body" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.14em', color: 'rgba(232,221,201,0.45)', display: 'block', marginBottom: '6px' }}>
                     Start (month/year)
                   </label>
                   <input
@@ -1382,7 +1382,7 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div style={{ flex: 1, minWidth: '180px' }}>
-                  <label className="font-body" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.14em', color: 'rgba(232,221,201,0.5)', display: 'block', marginBottom: '6px' }}>
+                  <label className="font-body" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.14em', color: 'rgba(232,221,201,0.45)', display: 'block', marginBottom: '6px' }}>
                     End <span style={{ textTransform: 'none', letterSpacing: 0.5, opacity: 0.7 }}>(leave blank if ongoing)</span>
                   </label>
                   <input
@@ -1474,7 +1474,7 @@ export default function ProfilePage() {
                   </thead>
                   <tbody>
                     {extracurriculars.map((ec) => (
-                      <tr key={ec.id} style={{ borderBottom: '1px solid rgba(232,221,201,0.1)' }}>
+                      <tr key={ec.id} style={{ borderBottom: '1px solid rgba(232,221,201,0.12)' }}>
                         {editingExtracurricular === ec.id ? (
                           <>
                             <td style={{ padding: '12px 16px' }}>
@@ -1559,7 +1559,7 @@ export default function ProfilePage() {
                                     minWidth: '110px',
                                   }}
                                 />
-                                <span className="font-body" style={{ color: 'rgba(232,221,201,0.4)', fontSize: '12px', alignSelf: 'center' }}>→</span>
+                                <span className="font-body" style={{ color: 'rgba(232,221,201,0.45)', fontSize: '12px', alignSelf: 'center' }}>→</span>
                                 <input
                                   type="month"
                                   value={editExtracurricular.end_date ? editExtracurricular.end_date.slice(0, 7) : ''}
@@ -1606,7 +1606,7 @@ export default function ProfilePage() {
                                   onClick={handleCancelEditExtracurricular}
                                   style={{
                                     background: 'transparent',
-                                    color: 'rgba(232,221,201,0.7)',
+                                    color: 'rgba(232,221,201,0.68)',
                                     border: '1px solid rgba(232,221,201,0.3)',
                                     cursor: 'pointer',
                                     fontFamily: 'var(--font-body)',
@@ -1626,13 +1626,13 @@ export default function ProfilePage() {
                             <td style={{ padding: '12px 16px', fontFamily: 'var(--font-body)', color: '#E8DDC9', fontWeight: 500, wordBreak: 'break-word' }}>
                               {ec.activity_name}
                             </td>
-                            <td style={{ padding: '12px 16px', fontFamily: 'var(--font-body)', color: 'rgba(232,221,201,0.7)', wordBreak: 'break-word' }}>
+                            <td style={{ padding: '12px 16px', fontFamily: 'var(--font-body)', color: 'rgba(232,221,201,0.68)', wordBreak: 'break-word' }}>
                               {ec.role || '—'}
                             </td>
-                            <td style={{ padding: '12px 16px', fontFamily: 'var(--font-body)', color: 'rgba(232,221,201,0.7)', wordBreak: 'break-word', maxWidth: '400px', whiteSpace: 'normal' }}>
+                            <td style={{ padding: '12px 16px', fontFamily: 'var(--font-body)', color: 'rgba(232,221,201,0.68)', wordBreak: 'break-word', maxWidth: '400px', whiteSpace: 'normal' }}>
                               {ec.description || '—'}
                               {formatDateRange(ec.start_date, ec.end_date) && (
-                                <div style={{ marginTop: '4px', fontSize: '12px', color: 'rgba(232,221,201,0.5)', fontStyle: 'italic' }}>
+                                <div style={{ marginTop: '4px', fontSize: '12px', color: 'rgba(232,221,201,0.45)', fontStyle: 'italic' }}>
                                   {formatDateRange(ec.start_date, ec.end_date)}
                                 </div>
                               )}
@@ -1680,7 +1680,7 @@ export default function ProfilePage() {
                 </table>
               </div>
             ) : (
-              <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)', padding: '16px 0' }}>
+              <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)', padding: '16px 0' }}>
                 No extracurriculars added yet. Add your first activity above.
               </p>
             )}
@@ -1814,14 +1814,14 @@ export default function ProfilePage() {
                   </thead>
                   <tbody>
                     {awards.map((award) => (
-                      <tr key={award.id} style={{ borderBottom: '1px solid rgba(232,221,201,0.1)' }}>
+                      <tr key={award.id} style={{ borderBottom: '1px solid rgba(232,221,201,0.12)' }}>
                         <td style={{ padding: '12px 16px', fontFamily: 'var(--font-body)', color: '#E8DDC9', fontWeight: 500, wordBreak: 'break-word' }}>
                           {award.award_name}
                         </td>
-                        <td style={{ padding: '12px 16px', fontFamily: 'var(--font-body)', color: 'rgba(232,221,201,0.7)', wordBreak: 'break-word' }}>
+                        <td style={{ padding: '12px 16px', fontFamily: 'var(--font-body)', color: 'rgba(232,221,201,0.68)', wordBreak: 'break-word' }}>
                           {award.organization || '—'}
                         </td>
-                        <td style={{ padding: '12px 16px', fontFamily: 'var(--font-body)', color: 'rgba(232,221,201,0.7)' }}>
+                        <td style={{ padding: '12px 16px', fontFamily: 'var(--font-body)', color: 'rgba(232,221,201,0.68)' }}>
                           {award.year || '—'}
                         </td>
                         <td style={{ padding: '12px 16px', textAlign: 'right', whiteSpace: 'nowrap' }}>
@@ -1846,7 +1846,7 @@ export default function ProfilePage() {
                 </table>
               </div>
             ) : (
-              <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)', padding: '16px 0' }}>
+              <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)', padding: '16px 0' }}>
                 No awards added yet. Add your first award above.
               </p>
             )}
@@ -1858,7 +1858,7 @@ export default function ProfilePage() {
           <div style={{ marginTop: '32px' }}>
           <Card>
             <h2 className="font-heading text-2xl mb-4" style={{ color: '#A35A6A' }}>Delete Account</h2>
-            <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.7)', marginBottom: '16px', lineHeight: '1.6' }}>
+            <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)', marginBottom: '16px', lineHeight: '1.6' }}>
               Permanently delete your Vantage account and all associated data: your essays, essay versions, Insight Question responses, college list, activities, awards, AI guidance history, and subscription record. This action cannot be undone.
             </p>
             <DeleteAccountButton />
@@ -1977,7 +1977,7 @@ function DeleteAccountButton() {
             </h3>
             <p
               className="font-body text-sm"
-              style={{ color: 'rgba(232,221,201,0.85)', lineHeight: '1.6', marginBottom: '20px' }}
+              style={{ color: 'rgba(232,221,201,0.68)', lineHeight: '1.6', marginBottom: '20px' }}
             >
               This will permanently remove your essays, essay versions, Insight Question
               answers, college list, activities, awards, AI guidance history, and subscription
@@ -1986,7 +1986,7 @@ function DeleteAccountButton() {
 
             <p
               className="font-body text-sm"
-              style={{ color: 'rgba(232,221,201,0.75)', marginBottom: '10px' }}
+              style={{ color: 'rgba(232,221,201,0.68)', marginBottom: '10px' }}
             >
               Type <strong style={{ color: '#A35A6A' }}>DELETE MY ACCOUNT</strong> to continue:
             </p>
@@ -2023,7 +2023,7 @@ function DeleteAccountButton() {
                 disabled={stage === 'deleting'}
                 style={{
                   background: 'transparent',
-                  color: 'rgba(232,221,201,0.8)',
+                  color: 'rgba(232,221,201,0.68)',
                   border: '1px solid rgba(232,221,201,0.3)',
                   padding: '10px 20px',
                   fontFamily: 'var(--font-body)',
@@ -2092,7 +2092,7 @@ function ProfileToggle({
         alignItems: 'flex-start',
         gap: '12px',
         background: checked ? 'rgba(201,169,119,0.08)' : 'rgba(0,0,0,0.2)',
-        border: `1px solid ${checked ? 'rgba(201,169,119,0.45)' : 'rgba(232,221,201,0.08)'}`,
+        border: `1px solid ${checked ? 'rgba(201,169,119,0.45)' : 'rgba(232,221,201,0.12)'}`,
         padding: '12px 14px',
         textAlign: 'left',
         cursor: 'pointer',
@@ -2123,7 +2123,7 @@ function ProfileToggle({
       <span style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
         <span style={{ color: '#E8DDC9', fontSize: '13px', fontWeight: 500, lineHeight: 1.3 }}>{label}</span>
         {hint && (
-          <span style={{ color: 'rgba(232,221,201,0.55)', fontSize: '11.5px', lineHeight: 1.4 }}>{hint}</span>
+          <span style={{ color: 'rgba(232,221,201,0.68)', fontSize: '11.5px', lineHeight: 1.4 }}>{hint}</span>
         )}
       </span>
     </button>

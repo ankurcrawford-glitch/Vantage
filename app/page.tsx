@@ -49,7 +49,7 @@ export default function Home() {
           </h1>
           <p
             className="font-body text-base sm:text-lg mb-10 mx-auto font-light leading-relaxed"
-            style={{ color: 'rgba(232,221,201,0.85)', maxWidth: '640px' }}
+            style={{ color: 'rgba(232,221,201,0.68)', maxWidth: '640px' }}
           >
             For high-school students (13 and up) preparing for college. Parents and
             counselors can review. Essay help is feedback and brainstorming — we do
@@ -69,7 +69,7 @@ export default function Home() {
       {/* Two stages — side by side on desktop, stacked on small screens */}
       <section
         className="px-6 sm:px-8"
-        style={{ background: '#0F1828', borderTop: '1px solid #1B2740', borderBottom: '1px solid #1B2740', paddingTop: '72px', paddingBottom: '72px' }}
+        style={{ background: '#101a2b', borderTop: '1px solid #1B2740', borderBottom: '1px solid #1B2740', paddingTop: '72px', paddingBottom: '72px' }}
       >
         <div className="max-w-6xl mx-auto">
           <p
@@ -93,7 +93,7 @@ export default function Home() {
               <h3 className="font-heading text-2xl sm:text-3xl font-semibold mb-4" style={{ color: '#E8DDC9' }}>
                 Vantage Foundations
               </h3>
-              <p className="font-body font-light leading-relaxed mb-8" style={{ color: 'rgba(232,221,201,0.85)', flex: 1 }}>
+              <p className="font-body font-light leading-relaxed mb-8" style={{ color: 'rgba(232,221,201,0.68)', flex: 1 }}>
                 Explore your interests, understand your strengths, and make thoughtful
                 choices about classes, activities, and experiences. Vantage Foundations
                 helps you develop a meaningful high-school journey without turning every
@@ -121,7 +121,7 @@ export default function Home() {
               <h3 className="font-heading text-2xl sm:text-3xl font-semibold mb-4" style={{ color: '#E8DDC9' }}>
                 Vantage Applications
               </h3>
-              <p className="font-body font-light leading-relaxed mb-8" style={{ color: 'rgba(232,221,201,0.85)', flex: 1 }}>
+              <p className="font-body font-light leading-relaxed mb-8" style={{ color: 'rgba(232,221,201,0.68)', flex: 1 }}>
                 Bring your experiences together and prepare for the college application
                 process. Vantage Applications helps you develop your strategy, organize
                 your college list, identify the stories that matter, and strengthen your
@@ -148,7 +148,7 @@ export default function Home() {
           <h2 className="font-heading text-3xl sm:text-4xl font-semibold text-center mb-4" style={{ color: '#E8DDC9' }}>
             How it works
           </h2>
-          <p className="font-body font-light text-center leading-relaxed mb-12" style={{ color: 'rgba(232,221,201,0.7)', maxWidth: '38rem', margin: '0 auto 48px' }}>
+          <p className="font-body font-light text-center leading-relaxed mb-12" style={{ color: 'rgba(232,221,201,0.68)', maxWidth: '38rem', margin: '0 auto 48px' }}>
             One counselor, all four years. It starts in 9th grade with a conversation —
             and by the time you apply, it remembers everything that shaped you.
           </p>
@@ -187,7 +187,7 @@ export default function Home() {
                         letterSpacing: '1.2px',
                         textTransform: 'uppercase',
                         fontWeight: 600,
-                        color: 'rgba(232,221,201,0.85)',
+                        color: 'rgba(232,221,201,0.68)',
                         border: '1px solid rgba(201,169,119,0.35)',
                         borderRadius: '999px',
                         padding: '6px 14px',
@@ -199,7 +199,7 @@ export default function Home() {
                   </span>
                 ))}
               </div>
-              <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.7)', fontSize: '15px', maxWidth: '44rem' }}>
+              <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.68)', fontSize: '15px', maxWidth: '44rem' }}>
                 {j.blurb}
               </p>
             </div>
@@ -245,7 +245,7 @@ export default function Home() {
               <h3 className="font-heading text-2xl font-semibold mb-3" style={{ color: '#C9A977' }}>
                 Build your story
               </h3>
-              <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.85)' }}>
+              <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.68)' }}>
                 Insight Questions and Story Builder help you find the experiences that
                 matter — so later essays start from your own material, not a blank page.
               </p>
@@ -254,7 +254,7 @@ export default function Home() {
               <h3 className="font-heading text-2xl font-semibold mb-3" style={{ color: '#C9A977' }}>
                 Keep a college list
               </h3>
-              <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.85)' }}>
+              <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.68)' }}>
                 Organize schools and strategy in one place as you move from exploration
                 into applications.
               </p>
@@ -263,7 +263,7 @@ export default function Home() {
               <h3 className="font-heading text-2xl font-semibold mb-3" style={{ color: '#C9A977' }}>
                 Essay feedback, not ghostwriting
               </h3>
-              <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.85)' }}>
+              <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.68)' }}>
                 AI helps you brainstorm and revise. It does not write essays for you.
                 Submitting generated text as your own work can violate a college&apos;s
                 integrity rules.
@@ -273,7 +273,7 @@ export default function Home() {
               <h3 className="font-heading text-2xl font-semibold mb-3" style={{ color: '#C9A977' }}>
                 Invite a parent or counselor
               </h3>
-              <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.85)' }}>
+              <p className="font-body font-light leading-relaxed" style={{ color: 'rgba(232,221,201,0.68)' }}>
                 Share drafts for review when you want a second set of eyes. Each student
                 keeps their own account.
               </p>
@@ -285,7 +285,7 @@ export default function Home() {
       {/* Privacy + access */}
       <section
         className="px-6 sm:px-8"
-        style={{ background: '#0F1828', borderTop: '1px solid #1B2740', borderBottom: '1px solid #1B2740', paddingTop: '64px', paddingBottom: '64px' }}
+        style={{ background: '#101a2b', borderTop: '1px solid #1B2740', borderBottom: '1px solid #1B2740', paddingTop: '64px', paddingBottom: '64px' }}
       >
         <div
           className="text-center"
@@ -294,11 +294,11 @@ export default function Home() {
           <h2 className="font-heading text-3xl sm:text-4xl font-semibold mb-6" style={{ color: '#E8DDC9' }}>
             Private, and free to start
           </h2>
-          <p className="font-body font-light leading-relaxed mb-4" style={{ color: 'rgba(232,221,201,0.85)' }}>
+          <p className="font-body font-light leading-relaxed mb-4" style={{ color: 'rgba(232,221,201,0.68)' }}>
             Your essays are not used to train AI models. Traffic is encrypted, and your
             work stays in your account.
           </p>
-          <p className="font-body font-light leading-relaxed mb-10" style={{ color: 'rgba(232,221,201,0.85)' }}>
+          <p className="font-body font-light leading-relaxed mb-10" style={{ color: 'rgba(232,221,201,0.68)' }}>
             Create an account for free. AI features have monthly usage caps. Obtain a
             one-time code for access.
           </p>

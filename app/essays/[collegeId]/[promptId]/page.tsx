@@ -932,7 +932,7 @@ export default function EssayWritingPage() {
               <h1 className="font-heading text-4xl mb-2" style={{ color: '#E8DDC9' }}>
                 {college.name}
                 {collegeId === 'a0000000-0000-0000-0000-000000000000' && (
-                  <span className="font-body text-base" style={{ color: 'rgba(232,221,201,0.5)', fontWeight: 400, marginLeft: '12px', letterSpacing: '0.05em' }}>
+                  <span className="font-body text-base" style={{ color: 'rgba(232,221,201,0.45)', fontWeight: 400, marginLeft: '12px', letterSpacing: '0.05em' }}>
                     2026–27
                   </span>
                 )}
@@ -940,10 +940,10 @@ export default function EssayWritingPage() {
               {(college.motto || college.website_url) && (
                 <div style={{ marginBottom: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   {college.motto && (
-                    <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.6)', fontStyle: 'italic' }}>
+                    <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)', fontStyle: 'italic' }}>
                       &ldquo;{college.motto}&rdquo;
                       {college.motto_translation && (
-                        <span style={{ color: 'rgba(232,221,201,0.4)', fontStyle: 'normal' }}>
+                        <span style={{ color: 'rgba(232,221,201,0.45)', fontStyle: 'normal' }}>
                           {' '}— {college.motto_translation}
                         </span>
                       )}
@@ -991,7 +991,7 @@ export default function EssayWritingPage() {
                   {prompt.prompt_text}
                 </p>
                 {prompt.word_limit && (
-                  <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
+                  <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)' }}>
                     Word Limit: {prompt.word_limit} words
                   </p>
                 )}
@@ -1011,7 +1011,7 @@ export default function EssayWritingPage() {
                         now={tickNow}
                       />
                     )}
-                    <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.7)' }}>
+                    <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)' }}>
                       {wordCount} {prompt.word_limit ? `/ ${prompt.word_limit}` : ''} words
                     </span>
                     {prompt.word_limit && wordCount > prompt.word_limit && (
@@ -1031,7 +1031,7 @@ export default function EssayWritingPage() {
                     minHeight: '400px',
                     background: canEdit ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.1)',
                     border: '1px solid rgba(201,169,119,0.2)',
-                    color: canEdit ? 'white' : 'rgba(232,221,201,0.7)',
+                    color: canEdit ? 'white' : 'rgba(232,221,201,0.68)',
                     padding: '20px',
                     fontFamily: 'var(--font-body)',
                     fontSize: '16px',
@@ -1095,7 +1095,7 @@ export default function EssayWritingPage() {
                             <p className="font-body font-semibold text-sm" style={{ color: '#C9A977', marginBottom: '4px' }}>
                               Comment from {comment.counselor_name}
                             </p>
-                            <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.5)' }}>
+                            <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.45)' }}>
                               {new Date(comment.created_at).toLocaleDateString()} at {new Date(comment.created_at).toLocaleTimeString()}
                             </p>
                           </div>
@@ -1213,7 +1213,7 @@ export default function EssayWritingPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '16px', flexWrap: 'wrap' }}>
                   <div>
                     <h3 className="font-heading text-lg" style={{ color: '#C9A977' }}>Strategic Intelligence</h3>
-                    <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.5)', marginTop: '4px' }}>
+                    <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.45)', marginTop: '4px' }}>
                       Guidance that sharpens as your essay does.
                     </p>
                   </div>
@@ -1246,7 +1246,7 @@ export default function EssayWritingPage() {
                 {/* Insight gate message */}
                 {insightGateMessage && (
                   <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(201,169,119,0.08)', borderRadius: '4px', borderLeft: '3px solid rgba(201,169,119,0.5)' }}>
-                    <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', lineHeight: '1.7' }}>
+                    <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)', lineHeight: '1.7' }}>
                       {insightGateMessage}
                     </p>
                     <a href="/story-builder" style={{ display: 'inline-block', marginTop: '16px', background: 'transparent', color: '#C9A977', padding: '8px 16px', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, border: '1px solid #C9A977', borderRadius: '2px', textDecoration: 'none' }}>
@@ -1267,7 +1267,7 @@ export default function EssayWritingPage() {
                           </span>
                         )}
                       </div>
-                      <button onClick={() => { setThinkingPartnerResponse(null); setInsightGateMessage(null); }} style={{ background: 'transparent', color: 'rgba(232,221,201,0.5)', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '0', lineHeight: '1' }}>
+                      <button onClick={() => { setThinkingPartnerResponse(null); setInsightGateMessage(null); }} style={{ background: 'transparent', color: 'rgba(232,221,201,0.45)', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '0', lineHeight: '1' }}>
                         ×
                       </button>
                     </div>
@@ -1290,12 +1290,12 @@ export default function EssayWritingPage() {
                     {showHistory && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
                         {guidanceHistory.map((entry: any) => (
-                          <details key={entry.id} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '4px', border: '1px solid rgba(232,221,201,0.08)' }}>
-                            <summary style={{ padding: '10px 14px', cursor: 'pointer', color: 'rgba(232,221,201,0.7)', fontFamily: 'var(--font-body)', fontSize: '12px', display: 'flex', justifyContent: 'space-between', listStyle: 'none' }}>
+                          <details key={entry.id} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '4px', border: '1px solid rgba(232,221,201,0.12)' }}>
+                            <summary style={{ padding: '10px 14px', cursor: 'pointer', color: 'rgba(232,221,201,0.68)', fontFamily: 'var(--font-body)', fontSize: '12px', display: 'flex', justifyContent: 'space-between', listStyle: 'none' }}>
                               <span>{modeLabel(entry.mode)} — {entry.essay_word_count || 0} words</span>
-                              <span style={{ color: 'rgba(232,221,201,0.4)' }}>{new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
+                              <span style={{ color: 'rgba(232,221,201,0.45)' }}>{new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
                             </summary>
-                            <div className="font-body text-sm" style={{ padding: '12px 14px', color: 'rgba(232,221,201,0.8)', lineHeight: '1.7', whiteSpace: 'pre-wrap', borderTop: '1px solid rgba(232,221,201,0.06)' }}>
+                            <div className="font-body text-sm" style={{ padding: '12px 14px', color: 'rgba(232,221,201,0.68)', lineHeight: '1.7', whiteSpace: 'pre-wrap', borderTop: '1px solid rgba(232,221,201,0.06)' }}>
                               {renderBoldText(entry.guidance_text)}
                             </div>
                           </details>
@@ -1317,7 +1317,7 @@ export default function EssayWritingPage() {
             <Card>
               <h3 className="font-heading text-lg mb-4" style={{ color: '#C9A977' }}>Versions</h3>
               {versions.length === 0 ? (
-                <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
+                <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)' }}>
                   No versions saved yet.
                 </p>
               ) : (
@@ -1328,7 +1328,7 @@ export default function EssayWritingPage() {
                       style={{
                         padding: '12px',
                         background: version.is_current ? 'rgba(201,169,119,0.2)' : 'transparent',
-                        border: version.is_current ? '1px solid rgba(201,169,119,0.5)' : '1px solid rgba(232,221,201,0.1)',
+                        border: version.is_current ? '1px solid rgba(201,169,119,0.5)' : '1px solid rgba(232,221,201,0.12)',
                         borderRadius: '4px',
                         display: 'flex',
                         justifyContent: 'space-between',
@@ -1353,7 +1353,7 @@ export default function EssayWritingPage() {
                         <span style={{ display: 'block', color: '#E8DDC9', fontSize: '14px', fontWeight: 600 }}>
                           Version {version.version_number}
                         </span>
-                        <span style={{ display: 'block', color: 'rgba(232,221,201,0.5)', fontSize: '12px', marginTop: '4px' }}>
+                        <span style={{ display: 'block', color: 'rgba(232,221,201,0.45)', fontSize: '12px', marginTop: '4px' }}>
                           {version.word_count} words · {new Date(version.created_at).toLocaleDateString()}
                         </span>
                       </button>
@@ -1369,7 +1369,7 @@ export default function EssayWritingPage() {
                             style={{
                               background: 'transparent',
                               border: '1px solid rgba(232,221,201,0.25)',
-                              color: 'rgba(232,221,201,0.8)',
+                              color: 'rgba(232,221,201,0.68)',
                               cursor: deletingVersionId ? 'not-allowed' : 'pointer',
                               fontSize: '12px',
                               fontFamily: 'var(--font-body)',
@@ -1491,7 +1491,7 @@ export default function EssayWritingPage() {
                               Email sent successfully
                             </p>
                           )}
-                          <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.7)', marginBottom: '8px' }}>
+                          <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.68)', marginBottom: '8px' }}>
                             {emailSent ? 'You can also share this link directly:' : 'Share this link with your reviewer:'}
                           </p>
                           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -1542,7 +1542,7 @@ export default function EssayWritingPage() {
                     );
                     return (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '16px' }}>
-                        <p className="font-body text-xs font-semibold" style={{ color: 'rgba(232,221,201,0.7)', marginBottom: '4px' }}>
+                        <p className="font-body text-xs font-semibold" style={{ color: 'rgba(232,221,201,0.68)', marginBottom: '4px' }}>
                           Invited Reviewers:
                         </p>
                         {unique.map((inv) => (
@@ -1550,7 +1550,7 @@ export default function EssayWritingPage() {
                             <p className="font-body text-xs" style={{ color: '#E8DDC9', margin: 0 }}>
                               {inv.invitee_name || inv.invitee_email}
                             </p>
-                            <span className="font-body text-xs" style={{ color: inv.status === 'accepted' ? '#8FB89A' : 'rgba(232,221,201,0.4)' }}>
+                            <span className="font-body text-xs" style={{ color: inv.status === 'accepted' ? '#8FB89A' : 'rgba(232,221,201,0.45)' }}>
                               {inv.status === 'accepted' ? 'Accepted' : inv.role}
                             </span>
                           </div>
@@ -1605,7 +1605,7 @@ function FocusChips({
             fontSize: '10.5px',
             textTransform: 'uppercase',
             letterSpacing: '0.14em',
-            color: 'rgba(232,221,201,0.5)',
+            color: 'rgba(232,221,201,0.45)',
             fontWeight: 600,
           }}
         >
@@ -1629,7 +1629,7 @@ function FocusChips({
                 borderRadius: '999px',
                 border: `1px solid ${active ? '#C9A977' : 'rgba(232,221,201,0.18)'}`,
                 background: active ? 'rgba(201,169,119,0.14)' : 'transparent',
-                color: active ? '#C9A977' : 'rgba(232,221,201,0.75)',
+                color: active ? '#C9A977' : 'rgba(232,221,201,0.68)',
                 cursor: disabled ? 'not-allowed' : 'pointer',
                 opacity: disabled ? 0.5 : 1,
                 transition: 'all 0.15s',
@@ -1653,7 +1653,7 @@ function FocusChips({
             borderRadius: '999px',
             border: `1px solid ${usingCustom || customOpen ? '#C9A977' : 'rgba(232,221,201,0.18)'}`,
             background: usingCustom ? 'rgba(201,169,119,0.14)' : 'transparent',
-            color: usingCustom || customOpen ? '#C9A977' : 'rgba(232,221,201,0.75)',
+            color: usingCustom || customOpen ? '#C9A977' : 'rgba(232,221,201,0.68)',
             cursor: disabled ? 'not-allowed' : 'pointer',
             opacity: disabled ? 0.5 : 1,
             transition: 'all 0.15s',
@@ -1668,7 +1668,7 @@ function FocusChips({
             className="font-body"
             style={{
               fontSize: '11px',
-              color: 'rgba(232,221,201,0.5)',
+              color: 'rgba(232,221,201,0.45)',
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
@@ -1714,7 +1714,7 @@ function FocusChips({
               borderRadius: '2px',
               border: `1px solid ${customText.trim() ? '#C9A977' : 'rgba(232,221,201,0.18)'}`,
               background: customText.trim() ? '#C9A977' : 'transparent',
-              color: customText.trim() ? '#0B1320' : 'rgba(232,221,201,0.5)',
+              color: customText.trim() ? '#0B1320' : 'rgba(232,221,201,0.45)',
               cursor: customText.trim() ? 'pointer' : 'not-allowed',
               fontWeight: 600,
               textTransform: 'uppercase',
@@ -1732,7 +1732,7 @@ function FocusChips({
             marginTop: '10px',
             fontSize: '11.5px',
             fontStyle: 'italic',
-            color: 'rgba(232,221,201,0.55)',
+            color: 'rgba(232,221,201,0.68)',
             lineHeight: 1.5,
           }}
         >
@@ -1757,10 +1757,10 @@ function AutosaveIndicator({
   now: number;
 }) {
   let label = '';
-  let color = 'rgba(232,221,201,0.5)';
+  let color = 'rgba(232,221,201,0.45)';
   if (status === 'saving') {
     label = 'Saving…';
-    color = 'rgba(232,221,201,0.6)';
+    color = 'rgba(232,221,201,0.68)';
   } else if (status === 'error') {
     label = 'Couldn’t save — retry on next edit';
     color = '#A35A6A';

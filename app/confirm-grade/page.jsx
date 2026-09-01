@@ -86,7 +86,7 @@ export default function ConfirmGrade() {
   if (!ready) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1320' }}>
-        <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>Loading…</p>
+        <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)' }}>Loading…</p>
       </div>
     );
   }
@@ -102,7 +102,7 @@ export default function ConfirmGrade() {
           <p className="font-heading" style={{ color: '#E8DDC9', fontSize: '24px', fontWeight: 600, marginBottom: '8px' }}>
             Welcome back — new school year!
           </p>
-          <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.7)', lineHeight: 1.6 }}>
+          <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)', lineHeight: 1.6 }}>
             Quick check so your guidance fits: our records suggest you're entering{' '}
             <strong style={{ color: '#C9A977' }}>{GRADE_LABELS[suggested]}</strong> this year.
             Confirm or correct it below.
@@ -163,7 +163,7 @@ export default function ConfirmGrade() {
           {saving ? 'Saving…' : `Yes, I'm in ${selected ? GRADE_LABELS[selected].split(' ')[0] : ''} — continue`}
         </button>
 
-        <p className="font-body text-xs text-center" style={{ color: 'rgba(232,221,201,0.4)', marginTop: '20px' }}>
+        <p className="font-body text-xs text-center" style={{ color: 'rgba(232,221,201,0.45)', marginTop: '20px' }}>
           We'll ask again each August so your roadmap always matches your year.
         </p>
       </div>

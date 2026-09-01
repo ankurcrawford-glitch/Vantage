@@ -354,10 +354,10 @@ export default function CollegeDetailPage() {
           {(college.motto || college.website_url) && (
             <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {college.motto && (
-                <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.6)', fontStyle: 'italic' }}>
+                <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)', fontStyle: 'italic' }}>
                   &ldquo;{college.motto}&rdquo;
                   {college.motto_translation && (
-                    <span style={{ color: 'rgba(232,221,201,0.4)', fontStyle: 'normal' }}>
+                    <span style={{ color: 'rgba(232,221,201,0.45)', fontStyle: 'normal' }}>
                       {' '}— {college.motto_translation}
                     </span>
                   )}
@@ -380,17 +380,17 @@ export default function CollegeDetailPage() {
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
             {college.acceptance_rate != null && college.acceptance_rate !== undefined && (
-              <p className="font-body text-base" style={{ color: 'rgba(232,221,201,0.8)' }}>
+              <p className="font-body text-base" style={{ color: 'rgba(232,221,201,0.68)' }}>
                 Acceptance Rate: {(college.acceptance_rate * 100).toFixed(1)}%
               </p>
             )}
             {college.sat_range_low != null && college.sat_range_high != null && (
-              <p className="font-body text-base" style={{ color: 'rgba(232,221,201,0.8)' }}>
+              <p className="font-body text-base" style={{ color: 'rgba(232,221,201,0.68)' }}>
                 SAT Range: {college.sat_range_low} – {college.sat_range_high}
               </p>
             )}
             {((college as any).deadline_ed || (college as any).deadline_ea || (college as any).deadline_rd) && (
-              <p className="font-body text-base" style={{ color: 'rgba(232,221,201,0.8)' }}>
+              <p className="font-body text-base" style={{ color: 'rgba(232,221,201,0.68)' }}>
                 Deadlines:{' '}
                 {[
                   (college as any).deadline_ed && `ED ${fmtDeadline((college as any).deadline_ed)}`,
@@ -428,7 +428,7 @@ export default function CollegeDetailPage() {
               </div>
 
               <ClassificationSection title="Why this bucket">
-                <p className="font-body" style={{ color: 'rgba(232,221,201,0.85)', fontSize: '14px', lineHeight: 1.7, margin: 0 }}>
+                <p className="font-body" style={{ color: 'rgba(232,221,201,0.68)', fontSize: '14px', lineHeight: 1.7, margin: 0 }}>
                   {classification.whyThisBucket}
                 </p>
               </ClassificationSection>
@@ -465,7 +465,7 @@ export default function CollegeDetailPage() {
                       className="font-body"
                       style={{
                         fontSize: '13px',
-                        color: 'rgba(232,221,201,0.85)',
+                        color: 'rgba(232,221,201,0.68)',
                         lineHeight: 1.6,
                         display: 'flex',
                         alignItems: 'flex-start',
@@ -480,7 +480,7 @@ export default function CollegeDetailPage() {
               </ClassificationSection>
 
               {inPortfolio && (
-                <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(232,221,201,0.08)' }}>
+                <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(232,221,201,0.12)' }}>
                   <button
                     onClick={handleRemoveFromPortfolio}
                     className="font-body"
@@ -508,14 +508,14 @@ export default function CollegeDetailPage() {
           <h2 className="font-heading text-2xl mb-6" style={{ color: '#E8DDC9' }}>Essay Prompts (2026–27)</h2>
           {prompts.length === 0 && (college as any)?.no_supplement ? (
             <Card>
-              <p style={{ color: 'rgba(232,221,201,0.7)', textAlign: 'center', padding: '32px' }}>
+              <p style={{ color: 'rgba(232,221,201,0.68)', textAlign: 'center', padding: '32px' }}>
                 {college?.name} requires no supplemental essays this year — only your Common App
                 personal statement. One less essay, one more reason to make that statement sing.
               </p>
             </Card>
           ) : prompts.length === 0 ? (
             <Card>
-              <p style={{ color: 'rgba(232,221,201,0.7)', textAlign: 'center', padding: '32px' }}>
+              <p style={{ color: 'rgba(232,221,201,0.68)', textAlign: 'center', padding: '32px' }}>
                 {college?.name} hasn’t published its 2026–27 supplemental essays yet. We check
                 every week — the moment they’re released, they’ll appear here and in your Friday brief.
               </p>
@@ -532,7 +532,7 @@ export default function CollegeDetailPage() {
                       {prompt.prompt_text}
                     </p>
                     {prompt.word_limit && (
-                      <p className="font-body text-sm mt-2" style={{ color: 'rgba(232,221,201,0.5)' }}>
+                      <p className="font-body text-sm mt-2" style={{ color: 'rgba(232,221,201,0.45)' }}>
                         Word Limit: {prompt.word_limit} words
                       </p>
                     )}
@@ -585,11 +585,11 @@ export default function CollegeDetailPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: '280px' }}>
                   <h3 className="font-heading text-xl" style={{ color: '#C9A977', marginBottom: '6px' }}>The Round Table</h3>
-                  <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.75)', lineHeight: '1.6', marginBottom: '8px' }}>
+                  <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)', lineHeight: '1.6', marginBottom: '8px' }}>
                     A panel-style review of your full {college.name} application package — your Common App essay read alongside all of your {college.name} supplemental essays — by a simulated admissions committee.
                   </p>
-                  <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.5)', lineHeight: '1.6' }}>
-                    <strong style={{ color: 'rgba(232,221,201,0.7)' }}>When to use this:</strong> this is your final-stage review — for when you are almost ready to submit. The Round Table looks at how your essays work together, what story emerges across them, whether anything is redundant, and what parts of your story are missing. It is not for line-editing a single essay — use the per-essay Strategic Intelligence review for that.
+                  <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.45)', lineHeight: '1.6' }}>
+                    <strong style={{ color: 'rgba(232,221,201,0.68)' }}>When to use this:</strong> this is your final-stage review — for when you are almost ready to submit. The Round Table looks at how your essays work together, what story emerges across them, whether anything is redundant, and what parts of your story are missing. It is not for line-editing a single essay — use the per-essay Strategic Intelligence review for that.
                   </p>
                 </div>
                 {readiness && allReady(readiness) ? (
@@ -633,7 +633,7 @@ export default function CollegeDetailPage() {
                         fontSize: '10px',
                         textTransform: 'uppercase',
                         letterSpacing: '0.18em',
-                        color: 'rgba(232,221,201,0.5)',
+                        color: 'rgba(232,221,201,0.45)',
                         fontWeight: 600,
                       }}
                     >
@@ -643,7 +643,7 @@ export default function CollegeDetailPage() {
                       className="font-body"
                       style={{
                         fontSize: '13px',
-                        color: 'rgba(232,221,201,0.75)',
+                        color: 'rgba(232,221,201,0.68)',
                         fontVariantNumeric: 'tabular-nums',
                       }}
                     >
@@ -661,7 +661,7 @@ export default function CollegeDetailPage() {
 
               {roundTableGateMessage && (
                 <div style={{ marginTop: '16px', padding: '16px', background: 'rgba(201,169,119,0.08)', borderRadius: '4px', borderLeft: '3px solid rgba(201,169,119,0.5)' }}>
-                  <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', lineHeight: '1.7' }}>{roundTableGateMessage}</p>
+                  <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)', lineHeight: '1.7' }}>{roundTableGateMessage}</p>
                 </div>
               )}
 
@@ -669,7 +669,7 @@ export default function CollegeDetailPage() {
                 <div style={{ marginTop: '16px', padding: '20px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', borderLeft: '3px solid #C9A977' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                     <h4 className="font-heading text-md" style={{ color: '#C9A977' }}>Holistic Application Review — {college.name}</h4>
-                    <button onClick={() => { setRoundTableResponse(null); setRoundTableGateMessage(null); }} style={{ background: 'transparent', color: 'rgba(232,221,201,0.5)', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '0', lineHeight: '1' }}>×</button>
+                    <button onClick={() => { setRoundTableResponse(null); setRoundTableGateMessage(null); }} style={{ background: 'transparent', color: 'rgba(232,221,201,0.45)', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '0', lineHeight: '1' }}>×</button>
                   </div>
                   <div className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.9)', lineHeight: '1.8', whiteSpace: 'pre-wrap' }}>
                     {renderBoldText(roundTableResponse)}
@@ -689,11 +689,11 @@ export default function CollegeDetailPage() {
                   {showRoundTableHistory && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
                       {roundTableHistory.map((entry: any) => (
-                        <details key={entry.id} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '4px', border: '1px solid rgba(232,221,201,0.08)' }}>
-                          <summary style={{ padding: '10px 14px', cursor: 'pointer', color: 'rgba(232,221,201,0.7)', fontFamily: 'var(--font-body)', fontSize: '12px', listStyle: 'none' }}>
+                        <details key={entry.id} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '4px', border: '1px solid rgba(232,221,201,0.12)' }}>
+                          <summary style={{ padding: '10px 14px', cursor: 'pointer', color: 'rgba(232,221,201,0.68)', fontFamily: 'var(--font-body)', fontSize: '12px', listStyle: 'none' }}>
                             <span>Round Table Review — {new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
                           </summary>
-                          <div className="font-body text-sm" style={{ padding: '12px 14px', color: 'rgba(232,221,201,0.8)', lineHeight: '1.7', whiteSpace: 'pre-wrap', borderTop: '1px solid rgba(232,221,201,0.06)' }}>
+                          <div className="font-body text-sm" style={{ padding: '12px 14px', color: 'rgba(232,221,201,0.68)', lineHeight: '1.7', whiteSpace: 'pre-wrap', borderTop: '1px solid rgba(232,221,201,0.06)' }}>
                             {renderBoldText(entry.guidance_text)}
                           </div>
                         </details>
@@ -740,7 +740,7 @@ function ClassificationStat({ label, value, highlight }: { label: string; value:
           fontSize: '9.5px',
           textTransform: 'uppercase',
           letterSpacing: '0.14em',
-          color: 'rgba(232,221,201,0.5)',
+          color: 'rgba(232,221,201,0.45)',
         }}
       >
         {label}
@@ -776,10 +776,10 @@ function ReadinessBreakdown({
   const readyCount = readiness.filter((r) => r.ready).length;
   return (
     <div style={{ marginTop: '20px', padding: '18px 18px 8px', background: 'rgba(232,221,201,0.04)', borderRadius: '4px', borderLeft: '3px solid rgba(232,221,201,0.18)' }}>
-      <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', lineHeight: '1.7', margin: 0, marginBottom: '6px' }}>
+      <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)', lineHeight: '1.7', margin: 0, marginBottom: '6px' }}>
         <strong style={{ color: '#C9A977' }}>The Round Table opens when every supplemental is refined.</strong>
       </p>
-      <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.65)', lineHeight: '1.7', margin: 0, marginBottom: '16px' }}>
+      <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.68)', lineHeight: '1.7', margin: 0, marginBottom: '16px' }}>
         Each essay needs to hit two marks: at least <strong>{Math.round(ROUND_TABLE_WORD_RATIO * 100)}% of its word limit</strong> and at least <strong>{ROUND_TABLE_MIN_VERSIONS} saved versions</strong>. That signals you've moved past first draft, which is when a holistic review is actually useful. You're at <span style={{ fontVariantNumeric: 'tabular-nums', color: '#C9A977' }}>{readyCount} of {readiness.length}</span> for {collegeName}.
       </p>
 
@@ -792,7 +792,7 @@ function ReadinessBreakdown({
               style={{
                 padding: '12px 14px',
                 background: 'rgba(11,19,32,0.4)',
-                border: '1px solid rgba(232,221,201,0.08)',
+                border: '1px solid rgba(232,221,201,0.12)',
                 borderRadius: '4px',
                 display: 'flex',
                 flexDirection: 'column',
@@ -805,7 +805,7 @@ function ReadinessBreakdown({
                     {r.promptLabel}
                   </span>
                   {r.wordLimit && (
-                    <span className="font-body" style={{ color: 'rgba(232,221,201,0.5)', fontSize: '12px', marginLeft: '8px' }}>
+                    <span className="font-body" style={{ color: 'rgba(232,221,201,0.45)', fontSize: '12px', marginLeft: '8px' }}>
                       · {r.wordLimit} word limit
                     </span>
                   )}
@@ -817,7 +817,7 @@ function ReadinessBreakdown({
                     textTransform: 'uppercase',
                     letterSpacing: '0.14em',
                     fontWeight: 600,
-                    color: r.ready ? '#8FB89A' : 'rgba(232,221,201,0.55)',
+                    color: r.ready ? '#8FB89A' : 'rgba(232,221,201,0.68)',
                   }}
                 >
                   {r.ready ? 'Ready' : r.started ? 'In progress' : 'Not started'}
@@ -852,7 +852,7 @@ function ReadinessCriterion({ met, label }: { met: boolean; label: string }) {
         alignItems: 'center',
         gap: '6px',
         fontSize: '12px',
-        color: met ? '#8FB89A' : 'rgba(232,221,201,0.55)',
+        color: met ? '#8FB89A' : 'rgba(232,221,201,0.68)',
         fontVariantNumeric: 'tabular-nums',
       }}
     >

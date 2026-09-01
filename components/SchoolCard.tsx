@@ -52,7 +52,7 @@ export default function SchoolCard({ classification, onRemove, hasPrompts, planO
         href={`/colleges/${college.id}`}
         style={{
           display: 'block',
-          background: '#0F1828',
+          background: '#101a2b',
           borderTop: `4px solid ${barColor}`,
           padding: '24px',
           cursor: 'pointer',
@@ -79,7 +79,7 @@ export default function SchoolCard({ classification, onRemove, hasPrompts, planO
             </h3>
             <p
               className="font-body"
-              style={{ color: 'rgba(232,221,201,0.6)', fontSize: '12px', marginTop: '4px', margin: '4px 0 0 0' }}
+              style={{ color: 'rgba(232,221,201,0.68)', fontSize: '12px', marginTop: '4px', margin: '4px 0 0 0' }}
             >
               {college.location}
             </p>
@@ -155,7 +155,7 @@ export default function SchoolCard({ classification, onRemove, hasPrompts, planO
                   title={active ? 'Click to unset' : `Apply ${opt} to ${college.name}`}
                   style={{
                     background: active ? '#C9A977' : 'rgba(201,169,119,0.08)',
-                    color: active ? '#0B1320' : 'rgba(232,221,201,0.7)',
+                    color: active ? '#0B1320' : 'rgba(232,221,201,0.68)',
                     border: active ? '1px solid #C9A977' : '1px solid rgba(201,169,119,0.3)',
                     fontSize: '10px',
                     fontWeight: 700,
@@ -171,7 +171,7 @@ export default function SchoolCard({ classification, onRemove, hasPrompts, planO
               );
             })}
             {!plan && (
-              <span className="font-body" style={{ fontSize: '10px', color: 'rgba(232,221,201,0.35)', fontStyle: 'italic' }}>
+              <span className="font-body" style={{ fontSize: '10px', color: 'rgba(232,221,201,0.45)', fontStyle: 'italic' }}>
                 undecided
               </span>
             )}
@@ -234,7 +234,7 @@ export default function SchoolCard({ classification, onRemove, hasPrompts, planO
               );
             })}
             {(!status || status === 'not_started') && (
-              <span className="font-body" style={{ fontSize: '10px', color: 'rgba(232,221,201,0.35)', fontStyle: 'italic' }}>
+              <span className="font-body" style={{ fontSize: '10px', color: 'rgba(232,221,201,0.45)', fontStyle: 'italic' }}>
                 not started
               </span>
             )}
@@ -251,7 +251,7 @@ export default function SchoolCard({ classification, onRemove, hasPrompts, planO
             right: '12px',
             background: 'none',
             border: 'none',
-            color: 'rgba(232,221,201,0.7)',
+            color: 'rgba(232,221,201,0.68)',
             fontSize: '12px',
             textDecoration: 'underline',
             cursor: 'pointer',
@@ -259,7 +259,7 @@ export default function SchoolCard({ classification, onRemove, hasPrompts, planO
             zIndex: 1,
           }}
           onMouseEnter={(e) => { e.currentTarget.style.color = '#A35A6A'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(232,221,201,0.7)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(232,221,201,0.68)'; }}
         >
           Remove
         </button>

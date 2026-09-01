@@ -108,7 +108,7 @@ export default function Gateway() {
   if (!ready) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1320' }}>
-        <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>Loading…</p>
+        <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)' }}>Loading…</p>
       </div>
     );
   }
@@ -121,7 +121,7 @@ export default function Gateway() {
             <span className="font-heading text-3xl font-semibold" style={{ color: '#E8DDC9' }}>VANTAGE</span>
             <span className="text-3xl" style={{ color: '#C9A977' }}>.</span>
           </div>
-          <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.7)' }}>
+          <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)' }}>
             Where are you on the journey?
           </p>
         </div>
@@ -152,7 +152,7 @@ export default function Gateway() {
             <p className="font-heading" style={{ color: '#E8DDC9', fontSize: '26px', fontWeight: 600, marginBottom: '10px' }}>
               Enter Foundations
             </p>
-            <p className="font-body" style={{ color: 'rgba(232,221,201,0.6)', fontSize: '14px', lineHeight: 1.6 }}>
+            <p className="font-body" style={{ color: 'rgba(232,221,201,0.68)', fontSize: '14px', lineHeight: 1.6 }}>
               Discover who you are, build your story, and lay the groundwork — years before applications.
             </p>
           </button>
@@ -180,13 +180,13 @@ export default function Gateway() {
             <p className="font-heading" style={{ color: '#E8DDC9', fontSize: '26px', fontWeight: 600, marginBottom: '10px' }}>
               {saving ? 'One moment…' : 'Go to Vantage'}
             </p>
-            <p className="font-body" style={{ color: 'rgba(232,221,201,0.6)', fontSize: '14px', lineHeight: 1.6 }}>
+            <p className="font-body" style={{ color: 'rgba(232,221,201,0.68)', fontSize: '14px', lineHeight: 1.6 }}>
               Applying this year. Your colleges, essays, and strategy — all in one place.
             </p>
           </button>
         </div>
 
-        <p className="font-body text-xs text-center" style={{ color: 'rgba(232,221,201,0.4)', marginTop: '28px' }}>
+        <p className="font-body text-xs text-center" style={{ color: 'rgba(232,221,201,0.45)', marginTop: '28px' }}>
           We'll remember your choice — next time you'll go straight in.
         </p>
       </div>

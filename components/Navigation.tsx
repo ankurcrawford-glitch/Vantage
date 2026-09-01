@@ -173,7 +173,7 @@ export default function Navigation() {
       </Link>
       <nav style={{ display: 'flex', gap: 'clamp(14px, 2.5vw, 30px)', flexWrap: 'wrap', alignItems: 'center' }}>
           {loading ? (
-            <span style={{ color: 'rgba(232,221,201,0.5)', fontSize: '14px' }}>Loading...</span>
+            <span style={{ color: 'rgba(232,221,201,0.45)', fontSize: '14px' }}>Loading...</span>
           ) : user ? (
             <>
               {/* College-app links, Dashboard first. Seniors always; juniors
@@ -205,7 +205,7 @@ export default function Navigation() {
                       >
                         <div
                           style={{
-                            background: '#0F1828',
+                            background: '#101a2b',
                             border: `1px solid ${C.line}`,
                             borderRadius: 8,
                             minWidth: 220,

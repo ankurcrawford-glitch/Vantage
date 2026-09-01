@@ -183,7 +183,7 @@ export default function ResetPasswordPage() {
     fontFamily: 'var(--font-body)',
     fontSize: '14px',
     fontWeight: 500,
-    color: 'rgba(232,221,201,0.7)',
+    color: 'rgba(232,221,201,0.68)',
     marginBottom: '8px',
   };
 
@@ -199,7 +199,7 @@ export default function ResetPasswordPage() {
         </div>
 
         {linkStatus === 'checking' && (
-          <p className="font-body text-sm text-center" style={{ color: 'rgba(232,221,201,0.7)' }}>
+          <p className="font-body text-sm text-center" style={{ color: 'rgba(232,221,201,0.68)' }}>
             Verifying your reset link...
           </p>
         )}
@@ -281,7 +281,7 @@ export default function ResetPasswordPage() {
                     transform: 'translateY(-50%)',
                     background: 'transparent',
                     border: 'none',
-                    color: 'rgba(232,221,201,0.7)',
+                    color: 'rgba(232,221,201,0.68)',
                     cursor: 'pointer',
                     padding: '4px',
                     display: 'flex',
@@ -290,7 +290,7 @@ export default function ResetPasswordPage() {
                     transition: 'color 0.2s',
                   }}
                   onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A977'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(232,221,201,0.7)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(232,221,201,0.68)'; }}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
@@ -333,7 +333,7 @@ export default function ResetPasswordPage() {
 
         {linkStatus === 'ready' && (
           <div style={{ marginTop: '32px', textAlign: 'center' }}>
-            <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.5)' }}>
+            <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)' }}>
               Remembered it after all?{' '}
               <Link href="/login" style={{ color: '#C9A977', textDecoration: 'none' }}>
                 Sign in

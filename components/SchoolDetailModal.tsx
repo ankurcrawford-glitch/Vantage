@@ -46,7 +46,7 @@ export default function SchoolDetailModal({ classification, onClose, onRemove }:
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: '#0F1828',
+          background: '#101a2b',
           borderTop: '4px solid #C9A977',
           maxWidth: '720px',
           width: '100%',
@@ -65,14 +65,14 @@ export default function SchoolDetailModal({ classification, onClose, onRemove }:
             right: '16px',
             background: 'none',
             border: 'none',
-            color: 'rgba(232,221,201,0.5)',
+            color: 'rgba(232,221,201,0.45)',
             fontSize: '24px',
             cursor: 'pointer',
             padding: '4px 12px',
             lineHeight: 1,
           }}
           onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A977'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(232,221,201,0.5)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(232,221,201,0.45)'; }}
         >
           ×
         </button>
@@ -82,7 +82,7 @@ export default function SchoolDetailModal({ classification, onClose, onRemove }:
             <h2 className="font-heading" style={{ color: '#C9A977', fontSize: '32px', fontWeight: 600, lineHeight: 1.15, letterSpacing: '-0.02em', margin: 0 }}>
               {college.name}
             </h2>
-            <p className="font-body" style={{ color: 'rgba(232,221,201,0.6)', fontSize: '13px', marginTop: '6px', margin: '6px 0 0 0' }}>
+            <p className="font-body" style={{ color: 'rgba(232,221,201,0.68)', fontSize: '13px', marginTop: '6px', margin: '6px 0 0 0' }}>
               {college.location}
             </p>
           </div>
@@ -128,7 +128,7 @@ export default function SchoolDetailModal({ classification, onClose, onRemove }:
 
         {/* Why this bucket */}
         <Section title="Why this bucket">
-          <p className="font-body" style={{ color: 'rgba(232,221,201,0.85)', fontSize: '14px', lineHeight: 1.7, margin: 0 }}>
+          <p className="font-body" style={{ color: 'rgba(232,221,201,0.68)', fontSize: '14px', lineHeight: 1.7, margin: 0 }}>
             {whyThisBucket}
           </p>
         </Section>
@@ -167,7 +167,7 @@ export default function SchoolDetailModal({ classification, onClose, onRemove }:
                 className="font-body"
                 style={{
                   fontSize: '13px',
-                  color: 'rgba(232,221,201,0.85)',
+                  color: 'rgba(232,221,201,0.68)',
                   lineHeight: 1.6,
                   display: 'flex',
                   alignItems: 'flex-start',
@@ -214,7 +214,7 @@ export default function SchoolDetailModal({ classification, onClose, onRemove }:
             className="font-body"
             style={{
               fontSize: '12px',
-              color: 'rgba(232,221,201,0.5)',
+              color: 'rgba(232,221,201,0.45)',
               fontStyle: 'italic',
             }}
           >
@@ -276,7 +276,7 @@ function Stat({ label, value, highlight }: { label: string; value: string; highl
           fontSize: '9.5px',
           textTransform: 'uppercase',
           letterSpacing: '0.14em',
-          color: 'rgba(232,221,201,0.5)',
+          color: 'rgba(232,221,201,0.45)',
         }}
       >
         {label}
