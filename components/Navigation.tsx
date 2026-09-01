@@ -27,6 +27,9 @@ export default function Navigation() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [grade, setGrade] = useState<number | null>(null);
+  // Essays dropdown: Common App + the student's own schools.
+  const [essaysOpen, setEssaysOpen] = useState(false);
+  const [myColleges, setMyColleges] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     checkAuth();
@@ -63,6 +66,21 @@ export default function Navigation() {
         } catch {
           /* grade column not present yet - leave hidden */
         }
+        // Portfolio schools for the Essays dropdown — best-effort.
+        try {
+          const { data: rows } = await supabase
+            .from('user_colleges')
+            .select('colleges:college_id(id, name)')
+            .eq('user_id', user.id);
+          const COMMON_APP_ID = 'a0000000-0000-0000-0000-000000000000';
+          const list = ((rows ?? []) as any[])
+            .map((r) => r.colleges)
+            .filter((c) => c?.id && c.id !== COMMON_APP_ID)
+            .map((c) => ({ id: c.id as string, name: c.name as string }))
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .slice(0, 12);
+          setMyColleges(list);
+        } catch { /* dropdown just shows the two mains */ }
       }
     } catch (error) {
       console.error('Error checking auth:', error);
@@ -165,7 +183,102 @@ export default function Navigation() {
                 <>
                   <Link href="/dashboard" style={getLinkStyle('/dashboard')}>Dashboard</Link>
                   <Link href="/story-builder" style={getLinkStyle('/story-builder')}>Story Builder</Link>
-                  <Link href="/applications" style={getLinkStyle('/applications')}>Essays</Link>
+                  {/* Essays with a dropdown: Common App + the student's schools. */}
+                  <div
+                    style={{ position: 'relative', display: 'inline-flex', alignItems: 'baseline' }}
+                    onMouseEnter={() => setEssaysOpen(true)}
+                    onMouseLeave={() => setEssaysOpen(false)}
+                  >
+                    <Link href="/applications" style={getLinkStyle('/applications')}>
+                      Essays <span aria-hidden style={{ fontSize: 9 }}>▾</span>
+                    </Link>
+                    {essaysOpen && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          paddingTop: 10, // hover bridge between tab and menu
+                          zIndex: 60,
+                        }}
+                      >
+                        <div
+                          style={{
+                            background: '#0F1828',
+                            border: `1px solid ${C.line}`,
+                            borderRadius: 8,
+                            minWidth: 220,
+                            padding: '8px 0',
+                            boxShadow: '0 12px 32px -8px rgba(0,0,0,0.6)',
+                          }}
+                        >
+                          {[
+                            { href: '/applications', label: 'All Essays' },
+                            { href: '/common-app', label: 'Common App' },
+                          ].map((it) => (
+                            <Link
+                              key={it.href}
+                              href={it.href}
+                              onClick={() => setEssaysOpen(false)}
+                              style={{
+                                display: 'block',
+                                padding: '9px 18px',
+                                fontSize: 12,
+                                letterSpacing: 1.5,
+                                textTransform: 'uppercase',
+                                textDecoration: 'none',
+                                color: C.gold,
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(201,169,119,0.1)'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                            >
+                              {it.label}
+                            </Link>
+                          ))}
+                          {myColleges.length > 0 && (
+                            <>
+                              <div style={{ borderTop: `1px solid ${C.line}`, margin: '6px 0' }} />
+                              <p
+                                style={{
+                                  padding: '4px 18px 6px',
+                                  margin: 0,
+                                  fontSize: 9,
+                                  letterSpacing: 2,
+                                  textTransform: 'uppercase',
+                                  color: C.inkDim,
+                                }}
+                              >
+                                Your schools
+                              </p>
+                              {myColleges.map((c) => (
+                                <Link
+                                  key={c.id}
+                                  href={`/colleges/${c.id}`}
+                                  onClick={() => setEssaysOpen(false)}
+                                  style={{
+                                    display: 'block',
+                                    padding: '7px 18px',
+                                    fontSize: 13,
+                                    textDecoration: 'none',
+                                    color: C.inkDim,
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    maxWidth: 260,
+                                  }}
+                                  onMouseEnter={(e) => { e.currentTarget.style.color = C.gold; e.currentTarget.style.background = 'rgba(201,169,119,0.08)'; }}
+                                  onMouseLeave={(e) => { e.currentTarget.style.color = C.inkDim; e.currentTarget.style.background = 'transparent'; }}
+                                >
+                                  {c.name}
+                                </Link>
+                              ))}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   <Link href="/colleges" style={getLinkStyle('/colleges')}>Strategy</Link>
                   <Link href="/profile" style={getLinkStyle('/profile')}>My Profile</Link>
                 </>
