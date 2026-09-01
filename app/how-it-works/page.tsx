@@ -188,6 +188,35 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
+      {/* Kept trustworthy */}
+      <section className="px-6 sm:px-8" style={{ paddingTop: '72px', paddingBottom: '72px' }}>
+        <div style={{ maxWidth: '44rem', margin: '0 auto' }}>
+          <p className="font-body mb-3" style={eyebrow}>Maintenance of trust</p>
+          <h2 className="font-heading text-3xl font-semibold mb-4" style={{ color: '#E8DDC9' }}>
+            A machine this personal has to earn it
+          </h2>
+          <p className="font-body font-light leading-relaxed mb-8" style={{ color: 'rgba(232,221,201,0.68)', fontSize: '15px' }}>
+            An AI counselor that knows your kid for four years is only worth having if it's held to a standard. So we hold it to one.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <Stage n="✓" title="The AI is audited">
+              Every week, every counselor conversation is reviewed against a strict rubric —
+              safety with minors, no invented facts, age-appropriate guidance, coaching that
+              never crosses into ghostwriting. Problems get flagged to a human.
+            </Stage>
+            <Stage n="✓" title="A person answers">
+              The &quot;Need help?&quot; button on every page reaches a real inbox that a real
+              person reads and replies to — usually within a day.
+            </Stage>
+            <Stage n="✓" title="The work stays yours">
+              Feedback, never ghostwriting: the AI helps you think and revise; the words are
+              yours. Your essays are never used to train AI models, and your reflections stay
+              in your account.
+            </Stage>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="px-6 sm:px-8" style={{ borderTop: '1px solid #1B2740', paddingTop: '72px', paddingBottom: '96px' }}>
         <div className="text-center" style={{ maxWidth: '40rem', margin: '0 auto' }}>

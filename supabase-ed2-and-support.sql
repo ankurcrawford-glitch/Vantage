@@ -27,3 +27,6 @@ alter table support_requests enable row level security;
 select
   (select count(*)::int from colleges where deadline_ed2 is not null) as ed2_schools,
   (select count(*)::int from support_requests) as support_rows;
+
+-- 3. Thread finder cache (seniors' through-lines).
+alter table user_stats add column if not exists senior_threads jsonb;

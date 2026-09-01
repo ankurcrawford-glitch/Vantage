@@ -38,11 +38,47 @@ export default function PersonalStatementPage() {
   // map: prompts asking essentially the same question grouped together,
   // so one strong draft can be adapted across schools.
   const [viewMode, setViewMode] = useState<'college' | 'theme'>('college');
+  // The thread finder — 2-3 through-lines mined from everything the
+  // student has shared. Cached server-side (user_stats.senior_threads).
+  const [threadData, setThreadData] = useState<any>(null);
+  const [threadBusy, setThreadBusy] = useState(false);
+  const [threadError, setThreadError] = useState('');
 
   useEffect(() => {
     checkAuth();
     loadEssays();
+    loadThreads();
   }, []);
+
+  const loadThreads = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await fetch('/api/thread', { headers: { Authorization: `Bearer ${session.access_token}` } });
+      const data = await res.json();
+      if (data?.threads) setThreadData(data.threads);
+    } catch { /* panel just shows the button */ }
+  };
+
+  const generateThreads = async () => {
+    if (threadBusy) return;
+    setThreadBusy(true);
+    setThreadError('');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch('/api/thread', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) },
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || 'failed');
+      setThreadData(data.threads);
+    } catch (e: any) {
+      setThreadError(e?.message || "Couldn't find your thread. Try again.");
+    } finally {
+      setThreadBusy(false);
+    }
+  };
 
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -297,6 +333,68 @@ export default function PersonalStatementPage() {
                 </button>
               ))}
             </div>
+          )}
+        </div>
+
+        {/* ── Your thread — the through-line everything hangs on ── */}
+        <div style={{
+          borderLeft: '3px solid #C9A977',
+          background: 'rgba(201,169,119,0.07)',
+          borderRadius: '0 10px 10px 0',
+          padding: '20px 24px',
+          marginBottom: '40px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: threadData?.threads?.length ? '14px' : '6px' }}>
+            <p className="font-body" style={{ margin: 0, fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#C9A977' }}>
+              Your thread
+            </p>
+            <button
+              onClick={generateThreads}
+              disabled={threadBusy}
+              className="font-body"
+              style={{
+                background: threadData ? 'transparent' : '#C9A977',
+                color: threadData ? '#C9A977' : '#0B1320',
+                border: '1px solid #C9A977',
+                borderRadius: '999px',
+                padding: '5px 14px',
+                fontSize: '11px',
+                fontWeight: 700,
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                cursor: threadBusy ? 'wait' : 'pointer',
+                opacity: threadBusy ? 0.6 : 1,
+              }}
+            >
+              {threadBusy ? 'Reading your material…' : threadData ? 'Refresh' : 'Find my thread'}
+            </button>
+          </div>
+          {threadError && (
+            <p className="font-body text-sm" style={{ color: '#A35A6A', margin: '0 0 8px' }}>{threadError}</p>
+          )}
+          {threadData?.threads?.length ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {threadData.threads.map((t: any, i: number) => (
+                <div key={i}>
+                  <p className="font-heading" style={{ color: '#E8DDC9', fontSize: '19px', fontWeight: 600, margin: '0 0 4px' }}>
+                    {t.name}
+                  </p>
+                  <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)', lineHeight: 1.6, margin: '0 0 4px' }}>
+                    {t.why}
+                  </p>
+                  <p className="font-body text-xs" style={{ color: '#C9A977', margin: 0 }}>
+                    Use it: {t.use}
+                  </p>
+                </div>
+              ))}
+              {threadData.note && (
+                <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.45)', fontStyle: 'italic', margin: 0 }}>{threadData.note}</p>
+              )}
+            </div>
+          ) : !threadError && (
+            <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)', lineHeight: 1.6, margin: 0 }}>
+              The strongest applications hang on one through-line. We'll read everything you've shared — Story Builder answers, activities, your Foundations years if you have them — and name the 2–3 threads your essays can pull on.
+            </p>
           )}
         </div>
 
