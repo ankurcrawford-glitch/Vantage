@@ -42,13 +42,6 @@ interface Props {
   onStatusChange?: (status: string) => void;
 }
 
-const STATUS_COLOR: Record<string, string> = {
-  not_started: 'rgba(232,221,201,0.55)',
-  in_progress: '#C9A977',
-  submitted: '#8FB89A',
-  decision: '#8FB89A',
-};
-
 export default function SchoolCard({ classification, onRemove, hasPrompts, planOptions, plan, onPlanChange, status, onStatusChange }: Props) {
   const { college, probabilityRange, score, bucket, effectiveAdmitRate, programOverrideTriggered } = classification;
   const barColor = TIER_BAR[bucket];
@@ -185,11 +178,19 @@ export default function SchoolCard({ classification, onRemove, hasPrompts, planO
           </div>
         )}
 
-        {/* Application status — closes the loop. Wrapper swallows the
-            click so the select never triggers the card's Link. */}
+        {/* Application status — same pill interaction as the Applying row,
+            sized to be seen. Every click swallows the card's Link. */}
         {onStatusChange && (
           <div
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              flexWrap: 'wrap',
+              marginTop: '12px',
+              paddingTop: '12px',
+              borderTop: '1px solid rgba(201,169,119,0.15)',
+            }}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
           >
             <span
@@ -198,28 +199,45 @@ export default function SchoolCard({ classification, onRemove, hasPrompts, planO
             >
               Status
             </span>
-            <select
-              value={status || 'not_started'}
-              onChange={(e) => onStatusChange(e.target.value)}
-              className="font-body"
-              style={{
-                background: 'rgba(0,0,0,0.25)',
-                border: '1px solid rgba(201,169,119,0.3)',
-                borderRadius: '4px',
-                color: STATUS_COLOR[status || 'not_started'] || 'rgba(232,221,201,0.7)',
-                fontSize: '11px',
-                fontWeight: 600,
-                letterSpacing: '0.05em',
-                padding: '3px 8px',
-                cursor: 'pointer',
-                outline: 'none',
-              }}
-            >
-              <option value="not_started">Not started</option>
-              <option value="in_progress">In progress</option>
-              <option value="submitted">Submitted ✓</option>
-              <option value="decision">Decision received</option>
-            </select>
+            {([
+              ['in_progress', 'In progress', '#C9A977'],
+              ['submitted', '✓ Submitted', '#8FB89A'],
+              ['decision', 'Decision', '#8FB89A'],
+            ] as const).map(([value, label, color]) => {
+              const active = (status || 'not_started') === value;
+              return (
+                <button
+                  key={value}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onStatusChange(active ? 'not_started' : value);
+                  }}
+                  className="font-body"
+                  title={active ? 'Click to reset to Not started' : `Mark ${college.name} as ${label}`}
+                  style={{
+                    background: active ? color : 'transparent',
+                    color: active ? '#0B1320' : color,
+                    border: `1px solid ${active ? color : 'rgba(201,169,119,0.35)'}`,
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    letterSpacing: '0.06em',
+                    padding: '5px 12px',
+                    borderRadius: '999px',
+                    cursor: 'pointer',
+                    transition: 'all 0.12s',
+                    opacity: active ? 1 : 0.85,
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
+            {(!status || status === 'not_started') && (
+              <span className="font-body" style={{ fontSize: '10px', color: 'rgba(232,221,201,0.35)', fontStyle: 'italic' }}>
+                not started
+              </span>
+            )}
           </div>
         )}
       </Link>
