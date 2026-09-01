@@ -65,6 +65,7 @@ export async function GET(request) {
       month: labelFromKey(r.month_key),
       prompt: r.prompt,
       excerpt: r.content.length > 180 ? r.content.slice(0, 180).trimEnd() + "…" : r.content,
+      content: r.content, // full text — the vault must be readable in full
       threads: [],
     }));
 

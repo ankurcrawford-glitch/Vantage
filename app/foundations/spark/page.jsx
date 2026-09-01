@@ -16,6 +16,7 @@ export default function FoundationsSpark() {
   const [hydrated, setHydrated] = useState(false);
   const [spark, setSpark] = useState({ month: "", prompt: "", hint: "" });
   const [archive, setArchive] = useState([]);
+  const [openEntries, setOpenEntries] = useState({}); // index -> true when reading in full
   const [bankCount, setBankCount] = useState(0);
   const [error, setError] = useState("");
 
@@ -63,6 +64,7 @@ export default function FoundationsSpark() {
           month: spark.month,
           prompt: spark.prompt,
           excerpt: content.length > 180 ? content.slice(0, 180).trimEnd() + "…" : content,
+          content,
           threads: [],
         },
         ...a,
@@ -201,7 +203,37 @@ export default function FoundationsSpark() {
                 </div>
               </div>
               <p style={{ ...display, fontSize: 17, fontStyle: "italic", marginBottom: 8 }}>{a.prompt}</p>
-              <p style={{ fontSize: 13, color: C.inkDim, lineHeight: 1.7 }}>{a.excerpt}</p>
+              {(() => {
+                const full = a.content || a.excerpt || "";
+                const truncated = !!a.content && a.content.length > (a.excerpt || "").length;
+                const open = !!openEntries[i];
+                return (
+                  <>
+                    <p style={{ fontSize: 13, color: C.inkDim, lineHeight: 1.7, whiteSpace: open ? "pre-wrap" : "normal" }}>
+                      {open ? full : a.excerpt}
+                    </p>
+                    {(truncated || open) && (
+                      <button
+                        onClick={() => setOpenEntries((m) => ({ ...m, [i]: !open }))}
+                        style={{
+                          background: "transparent",
+                          border: "none",
+                          padding: 0,
+                          marginTop: 8,
+                          cursor: "pointer",
+                          fontSize: 11,
+                          letterSpacing: 1.5,
+                          color: C.gold,
+                          fontFamily: "inherit",
+                        }}
+                        className="uppercase"
+                      >
+                        {open ? "Show less" : "Read in full"}
+                      </button>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           ))}
         </div>
