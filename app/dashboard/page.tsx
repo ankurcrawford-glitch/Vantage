@@ -443,7 +443,7 @@ function DashboardContent() {
                   <p className="font-body text-cream/70 text-sm" style={{ maxWidth: '600px' }}>
                     Get access to the 12-question Story Builder and Strategic Intelligence, our AI-powered essay coaching that learns your unique story and provides personalized guidance.
                   </p>
-                  <p className="font-heading text-3xl text-cream mt-3">$100 <span className="font-body text-sm text-cream/50">one-time</span></p>
+                  <p className="font-heading text-xl text-cream mt-3">Obtain a one-time code for access</p>
                 </div>
                 <button
                   onClick={handleCheckout}
