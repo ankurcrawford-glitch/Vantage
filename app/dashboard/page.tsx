@@ -12,6 +12,7 @@ import Navigation from '@/components/Navigation';
 import { canAccessCollegePrep } from '@/lib/college-prep-access';
 import { eaLabel, PLAN_EXPLAINERS } from '@/lib/earlyPlans';
 import JourneyStrip from '@/components/JourneyStrip';
+import ProfileEditor from '@/components/ProfileEditor';
 
 interface UserStats {
   gpa_weighted: number | null;
@@ -59,6 +60,10 @@ function DashboardContent() {
   const [droppedEarly, setDroppedEarly] = useState<{ name: string; kind: string }[]>([]);
   // Schools marked Submitted / Decision — off the deadline radar.
   const [submittedCount, setSubmittedCount] = useState(0);
+  // Inline profile editor (Dashboard and My Profile are now one place).
+  const [profileOpen, setProfileOpen] = useState(false);
+  // Story Builder progress — without it the essay AI can't give real guidance.
+  const [discoveryCount, setDiscoveryCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [hasSubscription, setHasSubscription] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -219,6 +224,15 @@ function DashboardContent() {
         .eq('user_id', user.id);
 
       setCollegeCount(collegeCountData || 0);
+
+      // Story Builder answers — powers the journey strip's position.
+      try {
+        const { count: dCount } = await supabase
+          .from('discovery_answers')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+        setDiscoveryCount(dCount || 0);
+      } catch { /* strip just assumes not started */ }
 
       // Load user's colleges with deadlines -> group by date so shared
       // dates (e.g. Nov 1) appear once with schools stacked beneath.
@@ -413,14 +427,16 @@ function DashboardContent() {
           activeIndex={
             !(stats && (stats.gpa_unweighted || stats.gpa_weighted || stats.sat_score || stats.act_score)) ? 0
               : collegeCount === 0 ? 1
-              : essayCount === 0 ? 2
-              : 3
+              : discoveryCount === 0 ? 2
+              : essayCount === 0 ? 3
+              : 4
           }
           steps={[
             { label: 'Profile', href: '/profile', desc: 'Your stats and activities — the raw inputs every other stage builds on.' },
             { label: 'Strategy', href: '/colleges', desc: 'Build a balanced list, see your real odds at each school, and commit to an early round.' },
+            { label: 'Story Builder', href: '/story-builder', desc: 'Twelve questions that teach the AI who you are. Without this, essay guidance can only be generic — this is where it learns your story.' },
             { label: 'Essays', href: '/applications', desc: 'Write every essay with Strategic Intelligence — per-essay coaching that knows your story.' },
-            { label: 'Round Table', href: '/colleges', desc: 'The final read: open any school on My Schools and convene the Round Table — a full-committee review of your whole application for that college.' },
+            { label: 'Round Table', href: '/round-table', desc: 'The final read: a full-committee review of your whole application, school by school. Tap to learn how it works.' },
           ]}
         />
 
@@ -453,7 +469,7 @@ function DashboardContent() {
 
         {/* Academic Stats */}
         {stats && (
-          <div className="mb-12">
+          <div className="mb-12" id="profile-section">
             <h2 className="font-heading text-3xl text-cream mb-6">Academic Profile</h2>
             <Card>
               <div className="grid md:grid-cols-4 gap-6">
@@ -482,10 +498,31 @@ function DashboardContent() {
                   </div>
                 )}
               </div>
-              <Link href="/profile" className="inline-block mt-6">
-                <Button variant="secondary">Edit Profile</Button>
-              </Link>
+              <button
+                onClick={() => {
+                  setProfileOpen((o) => {
+                    if (o) loadDashboardData(); // picked up edits — refresh tiles
+                    return !o;
+                  });
+                }}
+                className="font-body font-bold text-xs uppercase tracking-wider mt-6"
+                style={{
+                  background: profileOpen ? 'transparent' : '#C9A977',
+                  color: profileOpen ? '#C9A977' : '#0B1320',
+                  border: '1px solid #C9A977',
+                  padding: '12px 24px',
+                  cursor: 'pointer',
+                  borderRadius: '2px',
+                }}
+              >
+                {profileOpen ? 'Done editing' : 'Edit everything'}
+              </button>
             </Card>
+            {profileOpen && (
+              <div style={{ marginTop: '24px' }}>
+                <ProfileEditor />
+              </div>
+            )}
           </div>
         )}
 
@@ -511,14 +548,20 @@ function DashboardContent() {
               </Card>
             </Link>
 
-            <Link href="/profile">
+            <div
+              onClick={() => {
+                setProfileOpen(true);
+                document.getElementById('profile-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              style={{ cursor: 'pointer' }}
+            >
               <Card className="cursor-pointer hover:bg-royal-blue/80 transition-colors">
                 <h3 className="font-heading text-xl text-gold-leaf mb-3">Update Profile</h3>
                 <p className="font-body text-cream/70 text-sm">
-                  Edit your stats and activities
+                  Edit your stats and activities — right here on the dashboard
                 </p>
               </Card>
-            </Link>
+            </div>
           </div>
         </div>
 
