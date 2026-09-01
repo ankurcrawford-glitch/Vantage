@@ -25,7 +25,10 @@ export default function Home() {
           style={{ background: 'linear-gradient(to bottom, transparent, rgba(201,169,119,0.1), transparent)' }}
         />
 
-        <div className="relative z-10 w-full max-w-4xl mx-auto text-center">
+        <div
+          className="relative z-10 text-center"
+          style={{ width: '100%', maxWidth: '40rem', marginLeft: 'auto', marginRight: 'auto' }}
+        >
           <div className="flex items-center justify-center gap-2 mb-8">
             <span
               className="font-heading text-5xl sm:text-6xl md:text-7xl font-semibold"
@@ -68,7 +71,7 @@ export default function Home() {
         className="px-6 sm:px-8"
         style={{ background: '#0F1828', borderTop: '1px solid #1B2740', borderBottom: '1px solid #1B2740', paddingTop: '72px', paddingBottom: '72px' }}
       >
-        <div className="max-w-3xl mx-auto">
+        <div style={{ width: '100%', maxWidth: '40rem', marginLeft: 'auto', marginRight: 'auto' }}>
           <p
             className="font-body text-center mb-3"
             style={{ color: '#C9A977', fontSize: '11px', letterSpacing: '0.2em', textTransform: 'uppercase' }}
@@ -127,7 +130,7 @@ export default function Home() {
 
       {/* What you do here — single stacked column so prose stays readable */}
       <section className="px-6 sm:px-8" style={{ background: '#0B1320', paddingTop: '72px', paddingBottom: '72px' }}>
-        <div className="max-w-3xl mx-auto">
+        <div style={{ width: '100%', maxWidth: '40rem', marginLeft: 'auto', marginRight: 'auto' }}>
           <h2 className="font-heading text-3xl sm:text-4xl font-semibold text-center mb-12" style={{ color: '#E8DDC9' }}>
             What you do here
           </h2>
@@ -178,7 +181,10 @@ export default function Home() {
         className="px-6 sm:px-8"
         style={{ background: '#0F1828', borderTop: '1px solid #1B2740', borderBottom: '1px solid #1B2740', paddingTop: '64px', paddingBottom: '64px' }}
       >
-        <div className="max-w-3xl mx-auto text-center">
+        <div
+          className="text-center"
+          style={{ width: '100%', maxWidth: '40rem', marginLeft: 'auto', marginRight: 'auto' }}
+        >
           <h2 className="font-heading text-3xl sm:text-4xl font-semibold mb-6" style={{ color: '#E8DDC9' }}>
             Private, and free to start
           </h2>
