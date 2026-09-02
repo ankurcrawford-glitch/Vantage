@@ -7,7 +7,6 @@ import { supabase } from '@/lib/supabase';
 import { effectiveGrade } from '@/lib/grade';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
-import StatCard from '@/components/StatCard';
 import Navigation from '@/components/Navigation';
 import { canAccessCollegePrep } from '@/lib/college-prep-access';
 import { eaLabel, PLAN_EXPLAINERS } from '@/lib/earlyPlans';
@@ -64,6 +63,12 @@ function DashboardContent() {
   const [profileOpen, setProfileOpen] = useState(false);
   // Story Builder progress — without it the essay AI can't give real guidance.
   const [discoveryCount, setDiscoveryCount] = useState(0);
+  // Per-school rows for the timeline (gantt) — name, operative deadline,
+  // status, and how many of its essays have been started.
+  const [schools, setSchools] = useState<{
+    id: string; name: string; kind: string; deadline: string | null;
+    status: string | null; essaysStarted: number; essaysTotal: number;
+  }[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasSubscription, setHasSubscription] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -239,7 +244,7 @@ function DashboardContent() {
       try {
         const { data: dlRows } = await supabase
           .from('user_colleges')
-          .select('application_plan, app_status, colleges:college_id(name, deadline_ed, deadline_ed2, deadline_ea, deadline_rd)')
+          .select('application_plan, app_status, colleges:college_id(id, name, deadline_ed, deadline_ed2, deadline_ea, deadline_rd)')
           .eq('user_id', user.id);
         const byDate = new Map<string, { name: string; kind: string; chosen?: boolean }[]>();
         const today = new Date().toISOString().slice(0, 10);
@@ -309,6 +314,32 @@ function DashboardContent() {
         setEd2Choice(ed2Backup);
         setEarlyOptionsCount(earlyOffers);
         setDroppedEarly(dropped);
+
+        // Timeline rows: one per school, sorted by operative deadline.
+        const rows: { id: string; name: string; kind: string; deadline: string | null; status: string | null; essaysStarted: number; essaysTotal: number }[] = [];
+        for (const row of (dlRows ?? []) as any[]) {
+          const c = row.colleges;
+          if (!c) continue;
+          const plan: string | null = row.application_plan ?? null;
+          let kind = 'RD';
+          let d: string | null = c.deadline_rd ?? null;
+          if (plan) {
+            kind = plan === 'EA' ? eaLabel(c.name) : plan;
+            d = kind === 'ED' ? c.deadline_ed : kind === 'ED2' ? (c.deadline_ed2 || c.deadline_rd) : (kind === 'EA' || kind === 'REA') ? c.deadline_ea : c.deadline_rd;
+          } else {
+            const opts: [string, string | null][] = [['ED', c.deadline_ed], [eaLabel(c.name), c.deadline_ea], ['RD', c.deadline_rd]];
+            const upcoming = opts.filter(([, dd]) => dd && dd >= today).sort((x, y) => (x[1]! < y[1]! ? -1 : 1));
+            if (upcoming.length) { kind = upcoming[0][0]; d = upcoming[0][1]; }
+          }
+          rows.push({ id: c.id, name: c.name, kind, deadline: d, status: row.app_status ?? null, essaysStarted: 0, essaysTotal: 0 });
+        }
+        rows.sort((a2, b2) => {
+          const doneA = a2.status === 'submitted' || a2.status === 'decision';
+          const doneB = b2.status === 'submitted' || b2.status === 'decision';
+          if (doneA !== doneB) return doneA ? 1 : -1;
+          return (a2.deadline || '9999').localeCompare(b2.deadline || '9999');
+        });
+        setSchools(rows);
         // Every upcoming deadline, no cap — students plan off this list.
         const groups = [...byDate.entries()]
           .sort((a, b) => a[0].localeCompare(b[0]))
@@ -330,7 +361,7 @@ function DashboardContent() {
 
       const { data: promptRows } = await supabase
         .from('college_prompts')
-        .select('id, word_limit')
+        .select('id, word_limit, college_id')
         .in('college_id', Array.from(collegeIds));
       const prompts = promptRows ?? [];
       setTotalPrompts(prompts.length);
@@ -365,6 +396,29 @@ function DashboardContent() {
       }
       setEssayCount(finished);
       setEssayInProgressCount(inProgress);
+
+      // Per-college essay chips for the timeline.
+      if (prompts.length > 0) {
+        const collegeByPrompt = new Map<string, string>(prompts.map((p: any) => [p.id, p.college_id]));
+        const totalByCollege = new Map<string, number>();
+        for (const pr of prompts as any[]) {
+          totalByCollege.set(pr.college_id, (totalByCollege.get(pr.college_id) || 0) + 1);
+        }
+        const { data: startedRows } = await supabase
+          .from('essays')
+          .select('college_prompt_id')
+          .eq('user_id', user.id);
+        const startedByCollege = new Map<string, number>();
+        for (const e of (startedRows ?? []) as any[]) {
+          const cid = collegeByPrompt.get(e.college_prompt_id);
+          if (cid) startedByCollege.set(cid, (startedByCollege.get(cid) || 0) + 1);
+        }
+        setSchools((prev) => prev.map((r) => ({
+          ...r,
+          essaysTotal: totalByCollege.get(r.id) || 0,
+          essaysStarted: Math.min(startedByCollege.get(r.id) || 0, totalByCollege.get(r.id) || 0),
+        })));
+      }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -440,32 +494,108 @@ function DashboardContent() {
           ]}
         />
 
-        {/* Stats Overview */}
-        <div className="grid md:grid-cols-3 gap-8 mb-12">
-          <StatCard
-            title="Colleges"
-            value={collegeCount}
-            caption={submittedCount > 0
-              ? `${submittedCount} submitted · ${Math.max(collegeCount - submittedCount, 0)} to go`
-              : 'In your portfolio'}
-            icon="◆"
-          />
-          <StatCard
-            title="Essays"
-            value={essayCount}
-            caption={totalPrompts > 0
-              ? `Ready · ${essayInProgressCount} in progress`
-              : essayInProgressCount > 0 ? `${essayInProgressCount} in progress` : 'Ready'}
-            icon="▲"
-          />
-          <StatCard
-            title="Progress"
-            value={totalPrompts > 0 ? Math.round((essayCount / totalPrompts) * 100) : 0}
-            suffix="%"
-            caption={totalPrompts > 0 ? `${essayCount} of ${totalPrompts} essays refined` : 'Add schools to track progress'}
-            icon="■"
-          />
-        </div>
+        {/* Your applications — one timeline instead of stat tiles.
+            Status is the student's own word (their pills on My Schools);
+            essay chips count started drafts, claiming nothing more. */}
+        {schools.length > 0 && (() => {
+          // Application-season window: Sep 1 → Feb 1 of the current cycle.
+          const now = new Date();
+          const seasonYear = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
+          const start = new Date(seasonYear, 8, 1).getTime();
+          const end = new Date(seasonYear + 1, 1, 1).getTime();
+          const pos = (iso: string | null) => {
+            if (!iso) return 1;
+            const t = new Date(iso + 'T00:00:00').getTime();
+            return Math.min(1, Math.max(0.04, (t - start) / (end - start)));
+          };
+          const todayPos = Math.min(1, Math.max(0, (now.getTime() - start) / (end - start)));
+          const MONTHS = ['Sep', 'Oct', 'Nov', 'Dec', 'Jan'];
+          const STATUS: Record<string, { label: string; color: string }> = {
+            submitted: { label: '✓ Submitted', color: '#8FB89A' },
+            decision: { label: '✓ Decision', color: '#8FB89A' },
+            in_progress: { label: 'In progress', color: '#C9A977' },
+          };
+          return (
+            <div className="mb-12">
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+                <h2 className="font-heading text-3xl text-cream" style={{ margin: 0 }}>Your Applications</h2>
+                <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)' }}>
+                  {collegeCount} {collegeCount === 1 ? 'school' : 'schools'}{submittedCount > 0 ? ` · ${submittedCount} submitted` : ''}
+                </span>
+              </div>
+              <Card>
+                {/* Month axis */}
+                <div style={{ display: 'flex', marginLeft: '38%', marginBottom: '6px' }}>
+                  {MONTHS.map((m) => (
+                    <span key={m} className="font-body" style={{ flex: 1, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(232,221,201,0.45)' }}>
+                      {m}
+                    </span>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  {schools.map((sc) => {
+                    const done = sc.status === 'submitted' || sc.status === 'decision';
+                    const st = sc.status ? STATUS[sc.status] : null;
+                    const barColor = done ? '#8FB89A' : sc.status === 'in_progress' ? '#C9A977' : 'rgba(232,221,201,0.25)';
+                    const p2 = pos(sc.deadline);
+                    const dateLabel = sc.deadline
+                      ? new Date(sc.deadline + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                      : '—';
+                    return (
+                      <div key={sc.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '7px 0', borderBottom: '1px solid rgba(232,221,201,0.06)' }}>
+                        {/* Name + essays chip: 38% */}
+                        <div style={{ width: '38%', minWidth: 0, display: 'flex', alignItems: 'baseline', gap: '10px' }}>
+                          <span className="font-body text-sm" style={{ color: done ? 'rgba(232,221,201,0.45)' : '#E8DDC9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {sc.name}
+                          </span>
+                          {sc.essaysTotal > 0 && !done && (
+                            <span className="font-body" style={{ fontSize: '10px', color: 'rgba(232,221,201,0.45)', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+                              essays {sc.essaysStarted}/{sc.essaysTotal}
+                            </span>
+                          )}
+                        </div>
+                        {/* Track */}
+                        <div style={{ flex: 1, position: 'relative', height: '18px' }} title={`${sc.name} — ${sc.kind} deadline ${dateLabel}${st ? ` · ${st.label}` : ''}`}>
+                          <div style={{ position: 'absolute', top: '8px', left: 0, right: 0, height: '1px', background: 'rgba(232,221,201,0.08)' }} />
+                          {/* today marker */}
+                          <div style={{ position: 'absolute', top: '3px', bottom: '3px', left: `${todayPos * 100}%`, width: '1px', background: 'rgba(232,221,201,0.25)' }} />
+                          {/* bar to deadline */}
+                          <div style={{
+                            position: 'absolute', top: '6px', height: '5px', left: 0,
+                            width: `${(done ? 1 : p2) * 100}%`,
+                            background: barColor,
+                            borderRadius: '4px',
+                            opacity: done ? 0.55 : 1,
+                          }} />
+                          {/* deadline marker + label */}
+                          {!done && (
+                            <span className="font-body" style={{
+                              position: 'absolute', top: '-1px',
+                              left: `${p2 * 100}%`,
+                              transform: p2 > 0.86 ? 'translateX(-100%)' : 'translateX(6px)',
+                              fontSize: '10px', color: 'rgba(232,221,201,0.68)',
+                              whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums',
+                            }}>
+                              {dateLabel} <span style={{ color: sc.kind === 'REA' ? '#D4A24E' : '#C9A977', letterSpacing: '0.5px' }}>{sc.kind}</span>
+                            </span>
+                          )}
+                        </div>
+                        {/* Status word (their own, from My Schools) */}
+                        <span className="font-body" style={{ width: '96px', textAlign: 'right', fontSize: '11px', fontWeight: 600, letterSpacing: '0.04em', color: st ? st.color : 'rgba(232,221,201,0.45)', whiteSpace: 'nowrap' }}>
+                          {st ? st.label : 'Not started'}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="font-body" style={{ fontSize: '11px', color: 'rgba(232,221,201,0.45)', margin: '12px 0 0', lineHeight: 1.5 }}>
+                  Bars run to each school's operative deadline (your committed round, or its earliest upcoming). The thin line is today.
+                  Status is what you've marked on <Link href="/colleges" style={{ color: '#C9A977' }}>My Schools</Link> — you tell us when a school is done.
+                </p>
+              </Card>
+            </div>
+          );
+        })()}
 
         {/* Academic Stats */}
         {stats && (
