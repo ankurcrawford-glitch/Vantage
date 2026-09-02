@@ -281,6 +281,7 @@ export default function Navigation() {
                   </div>
                   <Link href="/colleges" style={getLinkStyle('/colleges')}>Strategy</Link>
                   <Link href="/profile" style={getLinkStyle('/profile')}>My Profile</Link>
+                  <Link href="/foundations/counselor" style={getLinkStyle('/counselor')}>Counselor</Link>
                 </>
               )}
               {/* Foundations is the other world — set apart by a divider,
