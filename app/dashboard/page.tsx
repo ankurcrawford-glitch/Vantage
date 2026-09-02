@@ -11,7 +11,6 @@ import Navigation from '@/components/Navigation';
 import { canAccessCollegePrep } from '@/lib/college-prep-access';
 import { eaLabel, PLAN_EXPLAINERS } from '@/lib/earlyPlans';
 import JourneyStrip from '@/components/JourneyStrip';
-import ProfileEditor from '@/components/ProfileEditor';
 
 interface UserStats {
   gpa_weighted: number | null;
@@ -59,8 +58,6 @@ function DashboardContent() {
   const [droppedEarly, setDroppedEarly] = useState<{ name: string; kind: string }[]>([]);
   // Schools marked Submitted / Decision — off the deadline radar.
   const [submittedCount, setSubmittedCount] = useState(0);
-  // Inline profile editor (Dashboard and My Profile are now one place).
-  const [profileOpen, setProfileOpen] = useState(false);
   // Story Builder progress — without it the essay AI can't give real guidance.
   const [discoveryCount, setDiscoveryCount] = useState(0);
   // Per-school rows for the timeline (gantt) — name, operative deadline,
@@ -426,6 +423,23 @@ function DashboardContent() {
     }
   };
 
+  // Status lives HERE now (not on Strategy) — click the chip to cycle
+  // Not started → In progress → Submitted → Decision → Not started.
+  const cycleStatus = async (collegeId: string, current: string | null) => {
+    const order = [null, 'in_progress', 'submitted', 'decision'];
+    const next = order[(order.indexOf(current) + 1) % order.length];
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { error } = await supabase
+        .from('user_colleges')
+        .update({ app_status: next })
+        .eq('user_id', user.id)
+        .eq('college_id', collegeId);
+      if (!error) loadDashboardData(); // timeline, deadlines, counts all refresh
+    } catch { /* chip just doesn't advance */ }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/');
@@ -545,9 +559,9 @@ function DashboardContent() {
                       <div key={sc.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '7px 0', borderBottom: '1px solid rgba(232,221,201,0.06)' }}>
                         {/* Name + essays chip: 38% */}
                         <div style={{ width: '38%', minWidth: 0, display: 'flex', alignItems: 'baseline', gap: '10px' }}>
-                          <span className="font-body text-sm" style={{ color: done ? 'rgba(232,221,201,0.45)' : '#E8DDC9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <Link href={`/colleges/${sc.id}`} className="font-body text-sm" style={{ color: done ? 'rgba(232,221,201,0.45)' : '#E8DDC9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textDecoration: 'none' }}>
                             {sc.name}
-                          </span>
+                          </Link>
                           {sc.essaysTotal > 0 && !done && (
                             <span className="font-body" style={{ fontSize: '10px', color: 'rgba(232,221,201,0.45)', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                               essays {sc.essaysStarted}/{sc.essaysTotal}
@@ -580,81 +594,41 @@ function DashboardContent() {
                             </span>
                           )}
                         </div>
-                        {/* Status word (their own, from My Schools) */}
-                        <span className="font-body" style={{ width: '96px', textAlign: 'right', fontSize: '11px', fontWeight: 600, letterSpacing: '0.04em', color: st ? st.color : 'rgba(232,221,201,0.45)', whiteSpace: 'nowrap' }}>
+                        {/* Status chip — click to cycle. This is the one
+                            place the student marks progress. */}
+                        <button
+                          onClick={() => cycleStatus(sc.id, sc.status)}
+                          title="Click to change status"
+                          className="font-body"
+                          style={{
+                            width: '104px',
+                            textAlign: 'center',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            letterSpacing: '0.04em',
+                            color: st ? st.color : 'rgba(232,221,201,0.45)',
+                            background: 'transparent',
+                            border: `1px solid ${st ? st.color : 'rgba(232,221,201,0.2)'}`,
+                            borderRadius: '999px',
+                            padding: '3px 0',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
                           {st ? st.label : 'Not started'}
-                        </span>
+                        </button>
                       </div>
                     );
                   })}
                 </div>
                 <p className="font-body" style={{ fontSize: '11px', color: 'rgba(232,221,201,0.45)', margin: '12px 0 0', lineHeight: 1.5 }}>
-                  Bars run to each school's operative deadline (your committed round, or its earliest upcoming). The thin line is today.
-                  Status is what you've marked on <Link href="/colleges" style={{ color: '#C9A977' }}>My Schools</Link> — you tell us when a school is done.
+                  Bars run to each school's operative deadline — your committed round, or its earliest upcoming. The thin line is today.
+                  Click a school for its essays; click the status chip when things change — you tell us when a school is done.
                 </p>
               </Card>
             </div>
           );
         })()}
-
-        {/* Academic Stats */}
-        {stats && (
-          <div className="mb-12" id="profile-section">
-            <h2 className="font-heading text-3xl text-cream mb-6">Academic Profile</h2>
-            <Card>
-              <div className="grid md:grid-cols-4 gap-6">
-                {stats.gpa_weighted && (
-                  <div>
-                    <p className="font-body text-sm text-cream/70 mb-1">Weighted GPA</p>
-                    <p className="font-heading text-2xl text-gold-leaf">{stats.gpa_weighted}</p>
-                  </div>
-                )}
-                {stats.gpa_unweighted && (
-                  <div>
-                    <p className="font-body text-sm text-cream/70 mb-1">Unweighted GPA</p>
-                    <p className="font-heading text-2xl text-gold-leaf">{stats.gpa_unweighted}</p>
-                  </div>
-                )}
-                {stats.sat_score && (
-                  <div>
-                    <p className="font-body text-sm text-cream/70 mb-1">SAT Score</p>
-                    <p className="font-heading text-2xl text-gold-leaf">{stats.sat_score}</p>
-                  </div>
-                )}
-                {stats.act_score && (
-                  <div>
-                    <p className="font-body text-sm text-cream/70 mb-1">ACT Score</p>
-                    <p className="font-heading text-2xl text-gold-leaf">{stats.act_score}</p>
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={() => {
-                  setProfileOpen((o) => {
-                    if (o) loadDashboardData(); // picked up edits — refresh tiles
-                    return !o;
-                  });
-                }}
-                className="font-body font-bold text-xs uppercase tracking-wider mt-6"
-                style={{
-                  background: profileOpen ? 'transparent' : '#C9A977',
-                  color: profileOpen ? '#C9A977' : '#0B1320',
-                  border: '1px solid #C9A977',
-                  padding: '12px 24px',
-                  cursor: 'pointer',
-                  borderRadius: '2px',
-                }}
-              >
-                {profileOpen ? 'Done editing' : 'Edit everything'}
-              </button>
-            </Card>
-            {profileOpen && (
-              <div style={{ marginTop: '24px' }}>
-                <ProfileEditor />
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Quick Actions */}
         <div>
@@ -678,20 +652,23 @@ function DashboardContent() {
               </Card>
             </Link>
 
-            <div
-              onClick={() => {
-                setProfileOpen(true);
-                document.getElementById('profile-section')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              style={{ cursor: 'pointer' }}
-            >
+            <Link href="/profile">
               <Card className="cursor-pointer hover:bg-royal-blue/80 transition-colors">
                 <h3 className="font-heading text-xl text-gold-leaf mb-3">Update Profile</h3>
                 <p className="font-body text-cream/70 text-sm">
-                  Edit your stats and activities — right here on the dashboard
+                  Edit your stats, activities, and awards
                 </p>
               </Card>
-            </div>
+            </Link>
+
+            <Link href="/foundations/counselor">
+              <Card className="cursor-pointer hover:bg-royal-blue/80 transition-colors">
+                <h3 className="font-heading text-xl text-gold-leaf mb-3">Talk to Your Counselor</h3>
+                <p className="font-body text-cream/70 text-sm">
+                  The counselor who knows your whole story — ask anything, any time
+                </p>
+              </Card>
+            </Link>
           </div>
         </div>
 

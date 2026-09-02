@@ -37,12 +37,9 @@ interface Props {
   plan?: string | null;
   /** Set or clear the committed round. */
   onPlanChange?: (plan: string | null) => void;
-  /** Application status: null/'not_started' | 'in_progress' | 'submitted' | 'decision'. */
-  status?: string | null;
-  onStatusChange?: (status: string) => void;
 }
 
-export default function SchoolCard({ classification, onRemove, hasPrompts, planOptions, plan, onPlanChange, status, onStatusChange }: Props) {
+export default function SchoolCard({ classification, onRemove, hasPrompts, planOptions, plan, onPlanChange }: Props) {
   const { college, probabilityRange, score, bucket, effectiveAdmitRate, programOverrideTriggered } = classification;
   const barColor = TIER_BAR[bucket];
 
@@ -178,68 +175,6 @@ export default function SchoolCard({ classification, onRemove, hasPrompts, planO
           </div>
         )}
 
-        {/* Application status — same pill interaction as the Applying row,
-            sized to be seen. Every click swallows the card's Link. */}
-        {onStatusChange && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              flexWrap: 'wrap',
-              marginTop: '12px',
-              paddingTop: '12px',
-              borderTop: '1px solid rgba(201,169,119,0.15)',
-            }}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-          >
-            <span
-              className="font-body"
-              style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'rgba(232,221,201,0.45)' }}
-            >
-              Status
-            </span>
-            {([
-              ['in_progress', 'In progress', '#C9A977'],
-              ['submitted', '✓ Submitted', '#8FB89A'],
-              ['decision', 'Decision', '#8FB89A'],
-            ] as const).map(([value, label, color]) => {
-              const active = (status || 'not_started') === value;
-              return (
-                <button
-                  key={value}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onStatusChange(active ? 'not_started' : value);
-                  }}
-                  className="font-body"
-                  title={active ? 'Click to reset to Not started' : `Mark ${college.name} as ${label}`}
-                  style={{
-                    background: active ? color : 'transparent',
-                    color: active ? '#0B1320' : color,
-                    border: `1px solid ${active ? color : 'rgba(201,169,119,0.35)'}`,
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    letterSpacing: '0.06em',
-                    padding: '5px 12px',
-                    borderRadius: '999px',
-                    cursor: 'pointer',
-                    transition: 'all 0.12s',
-                    opacity: active ? 1 : 0.85,
-                  }}
-                >
-                  {label}
-                </button>
-              );
-            })}
-            {(!status || status === 'not_started') && (
-              <span className="font-body" style={{ fontSize: '10px', color: 'rgba(232,221,201,0.45)', fontStyle: 'italic' }}>
-                not started
-              </span>
-            )}
-          </div>
-        )}
       </Link>
 
       {onRemove && (
