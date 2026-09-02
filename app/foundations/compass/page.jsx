@@ -147,7 +147,10 @@ export default function FoundationsCompass() {
                 ))}
               </div>
               <p style={{ fontSize: 12.5, color: C.gold, marginTop: 14, lineHeight: 1.6 }}>
-                Senior year, all of it walks into your applications with you — your reflections become essay ideas, your threads become your story.
+                Senior year, all of it walks into your applications with you — your reflections become essay ideas, your threads become your story.{" "}
+                <Link href="/foundations/ahead" style={{ color: C.gold, textDecoration: "underline" }}>
+                  Peek at what&apos;s waiting →
+                </Link>
               </p>
             </div>
           );
