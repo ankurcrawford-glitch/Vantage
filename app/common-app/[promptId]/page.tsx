@@ -272,13 +272,17 @@ export default function CommonAppEssayPage() {
 
       // college_prompt_id in DB is UUID; get prompt row for Common App by sort_order
       const promptNum = (selectedPrompt?.number ?? parseInt(promptId.replace('common-app-', ''), 10)) || 1;
-      const { data: promptRow } = await supabase
+      // limit(1) instead of maybeSingle(): if a prompt ever has duplicate
+      // rows (e.g. two cycles), maybeSingle() errors and we'd silently treat
+      // the prompt as missing.
+      const { data: promptRows } = await supabase
         .from('college_prompts')
         .select('id')
         .eq('college_id', COMMON_APP_COLLEGE_ID)
         .eq('sort_order', promptNum)
-        .maybeSingle();
-      const collegePromptUuid = promptRow?.id ?? null;
+        .order('id')
+        .limit(1);
+      const collegePromptUuid = promptRows?.[0]?.id ?? null;
 
       // Check if essay exists (college_prompt_id must be UUID)
       let essayData: { id: string; user_id: string } | null = null;
@@ -662,46 +666,27 @@ export default function CommonAppEssayPage() {
 
       // Create essay if it doesn't exist
       if (!currentEssayId) {
-        // college_prompts.id is UUID; look up by college_id + sort_order for Common App
+        // college_prompts.id is UUID; look up by college_id + sort_order for Common App.
+        // The 7 Common App rows are seeded server-side (supabase-common-app-prompts.sql).
+        // Students cannot insert into college_prompts (RLS: public read only), so
+        // we no longer try to create the row from the browser - that path failed
+        // silently for prompts 3-7 and produced the "cannot save" bug.
         const promptNumber = (prompt?.number ?? parseInt(promptId.replace('common-app-', ''), 10)) || 1;
-        const { data: promptData } = await supabase
+        const { data: promptRows, error: promptLookupError } = await supabase
           .from('college_prompts')
           .select('id')
           .eq('college_id', COMMON_APP_COLLEGE_ID)
           .eq('sort_order', promptNumber)
-          .maybeSingle();
+          .order('id')
+          .limit(1);
 
-        let promptDbId: string | null = promptData?.id ?? null;
-
-        if (!promptDbId) {
-          // Ensure "Common App" college exists (college_prompts.college_id FK references colleges.id)
-          await supabase
-            .from('colleges')
-            .upsert(
-              { id: COMMON_APP_COLLEGE_ID, name: 'Common Application' },
-              { onConflict: 'id' }
-            );
-
-          const { data: newPrompt, error: promptError } = await supabase
-            .from('college_prompts')
-            .insert({
-              college_id: COMMON_APP_COLLEGE_ID,
-              prompt_text: prompt?.prompt || '',
-              word_limit: prompt?.word_limit ?? 650,
-              year: 2025,
-              sort_order: promptNumber,
-            })
-            .select('id')
-            .single();
-
-          if (promptError && !promptError.message.includes('duplicate')) {
-            throw promptError;
-          }
-          promptDbId = newPrompt?.id ?? null;
-        }
+        if (promptLookupError) throw promptLookupError;
+        const promptDbId: string | null = promptRows?.[0]?.id ?? null;
 
         if (!promptDbId) {
-          throw new Error('Could not find or create Common App prompt. Check college_prompts table.');
+          throw new Error(
+            `Common App prompt ${promptNumber} is not set up yet. Please use the "Need help?" button and we'll fix it right away.`
+          );
         }
 
         // Create essay (college_prompt_id must be UUID)
