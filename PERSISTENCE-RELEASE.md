@@ -50,3 +50,11 @@ Keep a database backup and the previous deployment available. If verification fa
 The supplied schema export confirms `user_colleges.college_id` is text, not UUID. The application-plan RPC and its PostgreSQL fixture now use text, including a non-UUID regression case.
 
 The export also reveals legacy reviewer read policies calling `user_has_essay_permission`, an invitation update policy allowing invitees to change invitation rows, and a `counselor_comments.comments_select` policy with `USING (true)` for authenticated users. Other comment INSERT policies check author identity without requiring essay access. Adding new permissive policies does not override those legacy permissions. Inspect effective RLS flags, grants, helper function definitions, constraints, and triggers before finalizing permission repair. Do not apply or deploy this migration yet. No evidence of actual unauthorized access has been obtained.
+
+## Standalone comment containment — can be applied before the app release
+
+The follow-up live export confirms RLS is enabled and authenticated SELECT is granted on counselor_comments, so the broad comments_select policy is effective. The exported reviewer helper only checks essay_permissions membership. No evidence of actual unauthorized access has been obtained.
+
+Apply `supabase-comment-access-hotfix.sql` separately in the Vantage SQL Editor. It changes only comment access rules and a caller-scoped helper, preserves all data, and works with the current app and current permission records. It does not depend on the unreleased persistence RPCs. Its final query must show four RESTRICTIVE policies. Existing owners and permitted reviewers retain access; unrelated accounts and revoked reviewers cannot read or mutate comments. This contains the broad comment policy; it does not certify the provenance of existing permission records or repair the invitation policy.
+
+Five dedicated PostgreSQL tests reproduce the broad legacy policy before applying the script and verify containment, allowed access, author identity, permission revocation, anonymous access and idempotency. The larger reliability migration remains blocked pending replacement of legacy invitation/permission paths and compatible reviewer checks. Do not merge PR #13 yet.
