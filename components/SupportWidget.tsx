@@ -17,6 +17,12 @@ export default function SupportWidget() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    const openPanel = () => { setOpen(true); setSent(false); setError(''); };
+    window.addEventListener('vantage:open-support', openPanel);
+    return () => window.removeEventListener('vantage:open-support', openPanel);
+  }, []);
+
   // Prefill the email for signed-in students.
   useEffect(() => {
     if (!open || email) return;
@@ -57,7 +63,7 @@ export default function SupportWidget() {
     <>
       {/* Floating button */}
       <button
-        onClick={() => { setOpen((o) => !o); setError(''); }}
+        onClick={() => { setOpen((o) => !o); setError(''); setSent(false); }}
         aria-label="Need help?"
         className="font-body"
         style={{

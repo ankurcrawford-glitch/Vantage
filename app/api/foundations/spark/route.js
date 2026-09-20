@@ -94,9 +94,10 @@ export async function POST(request) {
     } catch {
       return Response.json({ error: "Bad request" }, { status: 400 });
     }
-    const content = String(body?.content ?? "").trim().slice(0, 8000);
+    const content = String(body?.content ?? "").trim();
     if (!content) return Response.json({ error: "Nothing to save" }, { status: 400 });
 
+    if (content.length > 8000) return Response.json({ error: "Please keep this reflection to 8,000 characters. Your full draft has not been changed." }, { status: 400 });
     const month = currentMonth();
     const supabase = getAdminClient();
     const { error } = await supabase.from("foundations_spark_entries").insert({

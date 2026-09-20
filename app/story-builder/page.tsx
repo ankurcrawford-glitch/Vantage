@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Card from '@/components/Card';
 import Navigation from '@/components/Navigation';
+import { useRecoverableText } from '@/hooks/useRecoverableText';
 import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
 
 export default function DiscoveryPage() {
@@ -15,7 +16,8 @@ export default function DiscoveryPage() {
   const [hasSubscription, setHasSubscription] = useState(false);
   const [discoveryAnswers, setDiscoveryAnswers] = useState<Record<string, string>>({});
   const [editingAnswer, setEditingAnswer] = useState<string | null>(null);
-  const [editAnswerText, setEditAnswerText] = useState('');
+  const answerDraft = useRecoverableText(`story:${editingAnswer ?? ''}`, !!editingAnswer);
+  const { text: editAnswerText, setText: setEditAnswerText } = answerDraft;
   const [saving, setSaving] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -74,35 +76,22 @@ export default function DiscoveryPage() {
   };
 
   const handleEditAnswer = (questionId: string) => {
+    if (saving) return;
+    if (editingAnswer && editAnswerText !== (discoveryAnswers[editingAnswer] || '') && !confirm('Switch questions? Your unsaved answer remains recoverable in this browser.')) return;
     setEditingAnswer(questionId);
-    setEditAnswerText(discoveryAnswers[questionId] || '');
+    answerDraft.openText(discoveryAnswers[questionId] || '');
   };
 
   const handleCancelEditAnswer = () => {
+    if (saving) return;
+    if (!confirm('Discard this unsaved answer?')) return;
+    answerDraft.clearRecovery();
     setEditingAnswer(null);
-    setEditAnswerText('');
+    answerDraft.openText('');
   };
 
-  const handleCheckout = async () => {
-    if (!userId) return;
-    setCheckoutLoading(true);
-    try {
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert(data.error || 'Unable to start checkout. Please try again.');
-      }
-    } catch {
-      alert('Unable to start checkout. Please try again.');
-    } finally {
-      setCheckoutLoading(false);
-    }
+  const handleCheckout = () => {
+    window.dispatchEvent(new Event('vantage:open-support'));
   };
 
   const handleRedeemCode = async () => {
@@ -145,13 +134,14 @@ export default function DiscoveryPage() {
           user_id: user.id,
           question_id: questionId,
           answer: editAnswerText.trim(),
-        });
+        }, { onConflict: "user_id,question_id" });
 
       if (error) throw error;
 
       setDiscoveryAnswers((prev) => ({ ...prev, [questionId]: editAnswerText.trim() }));
+      answerDraft.clearRecovery();
       setEditingAnswer(null);
-      setEditAnswerText('');
+      answerDraft.openText('');
       alert('Answer saved.');
 
       // Fire-and-forget: ask the server to look at the updated Story
@@ -177,13 +167,14 @@ export default function DiscoveryPage() {
   return (
     <div className="min-h-screen" style={{ background: '#0B1320' }}>
       <Navigation />
+      {answerDraft.warning && <p role="status" className="px-8 text-amber-200">{answerDraft.warning}</p>}
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '64px 32px' }}>
         {!hasSubscription ? (
           <Card>
             <h1 className="font-heading text-3xl mb-4" style={{ color: '#E8DDC9' }}>Story Builder</h1>
             <p className="font-body text-lg mb-6" style={{ color: 'rgba(232,221,201,0.9)' }}>
-              The 12 reflective questions unlock after a one-time purchase—
+              The 12 reflective questions unlock with an access code—
               <strong style={{ color: '#E8DDC9', fontWeight: 600 }}>
                 {' '}or use an access code if you were given one
               </strong>
@@ -208,7 +199,7 @@ export default function DiscoveryPage() {
               {checkoutLoading ? 'Redirecting...' : 'Obtain a one-time code for access'}
             </button>
             <p className="font-body text-sm mt-4" style={{ color: 'rgba(232,221,201,0.45)' }}>
-              One-time payment. Full access to Story Builder and Strategic Intelligence.
+              Access is currently free and invitation-based. Request a code if you do not have one.
             </p>
 
             <div
@@ -219,7 +210,7 @@ export default function DiscoveryPage() {
               }}
             >
               <p className="font-body text-sm mb-3" style={{ color: 'rgba(232,221,201,0.68)' }}>
-                Have an access code? Redeem it here to unlock without paying.
+                Have an access code? Redeem it here to unlock access.
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', maxWidth: '440px' }}>
                 <input
@@ -300,6 +291,7 @@ export default function DiscoveryPage() {
                         {isEditing ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             <textarea
+                              disabled={saving}
                               value={editAnswerText}
                               onChange={(e) => setEditAnswerText(e.target.value)}
                               style={{

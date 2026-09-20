@@ -253,9 +253,10 @@ export async function GET(req) {
       .from("conversation_messages")
       .select("role, content, created_at")
       .eq("user_id", auth.userId)
-      .order("created_at", { ascending: true })
+      .order("created_at", { ascending: false })
       .limit(500);
     if (error) throw error;
+    if (history) history.reverse();
 
     const dayStart = new Date();
     dayStart.setHours(0, 0, 0, 0);
@@ -298,7 +299,8 @@ export async function POST(req) {
     const userId = auth.userId;
     const supabase = getAdminClient();
 
-    const { messages } = await req.json();
+    const { messages, requestId } = await req.json();
+    if (typeof requestId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId)) return Response.json({ error: "A valid message identifier is required." }, { status: 400 });
     if (!Array.isArray(messages) || messages.length === 0) {
       return Response.json({ error: "Bad request" }, { status: 400 });
     }
@@ -306,6 +308,12 @@ export async function POST(req) {
     if (!lastUserMsg) {
       return Response.json({ error: "No user message" }, { status: 400 });
     }
+
+    const { data: prior, error: priorError } = await supabase.from("conversation_messages").select("role, content")
+      .eq("user_id", userId).eq("turn_id", requestId);
+    if (priorError) throw priorError;
+    const previousReply = prior?.find(row => row.role === "assistant");
+    if (previousReply) return Response.json({ reply: previousReply.content, replayed: true, cached: previousReply.is_free === true });
 
     // Daily cap (cost protection — generous enough for an hour-long session)
     const dayStart = new Date();
@@ -353,10 +361,11 @@ export async function POST(req) {
     );
 
     // Persist both sides (history reload + cap counting)
-    await supabase.from("conversation_messages").insert([
-      { user_id: userId, role: "user", content: lastUserMsg.content },
-      { user_id: userId, role: "assistant", content: reply },
-    ]);
+    const { error: persistError } = await supabase.from("conversation_messages").upsert([
+      { user_id: userId, turn_id: requestId, role: "user", content: lastUserMsg.content },
+      { user_id: userId, turn_id: requestId, role: "assistant", content: reply },
+    ], { onConflict: "user_id,turn_id,role", ignoreDuplicates: true });
+    if (persistError) throw persistError;
 
     const newCount = count + 1;
     const recent = [...history, { role: "assistant", content: reply }];

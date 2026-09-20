@@ -17,7 +17,7 @@ const SELECT = `
 
 export async function GET(_req, { params }) {
   try {
-    const token = params?.token;
+    const { token } = await params;
     if (!token || typeof token !== "string") {
       return Response.json({ error: "Not found" }, { status: 404 });
     }

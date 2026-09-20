@@ -136,6 +136,7 @@ export async function POST(request: NextRequest) {
       .from('college_prompts')
       .select('id, prompt_text, word_limit, sort_order')
       .eq('college_id', collegeId)
+      .eq('cycle', '2026-27')
       .order('sort_order');
 
     if (!collegePrompts || collegePrompts.length === 0) {
@@ -168,7 +169,8 @@ export async function POST(request: NextRequest) {
           version_number,
           content,
           word_count,
-          is_current
+          is_current,
+          is_checkpoint
         )
       `)
       .eq('user_id', userId)
@@ -185,7 +187,7 @@ export async function POST(request: NextRequest) {
         essayMap[essay.college_prompt_id] = {
           content: currentVersion.content,
           wordCount: currentVersion.word_count || 0,
-          versionCount: versions.length || 1,
+          versionCount: versions.filter((v: any) => v.is_checkpoint !== false).length,
         };
       }
     });

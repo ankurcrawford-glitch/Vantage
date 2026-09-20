@@ -34,8 +34,11 @@ const OPENER = {
 export default function CounselorChat() {
   const [messages, setMessages] = useState([]);
   const [hydrated, setHydrated] = useState(false);
+  const [historyReady, setHistoryReady] = useState(false);
   const [returning, setReturning] = useState(false);
   const [input, setInput] = useState("");
+  const pendingTurn = useRef(null);
+  const [sendError, setSendError] = useState("");
   const [loading, setLoading] = useState(false);
   const [used, setUsed] = useState(0);
   const endRef = useRef(null);
@@ -55,6 +58,7 @@ export default function CounselorChat() {
         const res = await fetch("/api/counselor", {
           headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
         });
+        if (!res.ok) throw new Error("Request failed");
         const data = await res.json();
         if (Array.isArray(data.messages) && data.messages.length > 0) {
           setMessages(data.messages.map((m) => ({ role: m.role, content: m.content })));
@@ -62,9 +66,10 @@ export default function CounselorChat() {
         } else {
           setMessages([OPENER]);
         }
+        setHistoryReady(true);
         if (typeof data.used === "number") setUsed(data.used);
       } catch {
-        setMessages([OPENER]);
+        setSendError("Your conversation could not be loaded. Refresh to retry before sending a message.");
       } finally {
         setHydrated(true);
       }
@@ -93,8 +98,10 @@ export default function CounselorChat() {
 
   const send = async (text) => {
     const q = (text ?? input).trim();
-    if (!q || loading || used >= MONTHLY_CAP) return;
+    if (!historyReady || !q || loading || used >= MONTHLY_CAP) return;
 
+    setSendError("");
+    if (!pendingTurn.current || pendingTurn.current.text !== q) pendingTurn.current = {text:q, id:crypto.randomUUID()};
     const nextMessages = [...messages, { role: "user", content: q }];
     setMessages(nextMessages);
     setInput("");
@@ -110,6 +117,7 @@ export default function CounselorChat() {
           ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
         },
         body: JSON.stringify({
+          requestId: pendingTurn.current.id,
           // Send only recent history — the API truncates again server-side.
           // Drop the synthetic opener; it was never persisted.
           messages: nextMessages.filter((m) => !m.synthetic).slice(-10),
@@ -117,19 +125,15 @@ export default function CounselorChat() {
       });
       const data = await res.json();
 
-      if (data.error) throw new Error(data.error);
+      if (!res.ok || data.error) throw new Error(data.error || "Request failed");
 
+      pendingTurn.current = null;
       setMessages((m) => [...m, { role: "assistant", content: data.reply }]);
-      if (!data.cached) setUsed(data.used ?? used + 1); // FAQ hits don't count
+      if (!data.cached && !data.replayed) setUsed(data.used ?? used + 1); // FAQ hits don't count
     } catch (err) {
-      setMessages((m) => [
-        ...m,
-        {
-          role: "assistant",
-          content:
-            "Something went wrong on my end. Give it a moment and ask again — your question wasn't counted.",
-        },
-      ]);
+      setMessages(messages);
+      setInput(q);
+      setSendError("Your message was not confirmed saved. It is back in the input below; send it again to retry safely.");
     } finally {
       setLoading(false);
     }
@@ -148,6 +152,7 @@ export default function CounselorChat() {
       />
 
       <FoundationsNav />
+      {sendError && <p role="alert" style={{color: "#F87171", padding: "12px 24px"}}>{sendError}</p>}
 
       {/* ── Header ── */}
       <div

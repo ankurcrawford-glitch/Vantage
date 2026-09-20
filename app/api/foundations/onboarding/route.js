@@ -59,7 +59,7 @@ export async function POST(req) {
     const reply = await callHaiku(system, history, MAX_TOKENS);
 
     if (wrap) {
-      // Best-effort: summarize the conversation and save it. Non-fatal on error.
+      // Completion is acknowledged only after the summary has been saved.
       try {
         const transcript = history
           .map((m) => (m.role === "user" ? "Student" : "Counselor") + ": " + m.content)
@@ -71,15 +71,19 @@ export async function POST(req) {
           400
         );
         const supabase = getAdminClient();
-        const { data: existing } = await supabase
+        const { data: existing, error: readError } = await supabase
           .from("user_stats").select("user_id").eq("user_id", userId).maybeSingle();
+        if (readError) throw readError;
         if (existing) {
-          await supabase.from("user_stats").update({ narrative_summary: summary }).eq("user_id", userId);
+          const { error } = await supabase.from("user_stats").update({ narrative_summary: summary }).eq("user_id", userId).select("user_id").single();
+          if (error) throw error;
         } else {
-          await supabase.from("user_stats").insert({ user_id: userId, narrative_summary: summary });
+          const { error } = await supabase.from("user_stats").insert({ user_id: userId, narrative_summary: summary });
+          if (error) throw error;
         }
       } catch (e) {
         console.error("onboarding summary save failed:", e);
+        return Response.json({ error: "Your introduction could not be saved. Please retry." }, { status: 500 });
       }
       return Response.json({ reply, done: true });
     }

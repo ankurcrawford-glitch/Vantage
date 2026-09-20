@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import FoundationsNav from "@/components/FoundationsNav";
 import { C, display, body } from "@/lib/foundations-theme";
@@ -36,6 +36,7 @@ async function authHeaders() {
 }
 
 export default function FoundationsActivities() {
+  const pendingRows = useRef(new Set());
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
@@ -54,6 +55,7 @@ export default function FoundationsActivities() {
           fetch("/api/foundations/activities", { headers }),
           fetch("/api/foundations/courses", { headers }),
         ]);
+        if (!actsRes.ok || !coursesRes.ok) throw new Error("Load failed");
         const data = await actsRes.json();
         if (Array.isArray(data.activities)) setActivities(data.activities);
         const courseData = await coursesRes.json();
@@ -76,9 +78,9 @@ export default function FoundationsActivities() {
         body: JSON.stringify(courseForm),
       });
       const data = await res.json();
-      if (data.error) throw new Error(data.error);
+      if (!res.ok || data.error) throw new Error(data.error || "Request failed");
       setCourses((cs) => [...cs, data.course]);
-      setCourseForm(null);
+      setCourseForm(current => JSON.stringify(current) === JSON.stringify(courseForm) ? null : current);
     } catch {
       setError("Couldn't save that course. Please try again.");
     } finally {
@@ -86,37 +88,23 @@ export default function FoundationsActivities() {
     }
   };
 
-  const removeCourse = async (id) => {
-    setCourses((cs) => cs.filter((c) => c.id !== id));
+  const mutateRow = async (id, url, method, body, onSuccess) => {
+    if (pendingRows.current.has(id)) return;
+    pendingRows.current.add(id); setError("");
     try {
-      await fetch(`/api/foundations/courses?id=${encodeURIComponent(id)}`, {
-        method: "DELETE",
-        headers: await authHeaders(),
-      });
-    } catch { /* optimistic; reload will reconcile */ }
+      const res = await fetch(url, { method, headers: await authHeaders(), ...(body ? {body: JSON.stringify(body)} : {}) });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || "Change failed");
+      onSuccess(data);
+    } catch { setError("Couldn't save that change. The previous entry is still shown. Try again."); }
+    finally { pendingRows.current.delete(id); }
   };
-
-  const confirm = async (id) => {
-    setActivities((as) => as.map((a) => (a.id === id ? { ...a, confirmed: true } : a)));
-    try {
-      await fetch("/api/foundations/activities", {
-        method: "PATCH",
-        headers: await authHeaders(),
-        body: JSON.stringify({ id, confirmOnly: true }),
-      });
-    } catch { /* optimistic; reload will reconcile */ }
-  };
-
-  const remove = async (id) => {
-    setActivities((as) => as.filter((a) => a.id !== id));
-    try {
-      await fetch("/api/foundations/activities", {
-        method: "DELETE",
-        headers: await authHeaders(),
-        body: JSON.stringify({ id }),
-      });
-    } catch { /* optimistic */ }
-  };
+  const removeCourse = (id) => mutateRow(id, `/api/foundations/courses?id=${encodeURIComponent(id)}`, "DELETE", null,
+    () => setCourses(cs => cs.filter(c => c.id !== id)));
+  const confirm = (id) => mutateRow(id, "/api/foundations/activities", "PATCH", {id, confirmOnly:true},
+    data => setActivities(rows => rows.map(a => a.id === id ? data.activity : a)));
+  const remove = (id) => window.confirm("Remove this linked activity from Foundations and Applications?") && mutateRow(id, "/api/foundations/activities", "DELETE", {id},
+    () => setActivities(rows => rows.filter(a => a.id !== id)));
 
   const saveForm = async () => {
     if (!form.name.trim() || saving) return;
@@ -129,11 +117,11 @@ export default function FoundationsActivities() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (data.error) throw new Error(data.error);
+      if (!res.ok || data.error) throw new Error(data.error || "Request failed");
       setActivities((as) =>
         form.id ? as.map((a) => (a.id === form.id ? data.activity : a)) : [...as, data.activity]
       );
-      setForm(null);
+      setForm(current => JSON.stringify(current) === JSON.stringify(form) ? null : current);
     } catch {
       setError("Couldn't save. Please try again.");
     } finally {
