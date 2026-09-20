@@ -24,7 +24,7 @@ before(async()=>{
  create table discovery_answers(id uuid primary key default gen_random_uuid(),user_id uuid,question_id text,answer text);
  create table conversation_messages(id uuid primary key default gen_random_uuid(),user_id uuid,role text,content text,created_at timestamptz default now());
  create table counselor_messages(like conversation_messages including all);
- create table user_colleges(user_id uuid,college_id uuid,application_plan text,primary key(user_id,college_id));
+ create table user_colleges(user_id uuid,college_id text,application_plan text,primary key(user_id,college_id));
  create table essay_invitations(id uuid primary key default gen_random_uuid(),essay_id uuid,student_id uuid,invitee_email text,invitee_name text,role text default 'parent',token text unique);
  create table essay_permissions(id uuid primary key default gen_random_uuid(),essay_id uuid,user_id uuid,unique(essay_id,user_id));
  alter table essay_permissions enable row level security;
@@ -92,6 +92,13 @@ test('early plan changes are atomic; nonexistent target cannot clear the old pla
  assert.equal((await db.query('select application_plan from user_colleges where college_id=$1',[prompts[0]])).rows[0].application_plan,'ED');
  const rows=(await db.query('select * from set_application_plan($1,$2)',[prompts[1],'ED'])).rows;
  assert.equal(rows.filter(r=>r.application_plan==='ED').length,1);
+});
+test('application plans accept the live text college IDs, including non-UUID values',async()=>{
+ await uid(owner);
+ await db.query("insert into user_colleges values($1,'stanford',null)",[owner]);
+ const rows=(await db.query("select * from set_application_plan('stanford','REA')")).rows;
+ assert.equal(rows.find(r=>r.college_id==='stanford').application_plan,'REA');
+ assert.equal(rows.filter(r=>['ED','REA'].includes(r.application_plan)).length,1);
 });
 test('all twelve Story Builder answers support repeat saves without duplicate rows',async()=>{
  for(let i=1;i<=12;i++)for(const answer of ['First','Second'])await db.query('insert into discovery_answers(user_id,question_id,answer) values($1,$2,$3) on conflict(user_id,question_id) do update set answer=excluded.answer',[owner,'q'+i,answer]);

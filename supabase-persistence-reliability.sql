@@ -88,7 +88,7 @@ alter table public.counselor_messages add column if not exists is_free boolean n
 create unique index if not exists conversation_turn_role_key on public.conversation_messages(user_id,turn_id,role);
 create unique index if not exists counselor_turn_role_key on public.counselor_messages(user_id,turn_id,role);
 
-create or replace function public.set_application_plan(p_college_id uuid,p_plan text)
+create or replace function public.set_application_plan(p_college_id text,p_plan text)
 returns setof public.user_colleges language plpgsql security invoker set search_path=public as $$
 begin
   if auth.uid() is null then raise exception 'Not authenticated'; end if;
@@ -104,8 +104,8 @@ begin
   if not found then raise exception 'Application plan was not updated'; end if;
   return query select * from public.user_colleges where user_id=auth.uid();
 end $$;
-revoke all on function public.set_application_plan(uuid,text) from public,anon;
-grant execute on function public.set_application_plan(uuid,text) to authenticated;
+revoke all on function public.set_application_plan(text,text) from public,anon;
+grant execute on function public.set_application_plan(text,text) to authenticated;
 
 -- Acceptance is atomic and recipient-verified; clients cannot self-grant access.
 alter table public.essay_invitations add column if not exists status text not null default 'pending';

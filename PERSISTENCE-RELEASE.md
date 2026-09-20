@@ -44,3 +44,9 @@ Browser recovery is per browser/user; it is not a server backup and may be unava
 ## Rollback
 
 Keep a database backup and the previous deployment available. If verification fails, stop writes and restore the previous app **together with** a reviewed database rollback/backup restore. Do not casually drop columns/functions or revert to direct writes while new editors remain open. Preserve drafts created since the backup before restoring it. Reviewer permission policy changes must not be undone by reinstating the insecure self-grant policy.
+
+## September 20 live-schema review — release remains blocked
+
+The supplied schema export confirms `user_colleges.college_id` is text, not UUID. The application-plan RPC and its PostgreSQL fixture now use text, including a non-UUID regression case.
+
+The export also reveals legacy reviewer read policies calling `user_has_essay_permission`, an invitation update policy allowing invitees to change invitation rows, and a `counselor_comments.comments_select` policy with `USING (true)` for authenticated users. Other comment INSERT policies check author identity without requiring essay access. Adding new permissive policies does not override those legacy permissions. Inspect effective RLS flags, grants, helper function definitions, constraints, and triggers before finalizing permission repair. Do not apply or deploy this migration yet. No evidence of actual unauthorized access has been obtained.
