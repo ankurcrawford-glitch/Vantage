@@ -156,7 +156,8 @@ export default function CollegesPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     const { error } = await supabase.from('user_colleges').insert({ user_id: user.id, college_id: collegeId });
-    if (!error) setUserColleges((prev) => [...prev, collegeId]);
+    if (error) alert('Could not add this college. Please try again.');
+    else setUserColleges((prev) => [...prev, collegeId]);
   }
 
   async function handleRemoveCollege(collegeId: string) {
@@ -167,49 +168,19 @@ export default function CollegesPage() {
       .delete()
       .eq('user_id', user.id)
       .eq('college_id', collegeId);
-    if (!error) setUserColleges((prev) => prev.filter((id) => id !== collegeId));
+    if (error) alert('Could not remove this college. Please try again.');
+    else setUserColleges((prev) => prev.filter((id) => id !== collegeId));
   }
 
   async function handlePlanChange(collegeId: string, plan: string | null) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // ED and REA are exclusive: committing early to one school clears any
-    // other school's ED/REA (matches the actual rules — one binding ED,
-    // and REA bars other private early apps).
-    // Two exclusive early slots: ED/REA (the November commitment) and
-    // ED2 (the January backup). Kids may legitimately hold one of each.
-    const clearedIds: string[] = [];
-    if (plan === 'ED' || plan === 'REA') {
-      for (const [id, p] of Object.entries(plans)) {
-        if (id !== collegeId && (p === 'ED' || p === 'REA')) clearedIds.push(id);
-      }
-    } else if (plan === 'ED2') {
-      for (const [id, p] of Object.entries(plans)) {
-        if (id !== collegeId && p === 'ED2') clearedIds.push(id);
-      }
-    }
-
-    const { error } = await supabase
-      .from('user_colleges')
-      .update({ application_plan: plan })
-      .eq('user_id', user.id)
-      .eq('college_id', collegeId);
-    if (error) return;
-
-    if (clearedIds.length > 0) {
-      await supabase
-        .from('user_colleges')
-        .update({ application_plan: null })
-        .eq('user_id', user.id)
-        .in('college_id', clearedIds);
-    }
-
-    setPlans((prev) => {
-      const next = { ...prev, [collegeId]: plan };
-      for (const id of clearedIds) next[id] = null;
-      return next;
-    });
+    try {
+      const { data, error } = await supabase.rpc('set_application_plan', { p_college_id: collegeId, p_plan: plan });
+      if (error || !Array.isArray(data)) throw error || new Error('Plan was not acknowledged');
+      setPlans(Object.fromEntries(data.map((row: any) => [row.college_id, row.application_plan])));
+    } catch { alert('Could not save your application plan. Your previous plan is still shown. Retry or reload to verify.'); }
   }
 
   async function handleLogout() {

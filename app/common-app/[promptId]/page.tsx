@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Card from '@/components/Card';
+import { useEssayDraft } from '@/hooks/useEssayDraft';
 import Navigation from '@/components/Navigation';
 import ApplicationsSubNav from '@/components/ApplicationsSubNav';
 
@@ -86,28 +87,20 @@ interface Invitation {
 const COMMON_APP_COLLEGE_ID = 'a0000000-0000-0000-0000-000000000000';
 
 export default function CommonAppEssayPage() {
+  const route = useParams();
+  return <EssayEditor key={String(route.collegeId ?? '') + ':' + String(route.promptId)} />;
+}
+
+function EssayEditor() {
   const params = useParams();
   const router = useRouter();
   const pathname = usePathname();
   const promptId = params.promptId as string;
 
   const [prompt, setPrompt] = useState<any>(null);
-  const [essayId, setEssayId] = useState<string | null>(null);
-  const [versions, setVersions] = useState<EssayVersion[]>([]);
-  const [currentVersion, setCurrentVersion] = useState<EssayVersion | null>(null);
-  const [content, setContent] = useState('');
-  const [wordCount, setWordCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
-  // Autosave — mirror of the per-school editor. See that file for the
-  // full reasoning. Same shape so behavior is identical across both
-  // editing surfaces.
-  const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-  const [lastAutosavedAt, setLastAutosavedAt] = useState<number | null>(null);
   const [tickNow, setTickNow] = useState(Date.now());
-  const lastSavedContentRef = useRef<string>('');
-  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [newComment, setNewComment] = useState({ text: '', type: 'general' });
@@ -134,6 +127,49 @@ export default function CommonAppEssayPage() {
   const [sendingInvitation, setSendingInvitation] = useState(false);
   const [showAllInvitations, setShowAllInvitations] = useState(false);
 
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [draftPromptId, setDraftPromptId] = useState<string | null>(null);
+  const draft = useEssayDraft(draftPromptId, currentUser?.id ?? null, hasSubscription);
+  const { content, essayId, versions, currentVersion, wordCount, status: autosaveStatus, lastSavedAt: lastAutosavedAt } = draft;
+  const saveNewVersion = async () => {
+    if (saving) return;
+    setSaving(true);
+    try { await draft.save(); setSaveSuccessMessage('Saved checkpoint'); }
+    catch { setSaveSuccessMessage(null); }
+    finally { setSaving(false); }
+  };
+  const switchVersion = (version: EssayVersion) => { void draft.restore(version); };
+  const deleteVersion = async (event: React.MouseEvent, version: EssayVersion) => {
+    event.stopPropagation(); if (deletingVersionId) return;
+    setDeletingVersionId(version.id);
+    try { await draft.remove(version); } finally { setDeletingVersionId(null); }
+  };
+  const loadData = async () => {
+    setLoading(true); setLoadError(null);
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!user) { router.push('/login'); return; }
+      setCurrentUser(user);
+      const selected = COMMON_APP_PROMPTS.find(p => p.id === promptId);
+      if (!selected) throw new Error('Prompt not found.');
+      setPrompt(selected);
+      const { data: rows, error: lookupError } = await supabase.from('college_prompts')
+        .select('id, cycle').eq('college_id', COMMON_APP_COLLEGE_ID).eq('sort_order', selected.number);
+      if (lookupError) throw lookupError;
+      if (!rows?.length) throw new Error('This prompt is not ready yet. Your existing work is safe. Please contact support.');
+      const { data: existing, error: essayError } = await supabase.from('essays').select('college_prompt_id')
+        .eq('user_id', user.id).in('college_prompt_id', rows.map(p => p.id));
+      if (essayError) throw essayError;
+      if ((existing?.length ?? 0) > 1) throw new Error('There are multiple drafts attached to this prompt. Contact support to reconcile them; no draft has been replaced.');
+      const currentRows = rows.filter(p => p.cycle === '2026-27');
+      const id = existing?.[0]?.college_prompt_id ?? (currentRows.length === 1 ? currentRows[0].id : rows.length === 1 ? rows[0].id : null);
+      if (!id) throw new Error('This prompt has duplicate records. Contact support before writing.');
+      setDraftPromptId(id); setHasSubscription(true); setIsOwner(true); setHasPermission(true);
+    } catch (err: any) { setLoadError(err?.message || 'Could not load this essay. Retry before editing.'); }
+    finally { setLoading(false); }
+  };
+
   useEffect(() => {
     checkAuth();
     loadData();
@@ -152,58 +188,9 @@ export default function CommonAppEssayPage() {
   }, [essayId, currentUser, isOwner]);
 
   useEffect(() => {
-    setWordCount(countWords(content));
-  }, [content]);
-
-  // Autosave: debounced UPDATE to the current version. Mirror of the
-  // per-school essay editor so behavior is identical across both.
-  useEffect(() => {
-    if (!essayId) return;
-    if (!isOwner) return;
-    if (!currentVersion?.id) return;
-    if (content === lastSavedContentRef.current) return;
-
-    setAutosaveStatus('saving');
-    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
-
-    autosaveTimerRef.current = setTimeout(async () => {
-      try {
-        const snapshot = content;
-        const { error } = await supabase
-          .from('essay_versions')
-          .update({ content: snapshot.trim(), word_count: countWords(snapshot) })
-          .eq('id', currentVersion.id);
-        if (error) throw error;
-        lastSavedContentRef.current = snapshot;
-        setLastAutosavedAt(Date.now());
-        setAutosaveStatus('saved');
-      } catch (err) {
-        console.error('Autosave failed:', err);
-        setAutosaveStatus('error');
-      }
-    }, 1500);
-
-    return () => {
-      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [content, essayId, isOwner, currentVersion?.id]);
-
-  useEffect(() => {
     const id = setInterval(() => setTickNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
-
-  useEffect(() => {
-    const handler = (e: BeforeUnloadEvent) => {
-      if (autosaveStatus === 'saving' || content !== lastSavedContentRef.current) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    };
-    window.addEventListener('beforeunload', handler);
-    return () => window.removeEventListener('beforeunload', handler);
-  }, [autosaveStatus, content]);
 
   // Load guidance history when user is ready
   useEffect(() => {
@@ -212,131 +199,12 @@ export default function CommonAppEssayPage() {
     }
   }, [currentUser, promptId]);
 
-  // Accurate word count function
-  const countWords = (text: string): number => {
-    if (!text || text.trim().length === 0) return 0;
-    const trimmed = text.trim();
-    const words = trimmed.split(/\s+/).filter(word => {
-      const cleaned = word.replace(/[^\w\s-]/g, '');
-      return cleaned.length > 0;
-    });
-    return words.length;
-  };
-
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       router.push('/login');
     } else {
       setCurrentUser(user);
-    }
-  };
-
-  const loadData = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-      setCurrentUser(user);
-
-      // Subscription required for essay writing
-      let subscribed = false;
-      try {
-        const { data: sub } = await supabase
-          .from('user_subscriptions')
-          .select('status')
-          .eq('user_id', user.id)
-          .eq('status', 'active')
-          .maybeSingle();
-        subscribed = !!sub;
-        setHasSubscription(subscribed);
-      } catch {
-        setHasSubscription(false);
-      }
-      // TODO: remove bypass when subscription/payments are live
-      subscribed = true;
-      setHasSubscription(true);
-
-      // Find the prompt (slug like common-app-1)
-      const selectedPrompt = COMMON_APP_PROMPTS.find(p => p.id === promptId);
-      if (selectedPrompt) {
-        setPrompt(selectedPrompt);
-      }
-
-      if (!subscribed) {
-        setLoading(false);
-        return;
-      }
-
-      // college_prompt_id in DB is UUID; get prompt row for Common App by sort_order
-      const promptNum = (selectedPrompt?.number ?? parseInt(promptId.replace('common-app-', ''), 10)) || 1;
-      // limit(1) instead of maybeSingle(): if a prompt ever has duplicate
-      // rows (e.g. two cycles), maybeSingle() errors and we'd silently treat
-      // the prompt as missing.
-      const { data: promptRows } = await supabase
-        .from('college_prompts')
-        .select('id')
-        .eq('college_id', COMMON_APP_COLLEGE_ID)
-        .eq('sort_order', promptNum)
-        .order('id')
-        .limit(1);
-      const collegePromptUuid = promptRows?.[0]?.id ?? null;
-
-      // Check if essay exists (college_prompt_id must be UUID)
-      let essayData: { id: string; user_id: string } | null = null;
-      if (collegePromptUuid) {
-        const res = await supabase
-          .from('essays')
-          .select('id, user_id')
-          .eq('user_id', user.id)
-          .eq('college_prompt_id', collegePromptUuid)
-          .maybeSingle();
-        essayData = res.data;
-      }
-
-      if (essayData) {
-        setEssayId(essayData.id);
-        setIsOwner(essayData.user_id === user.id);
-        setHasPermission(true);
-        loadVersions(essayData.id);
-      } else {
-        // No essay yet – current user can create one
-        setIsOwner(true);
-        setHasPermission(true);
-      }
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setLoading(false);
-      // Always allow editing for logged-in user (fixes disabled editor in production)
-      setIsOwner(true);
-      setHasPermission(true);
-    }
-  };
-
-  const loadVersions = async (essayIdParam: string) => {
-    try {
-      const { data: versionsData } = await supabase
-        .from('essay_versions')
-        .select('*')
-        .eq('essay_id', essayIdParam)
-        .order('version_number', { ascending: false });
-
-      if (versionsData) {
-        setVersions(versionsData);
-        const current = versionsData.find(v => v.is_current) || versionsData[0];
-        if (current) {
-          setCurrentVersion(current);
-          setContent(current.content);
-          lastSavedContentRef.current = current.content;
-          setAutosaveStatus('saved');
-          setLastAutosavedAt(Date.now());
-        }
-      }
-    } catch (error) {
-      console.error('Error loading versions:', error);
     }
   };
 
@@ -587,6 +455,7 @@ export default function CommonAppEssayPage() {
       }
 
       setThinkingPartnerResponse(data.response);
+      if (!data.savedId) alert("This feedback was generated but could not be saved to history. Copy it before leaving this page.");
       setGuidanceMode(data.mode);
       // Refresh history since a new entry was auto-saved
       loadGuidanceHistory();
@@ -648,151 +517,9 @@ export default function CommonAppEssayPage() {
     }
   };
 
-  const saveNewVersion = async () => {
-    if (!content.trim()) {
-      alert('Please write something before saving.');
-      return;
-    }
+  if (loadError) return <div className="p-8" role="alert"><p>{loadError}</p><button onClick={() => void loadData()}>Retry loading</button></div>;
 
-    setSaving(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-
-      let currentEssayId = essayId;
-
-      // Create essay if it doesn't exist
-      if (!currentEssayId) {
-        // college_prompts.id is UUID; look up by college_id + sort_order for Common App.
-        // The 7 Common App rows are seeded server-side (supabase-common-app-prompts.sql).
-        // Students cannot insert into college_prompts (RLS: public read only), so
-        // we no longer try to create the row from the browser - that path failed
-        // silently for prompts 3-7 and produced the "cannot save" bug.
-        const promptNumber = (prompt?.number ?? parseInt(promptId.replace('common-app-', ''), 10)) || 1;
-        const { data: promptRows, error: promptLookupError } = await supabase
-          .from('college_prompts')
-          .select('id')
-          .eq('college_id', COMMON_APP_COLLEGE_ID)
-          .eq('sort_order', promptNumber)
-          .order('id')
-          .limit(1);
-
-        if (promptLookupError) throw promptLookupError;
-        const promptDbId: string | null = promptRows?.[0]?.id ?? null;
-
-        if (!promptDbId) {
-          throw new Error(
-            `Common App prompt ${promptNumber} is not set up yet. Please use the "Need help?" button and we'll fix it right away.`
-          );
-        }
-
-        // Create essay (college_prompt_id must be UUID)
-        const { data: newEssay, error: essayError } = await supabase
-          .from('essays')
-          .insert({
-            user_id: user.id,
-            college_prompt_id: promptDbId,
-          })
-          .select()
-          .single();
-
-        if (essayError) throw essayError;
-        currentEssayId = newEssay.id;
-        setEssayId(currentEssayId);
-        setIsOwner(true);
-        setHasPermission(true);
-      }
-
-      // Get next version number
-      const nextVersion = versions.length > 0 
-        ? Math.max(...versions.map(v => v.version_number)) + 1 
-        : 1;
-
-      // Mark all previous versions as not current
-      if (versions.length > 0) {
-        await supabase
-          .from('essay_versions')
-          .update({ is_current: false })
-          .eq('essay_id', currentEssayId);
-      }
-
-      // Create new version
-      const { data: newVersion, error: versionError } = await supabase
-        .from('essay_versions')
-        .insert({
-          essay_id: currentEssayId,
-          version_number: nextVersion,
-          content: content.trim(),
-          word_count: wordCount,
-          is_current: true,
-        })
-        .select()
-        .single();
-
-      if (versionError) throw versionError;
-
-      // Reload versions
-      if (currentEssayId) await loadVersions(currentEssayId);
-
-      // Manual save also resets the autosave baseline.
-      lastSavedContentRef.current = content.trim();
-      setAutosaveStatus('saved');
-      setLastAutosavedAt(Date.now());
-      setSaveSuccessMessage('Saved');
-      setTimeout(() => setSaveSuccessMessage(null), 2500);
-    } catch (error: any) {
-      console.error('Error saving version:', error);
-      const msg = error?.message || error?.error_description || 'Unknown error';
-      const hint = msg.toLowerCase().includes('policy') || msg.toLowerCase().includes('rls') || msg.toLowerCase().includes('row-level security')
-        ? '\n\nCheck Supabase: Table Editor → essays & essay_versions → enable RLS and add INSERT policy for auth.uid() = user_id.'
-        : '';
-      alert('Error saving essay: ' + msg + hint);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const switchVersion = (version: EssayVersion) => {
-    setCurrentVersion(version);
-    setContent(version.content);
-    lastSavedContentRef.current = version.content;
-    setAutosaveStatus('saved');
-    setLastAutosavedAt(Date.now());
-  };
-
-  const deleteVersion = async (e: React.MouseEvent, version: EssayVersion) => {
-    e.stopPropagation();
-    if (!essayId || !isOwner || deletingVersionId) return;
-    if (!confirm(`Delete Version ${version.version_number}? This cannot be undone.`)) return;
-    setDeletingVersionId(version.id);
-    try {
-      const { error } = await supabase.from('essay_versions').delete().eq('id', version.id);
-      if (error) throw error;
-      const remaining = versions.filter((v) => v.id !== version.id);
-      if (version.is_current && remaining.length > 0) {
-        await supabase.from('essay_versions').update({ is_current: true }).eq('id', remaining[0].id);
-      }
-      await loadVersions(essayId);
-      if (version.is_current && remaining.length > 0) {
-        setCurrentVersion(remaining[0]);
-        setContent(remaining[0].content);
-      } else if (version.is_current && remaining.length === 0) {
-        setCurrentVersion(null);
-        setContent('');
-        setVersions([]);
-      }
-    } catch (err: any) {
-      console.error('Error deleting version:', err);
-      alert('Could not delete version: ' + (err?.message || 'Unknown error'));
-    } finally {
-      setDeletingVersionId(null);
-    }
-  };
-
-  if (loading) {
+  if (loading || draft.loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B1320' }}>
         <div style={{ color: '#C9A977' }}>Loading...</div>
@@ -831,7 +558,7 @@ export default function CommonAppEssayPage() {
     );
   }
 
-  const canEdit = isOwner;
+  const canEdit = isOwner && draft.canEdit;
   const canComment = hasPermission || isOwner;
 
   return (
@@ -888,7 +615,7 @@ export default function CommonAppEssayPage() {
                 <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <h3 className="font-heading text-lg" style={{ color: '#C9A977' }}>Your Essay</h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    {isOwner && essayId && (
+                    {isOwner && (
                       <AutosaveIndicator
                         status={autosaveStatus}
                         lastSavedAt={lastAutosavedAt}
@@ -903,9 +630,13 @@ export default function CommonAppEssayPage() {
                     )}
                   </div>
                 </div>
+                {draft.error && <div role="alert" className="mb-4 text-amber-200"><p>{draft.error}</p>
+                  <button onClick={() => void draft.retry().catch(() => undefined)} className="underline mr-4">Retry save</button>
+                  <button onClick={draft.reload} className="underline">Reload server draft</button>
+                </div>}
                 <textarea
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                  onChange={(e) => { setSaveSuccessMessage(null); draft.edit(e.target.value); }}
                   placeholder="Start writing your essay here..."
                   disabled={!canEdit}
                   style={{

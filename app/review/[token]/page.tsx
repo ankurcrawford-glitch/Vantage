@@ -75,6 +75,9 @@ export default function ReviewEssayPage() {
       }
 
       const inv = payload.invitation;
+      if (inv.invitee_email?.trim().toLowerCase() !== user.email?.trim().toLowerCase()) {
+        throw new Error('Sign in with the email address that received this review invitation.');
+      }
 
       if (inv.status !== 'accepted') {
         // Redirect to accept first
@@ -97,12 +100,14 @@ export default function ReviewEssayPage() {
 
       // Load the current essay version
       if (essay?.id) {
-        const { data: versions } = await supabase
+        const { data: versions, error: versionsError } = await supabase
           .from('essay_versions')
           .select('*')
           .eq('essay_id', essay.id)
           .order('version_number', { ascending: false });
 
+        if (versionsError) throw new Error('Could not load the essay. Refresh to retry.');
+        if (!versions?.length) throw new Error('This essay has no accessible saved draft. Your invitation may have expired or access may have been removed.');
         if (versions && versions.length > 0) {
           const current = versions.find(v => v.is_current) || versions[0];
           setEssayContent(current.content);
@@ -195,7 +200,7 @@ export default function ReviewEssayPage() {
 
     } catch (err) {
       console.error('Error loading review:', err);
-      setError('Something went wrong loading this review.');
+      setError(err instanceof Error ? err.message : 'Something went wrong loading this review.');
     } finally {
       setLoading(false);
     }
@@ -203,12 +208,13 @@ export default function ReviewEssayPage() {
 
   const loadComments = async (versionId: string, essayIdParam: string) => {
     try {
-      const { data: commentsData } = await supabase
+      const { data: commentsData, error: commentsError } = await supabase
         .from('counselor_comments')
         .select('id, counselor_id, comment_text, comment_type, created_at')
         .eq('essay_version_id', versionId)
         .order('created_at', { ascending: false });
 
+      if (commentsError) throw new Error('Comments could not be loaded. Refresh to retry.');
       if (commentsData) {
         // Look up names from permissions and invitations
         const nameMap: Record<string, string> = {};
@@ -250,6 +256,7 @@ export default function ReviewEssayPage() {
       }
     } catch (err) {
       console.error('Error loading comments:', err);
+      setError('Comments could not be loaded. Refresh to retry.');
     }
   };
 

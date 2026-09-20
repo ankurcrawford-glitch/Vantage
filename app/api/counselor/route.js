@@ -90,9 +90,10 @@ export async function GET(req) {
       .from("counselor_messages")
       .select("role, content, created_at")
       .eq("user_id", auth.userId)
-      .order("created_at", { ascending: true })
+      .order("created_at", { ascending: false })
       .limit(500);
     if (error) throw error;
+    if (history) history.reverse();
 
     const monthStart = new Date();
     monthStart.setDate(1);
@@ -102,6 +103,7 @@ export async function GET(req) {
       .select("id", { count: "exact", head: true })
       .eq("user_id", auth.userId)
       .eq("role", "user")
+      .eq("is_free", false)
       .gte("created_at", monthStart.toISOString());
 
     return Response.json({ messages: history || [], used: count || 0, cap: MONTHLY_CAP });
@@ -121,7 +123,8 @@ export async function POST(req) {
 
     const supabase = getAdminClient();
 
-    const { messages } = await req.json();
+    const { messages, requestId } = await req.json();
+    if (typeof requestId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId)) return Response.json({ error: "A valid message identifier is required." }, { status: 400 });
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return Response.json({ error: "Bad request" }, { status: 400 });
@@ -132,9 +135,20 @@ export async function POST(req) {
       return Response.json({ error: "No user message" }, { status: 400 });
     }
 
+    const { data: prior, error: priorError } = await supabase.from("counselor_messages").select("role, content, is_free")
+      .eq("user_id", userId).eq("turn_id", requestId);
+    if (priorError) throw priorError;
+    const previousReply = prior?.find(row => row.role === "assistant");
+    if (previousReply) return Response.json({ reply: previousReply.content, replayed: true, cached: previousReply.is_free === true });
+
     // 1) FAQ layer — free, doesn't count against cap
     const faqReply = faqMatch(lastUserMsg.content);
     if (faqReply) {
+      const { error: faqError } = await supabase.from("counselor_messages").upsert([
+        { user_id: userId, turn_id: requestId, role: "user", content: lastUserMsg.content, is_free: true },
+        { user_id: userId, turn_id: requestId, role: "assistant", content: faqReply, is_free: true },
+      ], { onConflict: "user_id,turn_id,role", ignoreDuplicates: true });
+      if (faqError) throw faqError;
       return Response.json({ reply: faqReply, cached: true });
     }
 
@@ -148,6 +162,7 @@ export async function POST(req) {
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId)
       .eq("role", "user")
+      .eq("is_free", false)
       .gte("created_at", monthStart.toISOString());
 
     if (countErr) throw countErr;
@@ -213,10 +228,11 @@ export async function POST(req) {
       .trim();
 
     // 6) Persist both sides (for cap counting + future thread analysis)
-    await supabase.from("counselor_messages").insert([
-      { user_id: userId, role: "user", content: lastUserMsg.content },
-      { user_id: userId, role: "assistant", content: reply },
-    ]);
+    const { error: persistError } = await supabase.from("counselor_messages").upsert([
+      { user_id: userId, turn_id: requestId, role: "user", content: lastUserMsg.content },
+      { user_id: userId, turn_id: requestId, role: "assistant", content: reply },
+    ], { onConflict: "user_id,turn_id,role", ignoreDuplicates: true });
+    if (persistError) throw persistError;
 
     return Response.json({ reply, used: count + 1, cap: MONTHLY_CAP });
   } catch (err) {

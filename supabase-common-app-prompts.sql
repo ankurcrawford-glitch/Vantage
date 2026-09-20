@@ -35,7 +35,7 @@ where not exists (
 );
 
 -- 3. Verify: expect exactly 7 rows, one per sort_order 1..7.
-select sort_order, count(*) as rows, min(id) as id, min(cycle) as cycle
+select sort_order, count(*) as rows, min(id::text) as id, min(cycle) as cycle
 from public.college_prompts
 where college_id = 'a0000000-0000-0000-0000-000000000000'
 group by sort_order

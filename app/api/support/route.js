@@ -40,17 +40,13 @@ export async function POST(request) {
       return Response.json({ error: "Add an email address so we can get back to you." }, { status: 400 });
     }
 
-    // Persist first (best-effort) so /admin/support never misses one
-    // even if the email hiccups.
-    try {
-      const supabase = getAdminClient();
-      await supabase.from("support_requests").insert({ email, message, page });
-    } catch (e) {
-      console.error("support insert failed:", e);
-    }
+    // A durable inbox receipt is required before acknowledging the request.
+    const supabase = getAdminClient();
+    const { error: storeError } = await supabase.from("support_requests").insert({ email, message, page });
+    if (storeError) throw storeError;
 
     const resend = new Resend(process.env.RESEND_API_KEY || "placeholder");
-    await resend.emails.send({
+    const delivery = await resend.emails.send({
       from: "Vantage Support <noreply@my-vantage.app>",
       to: ADMIN_EMAIL,
       replyTo: email,
@@ -65,6 +61,7 @@ export async function POST(request) {
       </div>`,
     });
 
+    if (delivery.error) console.error("Support notification failed; request is in the inbox:", delivery.error);
     return Response.json({ ok: true });
   } catch (err) {
     console.error("support route error:", err);

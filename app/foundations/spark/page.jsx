@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { useRecoverableText } from "@/hooks/useRecoverableText";
 import FoundationsNav from "@/components/FoundationsNav";
 import { C, display, body } from "@/lib/foundations-theme";
 
@@ -10,7 +11,8 @@ import { C, display, body } from "@/lib/foundations-theme";
 // entry banks raw material that becomes essay gold in senior year.
 
 export default function FoundationsSpark() {
-  const [draft, setDraft] = useState("");
+  const recovery = useRecoverableText("spark");
+  const { text: draft, setText: setDraft } = recovery;
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -57,6 +59,7 @@ export default function FoundationsSpark() {
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
+      recovery.clearRecovery();
       setSaved(true);
       setBankCount((n) => n + 1);
       setArchive((a) => [
@@ -84,6 +87,7 @@ export default function FoundationsSpark() {
       />
 
       <FoundationsNav />
+      {recovery.warning && <p role="status" className="px-8 text-amber-200">{recovery.warning}</p>}
 
       <main
         className="px-6 md:px-12 py-10 max-w-3xl mx-auto"
@@ -122,6 +126,7 @@ export default function FoundationsSpark() {
         {!saved ? (
           <>
             <textarea
+              disabled={saving}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder="Start anywhere. The middle is fine."
@@ -143,11 +148,11 @@ export default function FoundationsSpark() {
             />
             <div className="flex items-center justify-between mb-12">
               <span style={{ fontSize: 11, color: C.inkDim }}>
-                {draft.trim() ? `${draft.trim().split(/\s+/).length} words` : "Just for you — never graded."}
+                {`${draft.length.toLocaleString()} / 8,000 characters`}
               </span>
               <button
                 onClick={save}
-                disabled={!draft.trim() || saving}
+                disabled={!draft.trim() || saving || draft.length > 8000}
                 style={{
                   background: draft.trim() ? C.gold : "transparent",
                   color: draft.trim() ? C.navy : C.inkDim,

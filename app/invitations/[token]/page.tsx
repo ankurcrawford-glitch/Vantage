@@ -125,6 +125,11 @@ export default function AcceptInvitationPage() {
           return;
         }
 
+        if (data.user && !data.session) {
+          setAuthError("Check your email to confirm your account, then sign in here to accept.");
+          setAuthMode("signin");
+          return;
+        }
         if (data.user) {
           setCurrentUser(data.user);
           // Auto-accept after signup
@@ -167,31 +172,8 @@ export default function AcceptInvitationPage() {
 
     setAccepting(true);
     try {
-      // Add permission for this user on the essay
-      const { error: permError } = await supabase
-        .from('essay_permissions')
-        .upsert({
-          essay_id: invitation.essay_id,
-          user_id: user.id,
-          role: invitation.role || 'reviewer',
-          commenter_name: invitation.invitee_name || user.user_metadata?.full_name || invitation.invitee_email || 'Reviewer',
-        }, { onConflict: 'essay_id,user_id' });
-
-      if (permError) {
-        console.error('Permission error:', permError);
-        throw permError;
-      }
-
-      // Update invitation status to accepted
-      const { error: updateError } = await supabase
-        .from('essay_invitations')
-        .update({ status: 'accepted' })
-        .eq('id', invitation.id);
-
-      if (updateError) {
-        console.error('Update error:', updateError);
-        // Non-fatal
-      }
+      const { data: acceptedEssay, error: acceptError } = await supabase.rpc('accept_essay_invitation', { p_token: token });
+      if (acceptError || !acceptedEssay) throw acceptError || new Error('Acceptance was not confirmed.');
 
       // Redirect to the dedicated review page (NOT the student editor)
       router.push(`/review/${token}`);

@@ -134,7 +134,7 @@ export default function CollegeDetailPage() {
       const promptIds = prompts.map((p) => p.id);
       const { data: essays } = await supabase
         .from('essays')
-        .select('college_prompt_id, essay_versions(version_number, word_count, content, is_current)')
+        .select('college_prompt_id, essay_versions(version_number, word_count, content, is_current, is_checkpoint)')
         .eq('user_id', currentUserId)
         .in('college_prompt_id', promptIds);
 
@@ -146,7 +146,7 @@ export default function CollegeDetailPage() {
         const versions = essay.essay_versions ?? [];
         const current = versions.find((v: any) => v.is_current);
         const summary = {
-          versionCount: versions.length,
+          versionCount: versions.filter((v: any) => v.is_checkpoint !== false).length,
           wordCount: current?.word_count ?? 0,
           hasContent: !!(current?.content && current.content.trim().length > 0),
         };
@@ -217,6 +217,7 @@ export default function CollegeDetailPage() {
         return;
       }
       setRoundTableResponse(data.response);
+      if (!data.savedId) alert("This feedback was generated but could not be saved to history. Copy it before leaving this page.");
       loadRoundTableHistory();
     } catch (error: any) {
       console.error('Error loading round table:', error);

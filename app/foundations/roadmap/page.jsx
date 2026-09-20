@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import FoundationsNav from "@/components/FoundationsNav";
 import { C, display, body } from "@/lib/foundations-theme";
@@ -103,6 +103,8 @@ const fmtTestDate = (d) =>
   new Date(d + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 
 export default function FoundationsRoadmap() {
+  const pendingKeys = useRef(new Set());
+  const [saveError, setSaveError] = useState("");
   const [grade, setGrade] = useState(null);
   const [doneKeys, setDoneKeys] = useState(new Set());
   const [openGrade, setOpenGrade] = useState(null);
@@ -142,17 +144,18 @@ export default function FoundationsRoadmap() {
   }, []);
 
   const toggle = async (key) => {
-    const next = new Set(doneKeys);
-    const nowDone = !next.has(key);
-    nowDone ? next.add(key) : next.delete(key);
-    setDoneKeys(next); // optimistic
+    if (pendingKeys.current.has(key)) return;
+    pendingKeys.current.add(key); setSaveError("");
+    const nowDone = !doneKeys.has(key);
     try {
-      await fetch("/api/foundations/roadmap", {
-        method: "POST",
-        headers: await authHeaders(),
-        body: JSON.stringify({ key, done: nowDone }),
+      const res = await fetch("/api/foundations/roadmap", {
+        method: "POST", headers: await authHeaders(), body: JSON.stringify({key, done: nowDone}),
       });
-    } catch { /* optimistic; reload reconciles */ }
+      const result = await res.json();
+      if (!res.ok || !result.ok) throw new Error("Progress was not saved.");
+      setDoneKeys(previous => { const next = new Set(previous); nowDone ? next.add(key) : next.delete(key); return next; });
+    } catch { setSaveError("Couldn't save that change. Your previous progress is unchanged. Try again."); }
+    finally { pendingKeys.current.delete(key); }
   };
 
   const statusOf = (g) =>
@@ -168,6 +171,7 @@ export default function FoundationsRoadmap() {
       <FoundationsNav />
 
       <main style={{ width: "100%", maxWidth: 896, margin: "0 auto", padding: "40px clamp(16px, 4vw, 48px)", boxSizing: "border-box" }}>
+        {saveError && <p role="alert" style={{color: "#F87171"}}>{saveError}</p>}
         {/* ── Header ── */}
         <div className="mb-10">
           <p style={{ color: C.gold, fontSize: 11, letterSpacing: 3 }} className="uppercase mb-2">

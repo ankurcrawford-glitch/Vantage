@@ -359,7 +359,8 @@ function DashboardContent() {
       const { data: promptRows } = await supabase
         .from('college_prompts')
         .select('id, word_limit, college_id')
-        .in('college_id', Array.from(collegeIds));
+        .in('college_id', Array.from(collegeIds))
+        .eq('cycle', '2026-27');
       const prompts = promptRows ?? [];
       setTotalPrompts(prompts.length);
 
@@ -372,7 +373,7 @@ function DashboardContent() {
         const promptIds = prompts.map((p: any) => p.id);
         const { data: essayRows } = await supabase
           .from('essays')
-          .select('college_prompt_id, essay_versions(word_count, content, is_current)')
+          .select('college_prompt_id, essay_versions(word_count, content, is_current, is_checkpoint)')
           .eq('user_id', user.id)
           .in('college_prompt_id', promptIds);
 
@@ -382,7 +383,7 @@ function DashboardContent() {
           const hasContent = !!(current?.content && current.content.trim().length > 0);
           if (!hasContent) continue;
           const wordCount = current.word_count ?? 0;
-          const versionCount = versions.length;
+          const versionCount = versions.filter((v: any) => v.is_checkpoint !== false).length;
           const limit = promptWordLimit.get(essay.college_prompt_id) ?? null;
           const wordTarget = limit ? Math.ceil(limit * 0.8) : null;
           const meetsWords = wordTarget ? wordCount >= wordTarget : wordCount > 0;
@@ -436,8 +437,9 @@ function DashboardContent() {
         .update({ app_status: next })
         .eq('user_id', user.id)
         .eq('college_id', collegeId);
-      if (!error) loadDashboardData(); // timeline, deadlines, counts all refresh
-    } catch { /* chip just doesn't advance */ }
+      if (error) alert('Could not save the status. Please try again.');
+      else loadDashboardData(); // timeline, deadlines, counts all refresh
+    } catch { alert('Could not save the status. Please try again.'); }
   };
 
   const handleLogout = async () => {

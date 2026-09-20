@@ -18,6 +18,7 @@ export default function FoundationsWelcome() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [sendError, setSendError] = useState("");
   const endRef = useRef(null);
 
   useEffect(() => {
@@ -27,6 +28,7 @@ export default function FoundationsWelcome() {
   const send = async () => {
     const q = input.trim();
     if (!q || loading || done) return;
+    setSendError("");
     const next = [...messages, { role: "user", content: q }];
     setMessages(next);
     setInput("");
@@ -50,10 +52,9 @@ export default function FoundationsWelcome() {
       setMessages((m) => [...m, { role: "assistant", content: data.reply }]);
       if (data.done) setDone(true);
     } catch (e) {
-      setMessages((m) => [
-        ...m,
-        { role: "assistant", content: "Hmm, something glitched on my end. Give it another try in a moment." },
-      ]);
+      setMessages(messages);
+      setInput(q);
+      setSendError("Could not save your introduction. Your last answer is restored below; please retry.");
     } finally {
       setLoading(false);
     }
@@ -76,6 +77,7 @@ export default function FoundationsWelcome() {
         <h1 style={{ ...display, fontSize: 28, fontWeight: 500 }}>Let's get to know you</h1>
       </div>
 
+      {sendError && <p role="alert" style={{ color: "#F87171", padding: "16px 32px" }}>{sendError}</p>}
       {/* Messages */}
       <div style={{ flex: 1, overflowY: "auto", padding: "32px clamp(16px, 4vw, 48px)" }}>
         <div style={{ width: "100%", maxWidth: 720, margin: "0 auto", display: "flex", flexDirection: "column", gap: 18 }}>

@@ -100,6 +100,7 @@ export default function ProfileEditor() {
   const [saving, setSaving] = useState(false);
   const [addingAPClass, setAddingAPClass] = useState(false);
   const [addingExtracurricular, setAddingExtracurricular] = useState(false);
+  const [savingExtracurricular, setSavingExtracurricular] = useState(false);
   const [addingAward, setAddingAward] = useState(false);
   const [editingExtracurricular, setEditingExtracurricular] = useState<string | null>(null);
   const [editExtracurricular, setEditExtracurricular] = useState({ activity_name: '', role: '', description: '', start_date: '', end_date: '' });
@@ -143,7 +144,7 @@ export default function ProfileEditor() {
     }
   };
 
-  const loadProfile = async () => {
+  const loadProfile = async (collectionsOnly = false) => {
     let signedIn = false;
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -160,7 +161,7 @@ export default function ProfileEditor() {
         .eq('user_id', user.id)
         .single();
 
-      if (statsData) {
+      if (statsData && !collectionsOnly) {
         setStats({
           gpa_weighted: statsData.gpa_weighted,
           gpa_unweighted: statsData.gpa_unweighted,
@@ -402,8 +403,8 @@ export default function ProfileEditor() {
         return;
       }
 
-      await loadProfile();
-      setNewApClass({ class_name: '', score: '' });
+      await loadProfile(true);
+      setNewApClass(current => JSON.stringify(current) === JSON.stringify(newApClass) ? { class_name: '', score: '' } : current);
       alert('AP class added successfully!');
     } catch (error: any) {
       console.error('Error adding AP class:', error);
@@ -423,7 +424,7 @@ export default function ProfileEditor() {
         alert('Error removing AP class: ' + error.message);
         return;
       }
-      await loadProfile();
+      await loadProfile(true);
       alert('AP class removed successfully!');
     } catch (error: any) {
       console.error('Error removing AP class:', error);
@@ -462,8 +463,8 @@ export default function ProfileEditor() {
         return;
       }
 
-      await loadProfile();
-      setNewExtracurricular({ activity_name: '', role: '', description: '', start_date: '', end_date: '' });
+      await loadProfile(true);
+      setNewExtracurricular(current => JSON.stringify(current) === JSON.stringify(newExtracurricular) ? { activity_name: '', role: '', description: '', start_date: '', end_date: '' } : current);
       alert('Extracurricular added successfully!');
     } catch (error: any) {
       console.error('Error adding extracurricular:', error);
@@ -494,7 +495,7 @@ export default function ProfileEditor() {
     if (error) {
       console.error('Error accepting suggestion:', error);
       alert('Could not add. Refreshing.');
-      await loadProfile();
+      await loadProfile(true);
     }
   };
 
@@ -508,12 +509,12 @@ export default function ProfileEditor() {
       .eq('id', id);
     if (error) {
       console.error('Error skipping suggestion:', error);
-      await loadProfile();
+      await loadProfile(true);
     }
   };
 
   const handleRemoveExtracurricular = async (id: string) => {
-    if (!confirm('Are you sure you want to remove this extracurricular?')) return;
+    if (!confirm('Remove this activity? If linked, it will also be removed from Foundations.')) return;
 
     try {
       const { error } = await supabase.from('user_extracurriculars').delete().eq('id', id);
@@ -522,7 +523,7 @@ export default function ProfileEditor() {
         alert('Error removing extracurricular: ' + error.message);
         return;
       }
-      await loadProfile();
+      await loadProfile(true);
       alert('Extracurricular removed successfully!');
     } catch (error: any) {
       console.error('Error removing extracurricular:', error);
@@ -530,7 +531,9 @@ export default function ProfileEditor() {
     }
   };
 
+
   const handleEditExtracurricular = (ec: Extracurricular) => {
+    if (savingExtracurricular) return;
     setEditingExtracurricular(ec.id);
     setEditExtracurricular({
       activity_name: ec.activity_name,
@@ -542,6 +545,7 @@ export default function ProfileEditor() {
   };
 
   const handleCancelEditExtracurricular = () => {
+    if (savingExtracurricular) return;
     setEditingExtracurricular(null);
     setEditExtracurricular({ activity_name: '', role: '', description: '', start_date: '', end_date: '' });
   };
@@ -552,6 +556,8 @@ export default function ProfileEditor() {
       return;
     }
 
+    if (savingExtracurricular) return;
+    setSavingExtracurricular(true);
     try {
       const { error } = await supabase
         .from('user_extracurriculars')
@@ -562,7 +568,7 @@ export default function ProfileEditor() {
           start_date: editExtracurricular.start_date || null,
           end_date: editExtracurricular.end_date || null,
         })
-        .eq('id', id);
+        .eq('id', id).select('id').single();
 
       if (error) {
         console.error('Error updating extracurricular:', error);
@@ -570,14 +576,14 @@ export default function ProfileEditor() {
         return;
       }
 
-      await loadProfile();
+      await loadProfile(true);
       setEditingExtracurricular(null);
       setEditExtracurricular({ activity_name: '', role: '', description: '', start_date: '', end_date: '' });
       alert('Extracurricular updated successfully!');
     } catch (error: any) {
       console.error('Error updating extracurricular:', error);
       alert('Error updating extracurricular: ' + (error.message || 'Unknown error'));
-    }
+    } finally { setSavingExtracurricular(false); }
   };
 
   const handleAddAward = async () => {
@@ -609,8 +615,8 @@ export default function ProfileEditor() {
         return;
       }
 
-      await loadProfile();
-      setNewAward({ award_name: '', organization: '', year: '' });
+      await loadProfile(true);
+      setNewAward(current => JSON.stringify(current) === JSON.stringify(newAward) ? { award_name: '', organization: '', year: '' } : current);
       alert('Award added successfully!');
     } catch (error: any) {
       console.error('Error adding award:', error);
@@ -630,7 +636,7 @@ export default function ProfileEditor() {
         alert('Error removing award: ' + error.message);
         return;
       }
-      await loadProfile();
+      await loadProfile(true);
       alert('Award removed successfully!');
     } catch (error: any) {
       console.error('Error removing award:', error);
@@ -1473,6 +1479,7 @@ export default function ProfileEditor() {
                             <td style={{ padding: '12px 16px' }}>
                               <input
                                 type="text"
+                                disabled={savingExtracurricular}
                                 value={editExtracurricular.activity_name}
                                 onChange={(e) => setEditExtracurricular({ ...editExtracurricular, activity_name: e.target.value })}
                                 style={{
@@ -1493,6 +1500,7 @@ export default function ProfileEditor() {
                             <td style={{ padding: '12px 16px' }}>
                               <input
                                 type="text"
+                                disabled={savingExtracurricular}
                                 value={editExtracurricular.role}
                                 onChange={(e) => setEditExtracurricular({ ...editExtracurricular, role: e.target.value })}
                                 style={{
@@ -1512,6 +1520,7 @@ export default function ProfileEditor() {
                             </td>
                             <td style={{ padding: '12px 16px' }}>
                               <textarea
+                                disabled={savingExtracurricular}
                                 value={editExtracurricular.description}
                                 onChange={(e) => setEditExtracurricular({ ...editExtracurricular, description: e.target.value })}
                                 style={{
@@ -1532,6 +1541,7 @@ export default function ProfileEditor() {
                               <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
                                 <input
                                   type="month"
+                                  disabled={savingExtracurricular}
                                   value={editExtracurricular.start_date ? editExtracurricular.start_date.slice(0, 7) : ''}
                                   onChange={(e) => setEditExtracurricular({
                                     ...editExtracurricular,
@@ -1555,6 +1565,7 @@ export default function ProfileEditor() {
                                 <span className="font-body" style={{ color: 'rgba(232,221,201,0.45)', fontSize: '12px', alignSelf: 'center' }}>→</span>
                                 <input
                                   type="month"
+                                  disabled={savingExtracurricular}
                                   value={editExtracurricular.end_date ? editExtracurricular.end_date.slice(0, 7) : ''}
                                   onChange={(e) => setEditExtracurricular({
                                     ...editExtracurricular,
