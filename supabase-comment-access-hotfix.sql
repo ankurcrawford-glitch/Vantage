@@ -6,8 +6,7 @@ create or replace function public.comment_access_scope(p_version_id uuid)
 returns text language sql stable security definer set search_path=public as $$
   select case
     when e.user_id=auth.uid() then 'owner'
-    when exists(select 1 from public.essay_permissions ep
-      where ep.essay_id=e.id and ep.user_id=auth.uid()) then 'reviewer'
+    when public.user_has_essay_permission(e.id,auth.uid()) then 'reviewer'
     else null
   end
   from public.essay_versions v join public.essays e on e.id=v.essay_id

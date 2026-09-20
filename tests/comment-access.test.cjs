@@ -15,6 +15,7 @@ before(async()=>{
  create table essays(id uuid primary key,user_id uuid);
  create table essay_versions(id uuid primary key,essay_id uuid references essays);
  create table essay_permissions(essay_id uuid references essays,user_id uuid);
+ create function user_has_essay_permission(p_essay_id uuid,p_user_id uuid) returns boolean language sql stable security definer set search_path=public as $$select exists(select 1 from essay_permissions where essay_id=p_essay_id and user_id=p_user_id)$$;
  create table counselor_comments(id uuid primary key default gen_random_uuid(),essay_version_id uuid references essay_versions,counselor_id uuid,comment_text text);
  grant usage on schema public,auth to authenticated,anon;
  grant all on all tables in schema public to authenticated;

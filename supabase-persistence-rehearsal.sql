@@ -1,3 +1,5 @@
+-- Compatibility rehearsal: executes the migration then rolls ALL changes back.
+-- Run the entire script; no app deployment or backup restore is performed.
 -- Apply to an isolated Supabase test project first; see PERSISTENCE-RELEASE.md.
 -- Additive migration. No essay, draft, comment, or permission records are deleted.
 begin;
@@ -271,4 +273,5 @@ revoke all on function public.sync_application_activity() from public,anon,authe
 drop trigger if exists sync_application_activity on public.user_extracurriculars;
 create trigger sync_application_activity after update or delete on public.user_extracurriculars for each row execute function public.sync_application_activity();
 
-commit;
+rollback;
+select 'PASS: migration rehearsal completed; all changes rolled back' as result;

@@ -10,7 +10,7 @@ select sort_order,cycle,count(*) from public.college_prompts
  where college_id='a0000000-0000-0000-0000-000000000000' group by 1,2 order by 1,2;
 -- Inspect all policies, not just the known legacy policy replaced by the migration.
 select tablename,policyname,cmd,roles,qual,with_check from pg_policies
- where schemaname='public' and tablename in ('essays','essay_versions','essay_permissions','essay_invitations','essay_comments','user_colleges','user_extracurriculars','foundations_activities')
+ where schemaname='public' and tablename in ('essays','essay_versions','essay_permissions','essay_invitations','counselor_comments','user_colleges','user_extracurriculars','foundations_activities')
  order by tablename,policyname;
 select tablename,indexname,indexdef from pg_indexes where schemaname='public'
  and tablename in ('essays','essay_versions','essay_permissions','discovery_answers','user_extracurriculars');

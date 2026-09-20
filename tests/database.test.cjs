@@ -7,7 +7,7 @@ const owner='10000000-0000-4000-8000-000000000001';
 const reviewer='10000000-0000-4000-8000-000000000002';
 const stranger='10000000-0000-4000-8000-000000000003';
 let prompts=Array.from({length:7},(_,i)=>`20000000-0000-4000-8000-${String(i+1).padStart(12,'0')}`);
-const uid=async user=>{await db.exec(`reset role; select set_config('request.jwt.claim.sub','${user}',false); set role authenticated;`)};
+const uid=async user=>{await db.exec(`reset role; select set_config('request.jwt.claim.sub','${user}',false); select set_config('request.jwt.claim.email',(select email from auth.users where id='${user}'),false); set role authenticated;`)};
 const admin=async sql=>{await db.exec('reset role');return db.exec(sql)};
 const save=async(prompt,text,revision,checkpoint=false,id=crypto.randomUUID())=>(await db.query('select save_essay_draft($1,$2,$3,$4,$5) as result',[prompt,text,revision,id,checkpoint])).rows[0].result;
 before(async()=>{
@@ -17,21 +17,10 @@ before(async()=>{
  create schema auth;
  create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz);
  create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
- create table colleges(id uuid primary key,name text);
- create table college_prompts(id uuid primary key default gen_random_uuid(),college_id uuid references colleges,prompt_text text,word_limit integer,year integer,sort_order integer,cycle text,released_at timestamptz);
- create table essays(id uuid primary key default gen_random_uuid(),user_id uuid not null references auth.users,college_prompt_id uuid not null references college_prompts);
- create table essay_versions(id uuid primary key default gen_random_uuid(),essay_id uuid not null references essays on delete cascade,version_number integer not null,content text not null check(content<>'INJECT_FAILURE'),word_count integer,is_current boolean not null,created_at timestamptz default now(),unique(essay_id,version_number));
- create table discovery_answers(id uuid primary key default gen_random_uuid(),user_id uuid,question_id text,answer text);
- create table conversation_messages(id uuid primary key default gen_random_uuid(),user_id uuid,role text,content text,created_at timestamptz default now());
- create table counselor_messages(like conversation_messages including all);
- create table user_colleges(user_id uuid,college_id text,application_plan text,primary key(user_id,college_id));
- create table essay_invitations(id uuid primary key default gen_random_uuid(),essay_id uuid,student_id uuid,invitee_email text,invitee_name text,role text default 'parent',token text unique);
- create table essay_permissions(id uuid primary key default gen_random_uuid(),essay_id uuid,user_id uuid,unique(essay_id,user_id));
- alter table essay_permissions enable row level security;
- create policy essay_permissions_insert on essay_permissions for insert to authenticated with check(user_id=auth.uid());
- create policy own_permission_read on essay_permissions for select to authenticated using(user_id=auth.uid());
- create table foundations_activities(id uuid primary key default gen_random_uuid(),user_id uuid,name text,role text,confirmed boolean default false,depth integer,thread text,trajectory text,hours text,since text,updated_at timestamptz default now());
- create table user_extracurriculars(id uuid primary key default gen_random_uuid(),user_id uuid,source_foundation_id uuid,activity_name text,role text,status text,depth integer,thread text,trajectory text,hours text,since text,description text,start_date date,end_date date);
+ create function auth.jwt() returns jsonb language sql stable as $$select jsonb_build_object('email',current_setting('request.jwt.claim.email',true))$$;
+ `);
+ await db.exec(fs.readFileSync('tests/fixtures/live-schema-2026-09-20.sql','utf8'));
+ await db.exec(`
  grant usage on schema public,auth to authenticated,anon;
  grant select,insert,update,delete on all tables in schema public to authenticated;
  insert into auth.users values('${owner}','student@test.invalid',now()),('${reviewer}','parent@test.invalid',now()),('${stranger}','stranger@test.invalid',now());
@@ -40,7 +29,11 @@ before(async()=>{
  await db.exec(fs.readFileSync('supabase-common-app-prompts.sql','utf8'));
  prompts=(await db.query('select id from college_prompts order by sort_order')).rows.map(r=>r.id);
  assert.equal(prompts.length,7, 'real seed is repeatable and supplies all seven catalog rows');
- await db.exec(fs.readFileSync('supabase-essays-rls.sql','utf8'));
+
+ await db.exec(fs.readFileSync('supabase-comment-access-hotfix.sql','utf8'));
+ await db.exec(fs.readFileSync('supabase-persistence-rehearsal.sql','utf8'));
+ assert.equal((await db.query("select to_regprocedure('save_essay_draft(uuid,text,bigint,uuid,boolean)') as f")).rows[0].f,null,'rehearsal must roll back its functions');
+ assert.equal((await db.query("select count(*)::int n from information_schema.columns where table_name='essays' and column_name='revision'")).rows[0].n,0,'rehearsal must roll back its columns');
  await db.exec(fs.readFileSync('supabase-persistence-reliability.sql','utf8'));
  await uid(owner);
 });
@@ -87,15 +80,16 @@ test('version deletion atomically restores a single current version',async()=>{
  assert.equal((await db.query('select count(*)::int n from essay_versions where essay_id=$1 and is_current',[result.essay_id])).rows[0].n,1);
 });
 test('early plan changes are atomic; nonexistent target cannot clear the old plan',async()=>{
- await db.query('insert into user_colleges values($1,$2,$3),($1,$4,null)',[owner,prompts[0],'ED',prompts[1]]);
- await assert.rejects(db.query('select * from set_application_plan($1,$2)',[prompts[2],'ED']),/not found/);
- assert.equal((await db.query('select application_plan from user_colleges where college_id=$1',[prompts[0]])).rows[0].application_plan,'ED');
- const rows=(await db.query('select * from set_application_plan($1,$2)',[prompts[1],'ED'])).rows;
+ await admin("insert into colleges values('school-1','First'),('school-2','Second'),('stanford','Stanford')");await uid(owner);
+ await db.query('insert into user_colleges(user_id,college_id,application_plan) values($1,$2,$3),($1,$4,null)',[owner,'school-1','ED','school-2']);
+ await assert.rejects(db.query('select * from set_application_plan($1,$2)',['missing-school','ED']),/not found/);
+ assert.equal((await db.query('select application_plan from user_colleges where college_id=$1',['school-1'])).rows[0].application_plan,'ED');
+ const rows=(await db.query('select * from set_application_plan($1,$2)',['school-2','ED'])).rows;
  assert.equal(rows.filter(r=>r.application_plan==='ED').length,1);
 });
 test('application plans accept the live text college IDs, including non-UUID values',async()=>{
  await uid(owner);
- await db.query("insert into user_colleges values($1,'stanford',null)",[owner]);
+ await db.query("insert into user_colleges(user_id,college_id,application_plan) values($1,'stanford',null)",[owner]);
  const rows=(await db.query("select * from set_application_plan('stanford','REA')")).rows;
  assert.equal(rows.find(r=>r.college_id==='stanford').application_plan,'REA');
  assert.equal(rows.filter(r=>['ED','REA'].includes(r.application_plan)).length,1);
@@ -106,9 +100,9 @@ test('all twelve Story Builder answers support repeat saves without duplicate ro
 });
 test('reviewer acceptance: wrong account denied, intended recipient idempotent, RLS read allowed',async()=>{
  await uid(owner);const essay=(await db.query('select id from essays where college_prompt_id=$1',[prompts[0]])).rows[0].id;
- await admin(`insert into essay_invitations(essay_id,student_id,invitee_email,invitee_name,token) values('${essay}','${owner}','Parent@Test.Invalid','Parent','test-token')`);
+ await admin(`insert into essay_invitations(essay_id,student_id,invitee_email,invitee_name,token,role) values('${essay}','${owner}','Parent@Test.Invalid','Parent','test-token','parent')`);
  await uid(stranger);await assert.rejects(db.query("select accept_essay_invitation('test-token')"),/not available/);
- await assert.rejects(db.query('insert into essay_permissions(essay_id,user_id) values($1,$2)',[essay,stranger]),/row-level security/);
+ await assert.rejects(db.query("insert into essay_permissions(essay_id,user_id,role) values($1,$2,'other')",[essay,stranger]),/row-level security/);
  await uid(reviewer);assert.equal((await db.query('select * from essay_versions')).rows.length,0);
  await db.query("select accept_essay_invitation('test-token')");await db.query("select accept_essay_invitation('test-token')");
  assert.ok((await db.query('select * from essay_versions where essay_id=$1',[essay])).rows.length>0);
@@ -117,15 +111,57 @@ test('reviewer acceptance: wrong account denied, intended recipient idempotent, 
 });
 test('legacy self-granted permission alone cannot expose student work',async()=>{
  const essay=(await db.query('select id from essays where college_prompt_id=$1',[prompts[0]])).rows[0].id;
- await admin(`insert into essay_permissions(essay_id,user_id) values('${essay}','${stranger}')`);
+ await admin(`insert into essay_permissions(essay_id,user_id,role) values('${essay}','${stranger}','other')`);
  await uid(stranger);assert.equal((await db.query('select * from essay_versions')).rows.length,0);await uid(owner);
 });
+test('legacy invitation and permission policies cannot rewrite access',async()=>{
+ await uid(reviewer);
+ assert.equal((await db.query("update essay_invitations set invitee_email='stranger@test.invalid' where token='test-token' returning id")).rows.length,0);
+ assert.equal((await db.query("update essay_permissions set role='student' returning id")).rows.length,0);
+ await assert.rejects(db.query("insert into essay_permissions(essay_id,user_id,role) select essay_id,user_id,'other' from essay_permissions limit 1"),/row-level security/);
+ await uid(owner);const inv=(await db.query("select * from essay_invitations where token='test-token'")).rows[0];
+ assert.equal(inv.accepted_by_user_id,reviewer);assert.ok(inv.accepted_at);assert.equal(inv.invitee_email,'Parent@Test.Invalid');
+});
+test('expired or declined invitations deny essays, comments and legacy helper access',async()=>{
+ await uid(owner);const essay=(await db.query('select id from essays where college_prompt_id=$1',[prompts[0]])).rows[0].id;
+ const version=(await db.query('select id from essay_versions where essay_id=$1 and is_current',[essay])).rows[0].id;
+ await db.query("insert into counselor_comments(essay_version_id,counselor_id,comment_text) values($1,$2,'Private comment')",[version,owner]);
+ for(const update of ["expires_at=now()-interval '1 day'","expires_at=now()+interval '1 day',status='declined'"]){
+  await admin("update essay_invitations set "+update+" where token='test-token'");await uid(reviewer);
+  assert.equal((await db.query('select * from essay_versions')).rows.length,0);
+  assert.equal((await db.query('select * from counselor_comments')).rows.length,0);
+  assert.equal((await db.query('select user_has_essay_permission($1,$2) as allowed',[essay,reviewer])).rows[0].allowed,false);
+  await assert.rejects(db.query("select accept_essay_invitation('test-token')"),/not available/);
+ }
+ await admin("update essay_invitations set status='accepted',expires_at=now()+interval '1 day' where token='test-token'");await uid(reviewer);
+ assert.equal((await db.query('select * from counselor_comments')).rows.length,1);
+ await db.query("insert into counselor_comments(essay_version_id,counselor_id,comment_text) values($1,$2,'Reviewer reply')",[version,reviewer]);
+ await uid(stranger);assert.equal((await db.query('select * from counselor_comments')).rows.length,0);
+ await assert.rejects(db.query("insert into counselor_comments(essay_version_id,counselor_id,comment_text) values($1,$2,'Uninvited')",[version,stranger]),/row-level security/);
+ // Standalone containment can be rerun without weakening the later verified helper.
+ await admin(fs.readFileSync('supabase-comment-access-hotfix.sql','utf8'));await uid(stranger);
+ assert.equal((await db.query('select * from counselor_comments')).rows.length,0);
+ await uid(owner);
+});
+test('true current version is preferred over a legacy null current flag',async()=>{
+ await uid(owner);const essay=(await db.query('select id from essays where college_prompt_id=$1',[prompts[6]])).rows[0].id;
+ await admin(`insert into essay_versions(essay_id,version_number,content,is_current) values('${essay}',50,'Legacy null flag',null)`);
+ await uid(owner);const result=await save(prompts[6],'New current',3);
+ assert.equal(result.version.content,'New current');
+ const current=(await db.query('select content from essay_versions where essay_id=$1 and is_current',[essay])).rows;
+ assert.deepEqual(current,[{content:'New current'}]);
+});
 test('activity updates synchronize shared fields in both directions and preserve descriptions',async()=>{
+ await db.exec('reset role');
  const id=(await db.query("insert into foundations_activities(user_id,name,role,confirmed,hours) values($1,'Robotics','Member',true,'2') returning id",[owner])).rows[0].id;
+ await uid(owner);
  await db.query("update user_extracurriculars set description='My application description' where source_foundation_id=$1",[id]);
+ await db.exec('reset role');
  await db.query("update foundations_activities set role='Captain',hours='6' where id=$1",[id]);
  let row=(await db.query('select * from user_extracurriculars where source_foundation_id=$1',[id])).rows[0];assert.equal(row.role,'Captain');assert.equal(row.hours,'6');assert.equal(row.description,'My application description');
+ await uid(owner);
  await db.query("update user_extracurriculars set role='Co-captain' where source_foundation_id=$1",[id]);assert.equal((await db.query('select role from foundations_activities where id=$1',[id])).rows[0].role,'Co-captain');
+ await db.exec('reset role');
  await db.query('delete from foundations_activities where id=$1',[id]);assert.equal((await db.query('select * from user_extracurriculars where source_foundation_id=$1',[id])).rows.length,0);
 });
 test('migration is idempotent',async()=>{await db.exec('reset role');await db.exec(fs.readFileSync('supabase-persistence-reliability.sql','utf8'));});
