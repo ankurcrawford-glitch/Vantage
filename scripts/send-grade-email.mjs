@@ -9,8 +9,10 @@
 //   node scripts/send-grade-email.mjs --template seniors --dry-run   # list recipients, send nothing
 //   node scripts/send-grade-email.mjs --template seniors             # actually send
 //
-// Recipients are chosen by user_stats.class_of (seniors = 2027, juniors = 2028,
-// sophomores = 2029). Students with no class_of are skipped. Addresses in
+// Recipients are chosen by grade: user_stats.class_of (seniors = 2027,
+// juniors = 2028, sophomores = 2029), falling back to the legacy
+// user_stats.grade column for rows that predate class_of. Students with
+// neither are skipped. Addresses in
 // EXCLUDE are always skipped. --to someone@example.com sends ONLY to that
 // address (for a test send to yourself).
 
@@ -25,6 +27,7 @@ const EXCLUDE = new Set([
 const TEMPLATES = {
   seniors: {
     classOf: [2027],
+    grades: [12],
     subject: "Applying ED? Use the Round Table before you submit",
     text: (first) => `Hi ${first},
 
@@ -45,6 +48,7 @@ Vantage`,
   },
   underclassmen: {
     classOf: [2028, 2029],
+    grades: [10, 11],
     subject: "Five honest minutes this month",
     text: (first) => `Hi ${first},
 
@@ -100,9 +104,20 @@ for (let page = 1; ; page++) {
   users.push(...data.users);
   if (data.users.length < 200) break;
 }
-const { data: stats, error: statsErr } = await supabase.from("user_stats").select("user_id, class_of");
+const { data: stats, error: statsErr } = await supabase.from("user_stats").select("user_id, class_of, grade");
 if (statsErr) throw statsErr;
-const classOfById = new Map(stats.map((s) => [s.user_id, s.class_of]));
+const statsById = new Map(stats.map((s) => [s.user_id, s]));
+// Same rule as lib/grade.ts: class_of wins; legacy grade is the fallback.
+const matches = (u) => {
+  const s = statsById.get(u.id);
+  if (!s) return false;
+  if (s.class_of != null) return template.classOf.includes(s.class_of);
+  return template.grades.includes(s.grade);
+};
+const label = (u) => {
+  const s = statsById.get(u.id);
+  return s?.class_of != null ? `class of ${s.class_of}` : `grade ${s?.grade} (legacy)`;
+};
 
 const firstName = (u) => {
   const full = (u.user_metadata?.full_name || "").trim();
@@ -111,14 +126,14 @@ const firstName = (u) => {
 
 let recipients = users
   .filter((u) => u.email && !EXCLUDE.has(u.email.toLowerCase()))
-  .filter((u) => template.classOf.includes(classOfById.get(u.id)))
-  .map((u) => ({ email: u.email, first: firstName(u), classOf: classOfById.get(u.id) }));
+  .filter(matches)
+  .map((u) => ({ email: u.email, first: firstName(u), classOf: label(u) }));
 
 if (onlyTo) recipients = [{ email: onlyTo, first: "there", classOf: "test" }];
 
 console.log(`Template: ${templateName} — "${template.subject}"`);
 console.log(`${recipients.length} recipient(s):`);
-for (const r of recipients) console.log(`  ${r.classOf}  ${r.first.padEnd(12)} ${r.email}`);
+for (const r of recipients) console.log(`  ${String(r.classOf).padEnd(18)} ${r.first.padEnd(12)} ${r.email}`);
 
 if (dryRun) {
   console.log("\nDry run — nothing sent. Re-run without --dry-run to send.");
