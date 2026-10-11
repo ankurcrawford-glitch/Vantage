@@ -234,6 +234,17 @@ export async function POST(request: NextRequest) {
       .eq('id', promptId)
       .single();
 
+    // Word-limit status, stated explicitly so the coach always calls it out.
+    // Students were getting warm revision notes on drafts that were over the
+    // limit, with no mention of it.
+    const limit = currentPrompt?.word_limit ?? null;
+    const overBy = limit && wordCount > limit ? wordCount - limit : 0;
+    const wordLimitLine = limit
+      ? overBy > 0
+        ? `Word Limit: ${limit} words — THIS DRAFT IS OVER THE LIMIT BY ${overBy} WORD${overBy === 1 ? '' : 'S'} (${wordCount}/${limit}). Say so plainly in your first paragraph and point to the specific sentences or details that could go; the essay cannot be submitted at this length.`
+        : `Word Limit: ${limit} words (draft is ${wordCount}/${limit}${wordCount < limit * 0.5 ? ' — well under; there is room to develop' : ''})`
+      : '';
+
     const { data: userStats } = await supabase.from('user_stats').select('*').eq('user_id', userId).single();
     const { data: apClasses } = await supabase.from('user_ap_classes').select('*').eq('user_id', userId);
     const { data: extracurriculars } = await supabase.from('user_extracurriculars').select('*').eq('user_id', userId);
@@ -346,7 +357,7 @@ This is what the student is worried about right now — make it the primary lens
 
 THIS ESSAY'S PROMPT:
 "${currentPrompt?.prompt_text || 'No prompt found'}"
-${currentPrompt?.word_limit ? `Word Limit: ${currentPrompt.word_limit} words` : ''}
+${wordLimitLine}
 ${collegeName ? `For: ${collegeName}` : ''}
 
 STUDENT BACKGROUND:
@@ -373,7 +384,7 @@ Do NOT write the essay or give sample paragraphs.${formatRules}`;
 
 THIS ESSAY'S PROMPT:
 "${currentPrompt?.prompt_text || 'No prompt found'}"
-${currentPrompt?.word_limit ? `Word Limit: ${currentPrompt.word_limit} words` : ''}
+${wordLimitLine}
 ${collegeName ? `For: ${collegeName}` : ''}
 
 STUDENT'S DRAFT (${wordCount} words, version ${currentVersionNumber}):
@@ -404,7 +415,7 @@ Do NOT rewrite their essay.${formatRules}`;
 
 THIS ESSAY'S PROMPT:
 "${currentPrompt?.prompt_text || 'No prompt found'}"
-${currentPrompt?.word_limit ? `Word Limit: ${currentPrompt.word_limit} words` : ''}
+${wordLimitLine}
 ${collegeName ? `For: ${collegeName}` : ''}
 
 STUDENT'S DRAFT (${wordCount} words, version ${currentVersionNumber}):
