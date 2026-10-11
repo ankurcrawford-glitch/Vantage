@@ -33,18 +33,28 @@ const TEMPLATES = {
 
 If you're applying Early Decision, your application goes in around November 1 and the decision is binding. You get one shot at that school. So before you hit submit, use the Round Table in Vantage.
 
-Here's what it does. An admissions committee won't read your Common App essay, your supplements, your activities and your profile as separate pieces. They read all of it together, in a few minutes, and form one impression. The Round Table is that reading, done for you, before it counts. It takes everything you've written for that one school and judges it in that school's terms, because what lands at a place built around intellectual risk is different from what lands at a place built around community.
+WHERE TO FIND IT: click "Round Table" in the top menu of Vantage. It lists each of your schools and shows which ones are ready. Click a school to go straight to its Round Table. (It is also on each school's page under the essay prompts.)
+
+Here's what it does. An admissions committee won't read your Common App essay, your supplements, your activities and your profile as separate pieces. They read all of it together, in a few minutes, and form one impression. The Round Table is that reading, done for you, before it counts. It takes everything you've written for that one school and judges it in that school's terms.
 
 It catches the things you can't see from inside a single essay: two essays telling the same story, a thread you set up in one piece and dropped in the next, a supplement that could have been written by anyone. Then it gives you the committee's honest verdict: what carries the application, what's missing, and the one change to make.
 
-It unlocks once every supplement for that school is near full length (at least 80% of the word limit) and saved. Run it at least a week before the deadline so you have time to act on what it says. Fix what it flags, then run it again. The students it helps are the ones who change something afterward.
+It unlocks once every supplement for that school is near full length (at least 80% of the word limit) and saved. Run it at least a week before the deadline so you have time to act on what it says. Fix what it flags, then run it again.
 
-You'll find it on each school's page in Vantage, under the essay prompts.
-
-https://www.my-vantage.app/colleges
+https://www.my-vantage.app/round-table
 
 My Vantage. Your advantage.
 https://www.my-vantage.app`,
+    html: (first) => `<div style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#1a1a1a;max-width:600px">
+<p>Hi ${first},</p>
+<p>If you're applying Early Decision, your application goes in around November 1 and the decision is binding. You get one shot at that school. So before you hit submit, use the <strong>Round Table</strong> in Vantage.</p>
+<p><strong>Where to find it: click "Round Table" in the top menu of Vantage.</strong> It lists each of your schools and shows which ones are ready. Click a school to go straight to its Round Table. (It is also on each school's page, under the essay prompts.)</p>
+<p>Here's what it does. An admissions committee won't read your Common App essay, your supplements, your activities and your profile as separate pieces. They read all of it together, in a few minutes, and form one impression. The Round Table is that reading, done for you, before it counts. It takes everything you've written for that one school and judges it in that school's terms.</p>
+<p>It catches the things you can't see from inside a single essay: two essays telling the same story, a thread you set up in one piece and dropped in the next, a supplement that could have been written by anyone. Then it gives you the committee's honest verdict: what carries the application, what's missing, and the one change to make.</p>
+<p>It unlocks once every supplement for that school is near full length (at least 80% of the word limit) and saved. Run it at least a week before the deadline so you have time to act on what it says. Fix what it flags, then run it again.</p>
+<p><a href="https://www.my-vantage.app/round-table" style="color:#8a6d3b"><strong>Open the Round Table &rarr;</strong></a></p>
+<p style="margin-top:28px;color:#555"><em>My Vantage. Your advantage.</em><br><a href="https://www.my-vantage.app" style="color:#8a6d3b">my-vantage.app</a></p>
+</div>`,
   },
   underclassmen: {
     classOf: [2028, 2029],
@@ -149,6 +159,7 @@ for (const r of recipients) {
     replyTo: "ankur.crawford@gmail.com",
     subject: template.subject,
     text: template.text(r.first),
+    ...(template.html ? { html: template.html(r.first) } : {}),
   });
   if (error) console.error(`  FAILED ${r.email}: ${error.message || JSON.stringify(error)}`);
   else { sent++; console.log(`  sent -> ${r.email}`); }
