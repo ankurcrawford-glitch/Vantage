@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { draftBackupKey, readDraftBackup, writeDraftBackup, clearDraftBackup, type DraftBackup } from '@/lib/draftBackup';
 import { useParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -193,6 +194,37 @@ export default function CommonAppEssayPage() {
     const id = setInterval(() => setTickNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
+
+
+  // ── Local draft backup (browser-only insurance, see lib/draftBackup.ts) ──
+  const backupKey = currentUser?.id ? draftBackupKey(currentUser.id, promptId) : null;
+  const [pendingRestore, setPendingRestore] = useState<DraftBackup | null>(null);
+
+  // Read any leftover backup once we know who the user is, before the load
+  // flow can touch storage.
+  useEffect(() => {
+    if (!backupKey) return;
+    const b = readDraftBackup(backupKey);
+    if (b && b.content.trim()) setPendingRestore(b);
+  }, [backupKey]);
+
+  // Mirror unsaved text to storage; clear it once the server has the same text.
+  useEffect(() => {
+    if (!backupKey || loading || !isOwner) return;
+    if (content === lastSavedContentRef.current) {
+      clearDraftBackup(backupKey);
+      return;
+    }
+    const id = setTimeout(() => writeDraftBackup(backupKey, content), 400);
+    return () => clearTimeout(id);
+  }, [backupKey, content, loading, isOwner]);
+
+  const restoreOffer =
+    pendingRestore &&
+    pendingRestore.content !== content &&
+    pendingRestore.content !== lastSavedContentRef.current
+      ? pendingRestore
+      : null;
 
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
@@ -903,6 +935,42 @@ export default function CommonAppEssayPage() {
                     )}
                   </div>
                 </div>
+                {restoreOffer && canEdit && (
+                  <div
+                    style={{
+                      marginBottom: '12px',
+                      padding: '12px 14px',
+                      background: 'rgba(201,169,119,0.10)',
+                      border: '1px solid rgba(201,169,119,0.35)',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      alignItems: 'center',
+                      gap: '10px',
+                    }}
+                  >
+                    <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', flex: 1, minWidth: '220px' }}>
+                      We found unsaved writing from {new Date(restoreOffer.at).toLocaleString()} on this device
+                      {' '}({restoreOffer.content.trim().split(/\s+/).length} words). Restoring replaces what is in the editor.
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => { setContent(restoreOffer.content); setPendingRestore(null); }}
+                      className="font-body font-bold text-xs uppercase tracking-wider"
+                      style={{ background: '#C9A977', color: '#0B1320', padding: '8px 14px', border: 'none', cursor: 'pointer' }}
+                    >
+                      Restore
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { if (backupKey) clearDraftBackup(backupKey); setPendingRestore(null); }}
+                      className="font-body text-xs uppercase tracking-wider"
+                      style={{ background: 'transparent', color: 'rgba(232,221,201,0.68)', padding: '8px 10px', border: '1px solid rgba(232,221,201,0.25)', cursor: 'pointer' }}
+                    >
+                      Discard
+                    </button>
+                  </div>
+                )}
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
