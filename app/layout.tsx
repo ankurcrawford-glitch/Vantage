@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Footer from "@/components/Footer";
 import SupportWidget from "@/components/SupportWidget";
+import { Analytics } from "@vercel/analytics/next";
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +30,7 @@ export default function RootLayout({
         <div style={{ flex: 1 }}>{children}</div>
         <Footer />
         <SupportWidget />
+        <Analytics />
       </body>
     </html>
   );
