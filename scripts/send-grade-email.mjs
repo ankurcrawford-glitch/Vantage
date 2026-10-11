@@ -43,8 +43,8 @@ You'll find it on each school's page in Vantage, under the essay prompts.
 
 https://www.my-vantage.app/colleges
 
-Ankur
-Vantage`,
+My Vantage. Your advantage.
+https://www.my-vantage.app`,
   },
   underclassmen: {
     classOf: [2028, 2029],
@@ -62,8 +62,8 @@ That's what Spark is. One reflection a month, banked. Start now and you'll have 
 
 Open your Spark: https://www.my-vantage.app/foundations/spark
 
-Ankur
-Vantage`,
+My Vantage. Your advantage.
+https://www.my-vantage.app`,
   },
 };
 
@@ -144,7 +144,7 @@ const resend = new Resend(resendKey);
 let sent = 0;
 for (const r of recipients) {
   const { error } = await resend.emails.send({
-    from: "Ankur at Vantage <noreply@my-vantage.app>",
+    from: "Vantage <noreply@my-vantage.app>",
     to: r.email,
     replyTo: "ankur.crawford@gmail.com",
     subject: template.subject,
