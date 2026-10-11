@@ -780,7 +780,7 @@ function ReadinessBreakdown({
         <strong style={{ color: '#C9A977' }}>The Round Table opens when every supplemental is refined.</strong>
       </p>
       <p className="font-body text-xs" style={{ color: 'rgba(232,221,201,0.68)', lineHeight: '1.7', margin: 0, marginBottom: '16px' }}>
-        Each essay needs to hit two marks: at least <strong>{Math.round(ROUND_TABLE_WORD_RATIO * 100)}% of its word limit</strong> and at least <strong>{ROUND_TABLE_MIN_VERSIONS} saved versions</strong>. That signals you've moved past first draft, which is when a holistic review is actually useful. You're at <span style={{ fontVariantNumeric: 'tabular-nums', color: '#C9A977' }}>{readyCount} of {readiness.length}</span> for {collegeName}.
+        Each essay needs to hit two marks: at least <strong>{Math.round(ROUND_TABLE_WORD_RATIO * 100)}% of its word limit</strong> and at least <strong>{ROUND_TABLE_MIN_VERSIONS} saved version{ROUND_TABLE_MIN_VERSIONS === 1 ? '' : 's'}</strong>. That signals you've moved past first draft, which is when a holistic review is actually useful. You're at <span style={{ fontVariantNumeric: 'tabular-nums', color: '#C9A977' }}>{readyCount} of {readiness.length}</span> for {collegeName}.
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}>

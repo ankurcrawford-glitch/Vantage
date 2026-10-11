@@ -220,7 +220,7 @@ export async function POST(request: NextRequest) {
           wordRatio: ROUND_TABLE_WORD_RATIO,
           minVersions: ROUND_TABLE_MIN_VERSIONS,
         },
-        message: `The Round Table is your final-stage review — for when an essay is almost ready to submit. Each supplemental needs to hit at least ${Math.round(ROUND_TABLE_WORD_RATIO * 100)}% of its word limit and have at least ${ROUND_TABLE_MIN_VERSIONS} saved versions. You're at ${writtenCollegeEssays} of ${totalCollegePrompts} for this school — ${remaining} still to refine.`
+        message: `The Round Table is your final-stage review — for when an essay is almost ready to submit. Each supplemental needs to hit at least ${Math.round(ROUND_TABLE_WORD_RATIO * 100)}% of its word limit and have at least ${ROUND_TABLE_MIN_VERSIONS} saved version${ROUND_TABLE_MIN_VERSIONS === 1 ? '' : 's'}. You're at ${writtenCollegeEssays} of ${totalCollegePrompts} for this school — ${remaining} still to refine.`
       }, { status: 200 });
     }
 

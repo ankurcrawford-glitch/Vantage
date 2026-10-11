@@ -5,7 +5,7 @@
 // requires every supplemental to look genuinely refined.
 
 export const ROUND_TABLE_WORD_RATIO = 0.8; // essay must be at least this share of its word limit
-export const ROUND_TABLE_MIN_VERSIONS = 2; // and have at least this many saved versions
+export const ROUND_TABLE_MIN_VERSIONS = 1; // saved versions required. Was 2; relaxed to 1 for the 2026-27 seniors (Oct 11, 2026) so one full-length draft unlocks the Round Table
 
 export interface PromptReadiness {
   promptId: string;
