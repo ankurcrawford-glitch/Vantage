@@ -525,9 +525,14 @@ export default function CollegesPage() {
 function planOptionsFor(college: College): string[] {
   const c = college as any;
   const opts: string[] = [];
-  if (c.deadline_ed) opts.push('ED');
-  if (c.deadline_ed2 || (Array.isArray(c.available_rounds) && c.available_rounds.includes('ED2'))) opts.push('ED2');
-  if (c.deadline_ea) opts.push(eaLabel(college.name));
+  // A round counts if the school has a deadline for it OR lists it in
+  // available_rounds. Many rows (e.g. Boston University) carry
+  // available_rounds but no deadline columns, so checking deadlines alone
+  // hid the ED pill for schools that do offer ED.
+  const rounds: string[] = Array.isArray(c.available_rounds) ? c.available_rounds : [];
+  if (c.deadline_ed || rounds.includes('ED')) opts.push('ED');
+  if (c.deadline_ed2 || rounds.includes('ED2')) opts.push('ED2');
+  if (c.deadline_ea || rounds.includes('EA') || rounds.includes('REA')) opts.push(eaLabel(college.name));
   opts.push('RD');
   return opts;
 }

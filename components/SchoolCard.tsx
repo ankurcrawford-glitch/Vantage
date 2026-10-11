@@ -123,7 +123,7 @@ export default function SchoolCard({ classification, onRemove, hasPrompts, planO
               marginTop: '4px',
             }}
           >
-            2025 Prompts Available
+            2026–27 Prompts Available
           </span>
         )}
 
