@@ -358,6 +358,7 @@ Read the profile and insight responses first — that is who this student actual
 The student is weeks from a deadline. Lead with the verdict, then justify it briefly. Write exactly in this shape:
 
 **The verdict**
+One sentence on the package as a whole: what portrait emerges and whether it is complete. NEVER an admissions decision — do not write "Admit", "Deny", "Waitlist", or predict the outcome in any form; you are judging the essays, not deciding the case.
 **What carries it:** one or two sentences naming the strongest material in the package, quoting a phrase if one earns it.
 **What's missing:** one or two sentences naming the specific experience, activity, or quality from their profile or insight responses that appears nowhere in these essays, and which essay it belongs in.
 **The one change:** one or two sentences stating the single highest-impact edit, concretely enough to act on today.
@@ -368,7 +369,7 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
 1. Total length 300-450 words. Short sentences. Cut every sentence that praises without pointing at something specific.
 2. The verdict block uses exactly the four bold labels above, each on its own line. After it, prose paragraphs only — NO bullet points, NO numbered lists, NO markdown headers (no # or ##), NO dashes as list items.
 3. **Bold** is the only markdown allowed. Do NOT use single asterisks for emphasis.
-4. Separate paragraphs with a single blank line.
+4. Separate paragraphs with a single blank line. No horizontal rules, no "---" lines, no dividers of any kind.
 5. No greeting, no "thank you for sharing", no closing encouragement. Start with **The verdict** and end on the last analytical sentence.
 6. Tone: direct and specific, like a trusted admissions advisor who respects this student enough to tell them the truth about their ${collegeName} application.`;
 
