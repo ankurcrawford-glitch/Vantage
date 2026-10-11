@@ -112,6 +112,17 @@ export default function Conversation() {
       if (data.error) throw new Error(data.error);
 
       setMessages((m) => [...m, { role: "assistant", content: data.reply }]);
+      if (data.saved === false) {
+        // The reply arrived but the exchange didn't reach the database.
+        setMessages((m) => [
+          ...m,
+          {
+            role: "assistant",
+            content:
+              "Heads up — that last exchange couldn't be saved to your history, so I won't remember it next time. If it matters, copy it somewhere or send it again in a minute.",
+          },
+        ]);
+      }
       if (typeof data.used === "number") setUsed(data.used);
     } catch (err) {
       setMessages((m) => [

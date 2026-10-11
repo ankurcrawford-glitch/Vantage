@@ -352,11 +352,15 @@ export async function POST(req) {
       MAX_TOKENS
     );
 
-    // Persist both sides (history reload + cap counting)
-    await supabase.from("conversation_messages").insert([
+    // Persist both sides (history reload + cap counting). If this fails the
+    // student still gets the reply they paid for, but the client is told so
+    // it can warn them that this exchange won't be in their history.
+    const { error: persistErr } = await supabase.from("conversation_messages").insert([
       { user_id: userId, role: "user", content: lastUserMsg.content },
       { user_id: userId, role: "assistant", content: reply },
     ]);
+    if (persistErr) console.error("Conversation persist failed:", persistErr);
+    const saved = !persistErr;
 
     const newCount = count + 1;
     const recent = [...history, { role: "assistant", content: reply }];
@@ -387,7 +391,7 @@ export async function POST(req) {
       }
     }
 
-    return Response.json({ reply, used: newCount, cap: DAILY_CAP });
+    return Response.json({ reply, used: newCount, cap: DAILY_CAP, saved });
   } catch (err) {
     console.error("Conversation POST error:", err);
     return Response.json({ error: "Something went wrong" }, { status: 500 });
