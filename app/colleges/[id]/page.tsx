@@ -580,7 +580,7 @@ export default function CollegeDetailPage() {
             Round Table once they have drafts. Hidden for the Common App
             "pseudo-college" since there are no supplementals to review. */}
         {collegeId !== COMMON_APP_COLLEGE_ID && (
-          <div style={{ marginTop: '48px' }}>
+          <div id="round-table" style={{ marginTop: '48px', scrollMarginTop: '96px' }}>
             <Card>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: '280px' }}>

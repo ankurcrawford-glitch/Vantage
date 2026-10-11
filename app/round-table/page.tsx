@@ -1,7 +1,71 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
+import { supabase } from '@/lib/supabase';
+import { ROUND_TABLE_WORD_RATIO, ROUND_TABLE_MIN_VERSIONS } from '@/lib/roundTableGate';
+
+const COMMON_APP_COLLEGE_ID = 'a0000000-0000-0000-0000-000000000000';
+
+interface SchoolRow {
+  id: string;
+  name: string;
+  total: number; // supplemental prompts for this school
+  ready: number; // prompts that meet the Round Table bar
+}
+
+// Per-school readiness for the signed-in student, using the same bar the
+// Round Table itself enforces (lib/roundTableGate). Read-only.
+function useSchoolReadiness(): { rows: SchoolRow[] | null; signedIn: boolean | null } {
+  const [rows, setRows] = useState<SchoolRow[] | null>(null);
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { setSignedIn(false); setRows([]); return; }
+        setSignedIn(true);
+        const { data: uc } = await supabase.from('user_colleges').select('college_id').eq('user_id', user.id);
+        const ids = (uc ?? []).map((r: { college_id: string }) => r.college_id).filter((id) => id !== COMMON_APP_COLLEGE_ID);
+        if (ids.length === 0) { setRows([]); return; }
+        const [{ data: colleges }, { data: prompts }] = await Promise.all([
+          supabase.from('colleges').select('id, name').in('id', ids),
+          supabase.from('college_prompts').select('id, college_id, word_limit').in('college_id', ids),
+        ]);
+        const promptList = prompts ?? [];
+        const promptIds = promptList.map((p: { id: string }) => p.id);
+        const readyPromptIds = new Set<string>();
+        if (promptIds.length > 0) {
+          const { data: essays } = await supabase
+            .from('essays')
+            .select('college_prompt_id, essay_versions(word_count, content, is_current)')
+            .eq('user_id', user.id)
+            .in('college_prompt_id', promptIds);
+          const limitById = new Map<string, number | null>(promptList.map((p: { id: string; word_limit: number | null }) => [p.id, p.word_limit ?? null]));
+          for (const e of (essays ?? []) as { college_prompt_id: string; essay_versions?: { word_count: number | null; content: string | null; is_current: boolean }[] }[]) {
+            const versions = e.essay_versions ?? [];
+            const current = versions.find((v) => v.is_current);
+            if (!current?.content?.trim()) continue;
+            const limit = limitById.get(e.college_prompt_id) ?? null;
+            const target = limit ? Math.ceil(limit * ROUND_TABLE_WORD_RATIO) : null;
+            const meetsWords = target ? (current.word_count ?? 0) >= target : true;
+            if (meetsWords && versions.length >= ROUND_TABLE_MIN_VERSIONS) readyPromptIds.add(e.college_prompt_id);
+          }
+        }
+        const out: SchoolRow[] = (colleges ?? []).map((c: { id: string; name: string }) => {
+          const mine = promptList.filter((p: { college_id: string }) => p.college_id === c.id);
+          return { id: c.id, name: c.name, total: mine.length, ready: mine.filter((p: { id: string }) => readyPromptIds.has(p.id)).length };
+        });
+        out.sort((a, b) => a.name.localeCompare(b.name));
+        setRows(out);
+      } catch {
+        setRows([]); // page still explains the Round Table; the list is a convenience
+      }
+    })();
+  }, []);
+  return { rows, signedIn };
+}
 
 // ─── Vantage — What is the Round Table? ──────────────────────────
 // The definition page the journey strip points to. Explains what the
@@ -44,6 +108,7 @@ function Point({ n, title, children }: { n: string; title: string; children: Rea
 }
 
 export default function RoundTablePage() {
+  const { rows, signedIn } = useSchoolReadiness();
   return (
     <div className="min-h-screen" style={{ background: '#0B1320' }}>
       <Navigation />
@@ -90,11 +155,47 @@ export default function RoundTablePage() {
         }}>
           <p className="font-body text-sm" style={{ color: ink, lineHeight: 1.7, margin: 0 }}>
             <strong style={{ color: gold }}>When it unlocks:</strong> the Round Table convenes
-            once a school&apos;s essays are genuinely drafted — near their word limits, with at
-            least a couple of revisions behind them. That&apos;s deliberate: a committee read of
+            once a school&apos;s essays are genuinely drafted — each one near its word limit and
+            saved. That&apos;s deliberate: a committee read of
             half-finished work would only tell you it&apos;s half-finished.
           </p>
         </div>
+
+        {signedIn && rows && rows.length > 0 && (
+          <div style={{ marginBottom: '40px' }}>
+            <h2 className="font-heading text-2xl mb-3" style={{ color: ink }}>Your schools</h2>
+            <p className="font-body text-sm mb-4" style={{ color: dim, lineHeight: 1.7 }}>
+              Each school convenes its own Round Table. Click a school to go straight to it.
+              The count shows how many of that school&apos;s supplements meet the bar
+              (at least {Math.round(ROUND_TABLE_WORD_RATIO * 100)}% of the word limit, saved).
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {rows.map((r) => {
+                const open = r.total > 0 && r.ready >= r.total;
+                const noSupp = r.total === 0;
+                return (
+                  <Link key={r.id} href={`/colleges/${r.id}#round-table`} style={{ textDecoration: 'none' }}>
+                    <div
+                      style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px',
+                        padding: '12px 16px', borderRadius: '4px',
+                        background: '#101a2b', border: '1px solid rgba(232,221,201,0.12)',
+                      }}
+                    >
+                      <span className="font-body text-sm" style={{ color: ink }}>{r.name}</span>
+                      <span
+                        className="font-body text-xs uppercase tracking-wider"
+                        style={{ color: open ? '#0B1320' : noSupp ? faint : gold, background: open ? gold : 'transparent', padding: '4px 10px', borderRadius: '3px', border: open ? 'none' : '1px solid rgba(201,169,119,0.35)', whiteSpace: 'nowrap' }}
+                      >
+                        {noSupp ? 'No supplements' : open ? 'Ready — convene' : `${r.ready} of ${r.total} essays ready`}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <h2 className="font-heading text-2xl mb-3" style={{ color: ink }}>How to convene one</h2>
         <p className="font-body text-sm mb-8" style={{ color: dim, lineHeight: 1.7 }}>

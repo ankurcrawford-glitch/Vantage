@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
+import { ROUND_TABLE_WORD_RATIO, ROUND_TABLE_MIN_VERSIONS } from '@/lib/roundTableGate';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -384,9 +385,9 @@ function DashboardContent() {
           const wordCount = current.word_count ?? 0;
           const versionCount = versions.length;
           const limit = promptWordLimit.get(essay.college_prompt_id) ?? null;
-          const wordTarget = limit ? Math.ceil(limit * 0.8) : null;
+          const wordTarget = limit ? Math.ceil(limit * ROUND_TABLE_WORD_RATIO) : null;
           const meetsWords = wordTarget ? wordCount >= wordTarget : wordCount > 0;
-          const meetsVersions = versionCount >= 2;
+          const meetsVersions = versionCount >= ROUND_TABLE_MIN_VERSIONS;
           if (meetsWords && meetsVersions) finished += 1;
           else inProgress += 1;
         }
