@@ -22,6 +22,57 @@ const HISTORY_LIMIT = 8;
 // ─── FAQ layer — zero-cost answers ───────────────────────────────
 // Keyword-matched. Personalized questions fall through to Claude.
 const FAQS = [
+  // ── Where-is-it questions: answered instantly, no API call ──
+  {
+    match: ["where is the round table", "where's the round table", "find the round table", "round table access", "how do i get to the round table", "where do i find round table", "access the round table", "how do i use the round table", "open the round table"],
+    reply:
+      "The Round Table lives on each school's page. Two ways in: click Round Table in the top menu — it lists your schools and shows which ones are ready, click a school to jump straight to it. Or go to Strategy, click a school, and scroll to \"The Round Table\" below its essay prompts. It unlocks once every supplement for that school is at least 80% of its word limit and saved; until then it shows which essays still need work.",
+  },
+  {
+    match: ["where is story builder", "where's story builder", "find story builder", "where are the 12 questions", "where are the twelve questions"],
+    reply:
+      "Story Builder is in the top menu on the applications side. Twelve questions; answer them once and every essay review, the Round Table, and I all draw on them.",
+  },
+  {
+    match: ["where are my essays", "where do i write my essay", "where is the common app essay", "where do i write the common app", "where are the supplements", "where are the supplemental"],
+    reply:
+      "Click Essays in the top menu. The dropdown lists All Essays, the Common App essay, and each of your schools. For a specific school's supplements you can also go to Strategy, click the school, and use the Write Essay links under its prompts.",
+  },
+  {
+    match: ["where is strategic intelligence", "how do i get feedback on my essay", "where is get guidance", "essay feedback", "how do i get essay feedback"],
+    reply:
+      "Open any essay and look below the editor for Strategic Intelligence — click Get Guidance. It knows your Story Builder answers, so its notes are about your story, not generic editing. Use it per essay; use the Round Table when a whole school's application is drafted.",
+  },
+  {
+    match: ["where do i pick ed", "how do i choose early decision", "where do i set my early round", "how do i commit to ed", "where do i mark ed", "how do i mark a school submitted", "where do i change application status"],
+    reply:
+      "Go to Strategy (your school list). Each school card has Applying pills — ED, ED2, EA or REA, RD — click one to commit. Once you choose ED, the other schools' early dates drop off your deadline list. To mark a school submitted, click its status chip on the Dashboard timeline.",
+  },
+  {
+    match: ["where is my roadmap", "where is the roadmap", "where is spark", "where is my spark", "where is the compass", "where is foundations"],
+    reply:
+      "Those are on the Foundations side: click Foundations → in the top menu. Compass is the home page there, and Roadmap, Activities, Spark, Story, and Conversation are in its menu. Seniors can come back to the application side with College Prep →.",
+  },
+  {
+    match: ["where do i add a school", "how do i add a college", "add a school to my list", "where is my school list", "where is my college list"],
+    reply:
+      "Click Strategy in the top menu — that's your school list. Add schools there; each one gets a tier (Safety through Hard Reach) based on your profile, and the ED Strategy panel shows where applying early pays most.",
+  },
+  {
+    match: ["where do i enter my gpa", "where do i add activities", "where is my profile", "where do i add my sat", "where do i put my test scores", "where do i add awards"],
+    reply:
+      "Click My Profile in the top menu: GPA, test scores, AP classes, activities, awards, and your high school all live there. Your Strategy tiers recalculate from what you enter.",
+  },
+  {
+    match: ["where do i enter my access code", "where is the access code", "how do i redeem a code", "where do i put the code"],
+    reply:
+      "On the Dashboard, scroll to the Unlock Full Access card — there's a \"Have an access code?\" box under it. Story Builder has the same box.",
+  },
+  {
+    match: ["how do i invite", "where do i invite a commenter", "how do i share my essay", "how do i add a reviewer", "invite my counselor", "invite a teacher"],
+    reply:
+      "Open the essay and use Invite Commenters on the right. They get an email link, can read that essay, and leave comments; you stay the only one who can edit it.",
+  },
   {
     match: ["sat dates", "when is the sat", "sat registration", "register for sat"],
     reply:
@@ -62,6 +113,17 @@ ${studentContext ? `
 WHAT YOU KNOW ABOUT THIS STUDENT'S CURRENT WORK:
 ${studentContext}
 ` : ""}
+HOW VANTAGE IS LAID OUT (use this when the student asks where something is or how to do something in the app; be concrete, name the menu item):
+- Top menu on the applications side: Dashboard, Story Builder, Essays (dropdown: All Essays, Common App, each school), Strategy (the school list), Round Table, My Profile, Counselor, Foundations →.
+- Dashboard: application timeline with a status chip per school (click it to mark a school submitted), upcoming deadlines, the "How Vantage works" strip, and the Unlock Full Access card with the access-code box.
+- Story Builder: 12 questions that feed every essay review and the Round Table.
+- Essays: the Common App essay (7 prompts, pick one) and each school's supplements. Below every editor is Strategic Intelligence (click Get Guidance) for per-essay feedback, and Invite Commenters on the right.
+- Strategy: the school list with tiers (Safety to Hard Reach), the ED Strategy panel, and Applying pills (ED / ED2 / EA or REA / RD) on each card to commit to a round. Click a school to open its page: prompts with Write Essay links, and The Round Table below them.
+- Round Table (top menu): explains it and lists the student's schools with readiness; click a school to jump to its Round Table. It unlocks per school once every supplement is at least 80% of its word limit and saved. It is a final read of the whole package for that school, not line editing.
+- My Profile: GPA, SAT/ACT, AP classes, activities, awards, high school, strategy profile (state, major, hooks).
+- Foundations → (the other side, for grades 9-11 and still open to seniors): Compass (home), Conversation (long-form chat with you), Story, Roadmap, Activities, Spark (one reflection a month), Counselor. College Prep → goes back to the application side.
+- Need help? (bottom-right on every page) emails Vantage support for anything you cannot answer.
+
 RULES:
 - Answer like a seasoned counselor: specific, honest, tight. 2-4 short paragraphs maximum. No bullet lists unless truly necessary.
 - Ground every answer in THIS student's profile, threads, and grade. Generic advice is a failure.
