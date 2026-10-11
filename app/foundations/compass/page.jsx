@@ -24,6 +24,7 @@ export default function FoundationsCompass() {
   const [toReview, setToReview] = useState(0); // unconfirmed activity suggestions
   const [activityCount, setActivityCount] = useState(0);
   const [roadmapDone, setRoadmapDone] = useState(0);
+  const [sparkBanked, setSparkBanked] = useState(false); // this month's Spark already in the vault
 
   useEffect(() => {
     (async () => {
@@ -34,12 +35,16 @@ export default function FoundationsCompass() {
           return;
         }
         // All reads are RLS "select own" — safe from the client.
-        const [stats, convo, acts, prog] = await Promise.all([
+        const now = new Date();
+        const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`; // same shape as the spark API's month_key
+        const [stats, convo, acts, prog, spark] = await Promise.all([
           supabase.from("user_stats").select("grade, class_of").eq("user_id", user.id).maybeSingle(),
           supabase.from("conversation_messages").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("role", "user"),
           supabase.from("foundations_activities").select("confirmed").eq("user_id", user.id),
           supabase.from("roadmap_progress").select("item_key").eq("user_id", user.id),
+          supabase.from("foundations_spark_entries").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("month_key", monthKey),
         ]);
+        setSparkBanked((spark.count ?? 0) > 0);
         const eg = effectiveGrade(stats.data);
         if (typeof eg === "number") setGrade(eg);
         setConvoCount(convo.count ?? 0);
@@ -113,7 +118,9 @@ export default function FoundationsCompass() {
                 ? { href: "/foundations/activities", label: "Add your first activity — hobbies count" }
                 : roadmapDone === 0
                   ? { href: "/foundations/roadmap", label: "Check your roadmap" }
-                  : { href: "/foundations/spark", label: "Write this month's Spark" };
+                  : !sparkBanked
+                    ? { href: "/foundations/spark", label: "Write this month's Spark" }
+                    : { href: "/foundations/conversation", label: "Keep the conversation going" };
           const rows = [
             { href: "/foundations/conversation", label: "You talk", detail: "with a counselor who remembers everything" },
             { href: "/foundations/story", label: "It writes your story", detail: "who you are, kept current as you grow" },
