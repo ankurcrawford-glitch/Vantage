@@ -274,10 +274,7 @@ export default function PrivacyPage() {
 
         <div style={{ marginTop: '48px', padding: '16px', background: 'rgba(201,169,119,0.08)', border: '1px solid rgba(201,169,119,0.3)', borderRadius: '4px' }}>
           <p style={{ color: 'rgba(232,221,201,0.68)', fontSize: '13px', lineHeight: '1.6' }}>
-            <strong style={{ color: '#C9A977' }}>Note:</strong> This document is a
-            starter template, not legal advice. Vantage has had it reviewed by a
-            qualified attorney before publication. If anything here is unclear or
-            inconsistent with our practices, contact us and we will fix it.
+            Questions about this policy, or something here that does not match your experience? Contact us and we will fix it.
           </p>
         </div>
       </article>
