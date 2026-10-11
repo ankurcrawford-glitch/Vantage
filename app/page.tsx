@@ -299,8 +299,8 @@ export default function Home() {
             work stays in your account.
           </p>
           <p className="font-body font-light leading-relaxed mb-10" style={{ color: 'rgba(232,221,201,0.68)' }}>
-            Create an account for free. AI features have monthly usage caps. Obtain a
-            one-time code for access.
+            Create an account for free. AI features have monthly usage caps. Full access is a
+            one-time payment, or use an access code if you have one.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link href="/signup">

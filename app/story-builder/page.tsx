@@ -205,7 +205,7 @@ export default function DiscoveryPage() {
                 opacity: checkoutLoading ? 0.7 : 1,
               }}
             >
-              {checkoutLoading ? 'Redirecting...' : 'Obtain a one-time code for access'}
+              {checkoutLoading ? 'Redirecting...' : 'Unlock full access'}
             </button>
             <p className="font-body text-sm mt-4" style={{ color: 'rgba(232,221,201,0.45)' }}>
               One-time payment. Full access to Story Builder and Strategic Intelligence.
