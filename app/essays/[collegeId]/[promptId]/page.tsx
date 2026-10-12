@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { draftBackupKey, readDraftBackup, writeDraftBackup, clearDraftBackup, type DraftBackup } from '@/lib/draftBackup';
 import { useParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { ROUND_TABLE_WORD_RATIO } from '@/lib/roundTableGate';
 import { supabase } from '@/lib/supabase';
 import Card from '@/components/Card';
 import Navigation from '@/components/Navigation';
@@ -114,6 +115,9 @@ export default function EssayWritingPage() {
 
   const [hasSubscription, setHasSubscription] = useState(false);
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
+  // After a manual save, point the student at the Round Table (or say how
+  // far this essay is from unlocking it). Stays until they leave the page.
+  const [showRoundTableNudge, setShowRoundTableNudge] = useState(false);
   const [deletingVersionId, setDeletingVersionId] = useState<string | null>(null);
 
   // Email invitation states
@@ -787,6 +791,7 @@ export default function EssayWritingPage() {
       setLastAutosavedAt(Date.now());
       setSaveSuccessMessage('Saved');
       setTimeout(() => setSaveSuccessMessage(null), 2500);
+      setShowRoundTableNudge(true);
     } catch (error: any) {
       console.error('Error saving version:', error);
       const msg = error?.message || error?.error_description || 'Unknown error';
@@ -1147,6 +1152,26 @@ export default function EssayWritingPage() {
                     )}
                   </div>
                 )}
+                {canEdit && showRoundTableNudge && college && (() => {
+                  const target = prompt.word_limit ? Math.ceil(prompt.word_limit * ROUND_TABLE_WORD_RATIO) : null;
+                  const ready = target ? wordCount >= target : wordCount > 0;
+                  return (
+                    <div style={{ marginTop: '14px', padding: '12px 14px', background: 'rgba(201,169,119,0.10)', border: '1px solid rgba(201,169,119,0.35)', borderRadius: '4px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
+                      <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', flex: 1, minWidth: '220px' }}>
+                        {ready
+                          ? `This essay meets the Round Table bar. When every ${college.name} supplement does, get the committee's read before you submit.`
+                          : `${(target ?? 0) - wordCount} more words and this essay meets the Round Table bar (${Math.round(ROUND_TABLE_WORD_RATIO * 100)}% of the limit).`}
+                      </span>
+                      <Link
+                        href={`/colleges/${collegeId}#round-table`}
+                        className="font-body font-bold text-xs uppercase tracking-wider"
+                        style={{ background: ready ? '#C9A977' : 'transparent', color: ready ? '#0B1320' : '#C9A977', padding: '8px 14px', border: ready ? 'none' : '1px solid rgba(201,169,119,0.5)', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                      >
+                        Get a Round Table read →
+                      </Link>
+                    </div>
+                  );
+                })()}
               </Card>
             </div>
 
