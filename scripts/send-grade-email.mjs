@@ -14,7 +14,8 @@
 // user_stats.grade column for rows that predate class_of. Students with
 // neither are skipped. Addresses in
 // EXCLUDE are always skipped. --to someone@example.com sends ONLY to that
-// address (for a test send to yourself).
+// address (for a test send to yourself). --also a@x.com,b@y.com adds those
+// accounts to the recipient list regardless of their grade.
 
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
@@ -127,6 +128,7 @@ const flag = (name) => {
 const templateName = flag("--template");
 const dryRun = args.includes("--dry-run");
 const onlyTo = flag("--to");
+const also = (flag("--also") || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
 
 const template = TEMPLATES[templateName];
 if (!template) {
@@ -180,7 +182,7 @@ const firstName = (u) => {
 
 let recipients = users
   .filter((u) => u.email && !EXCLUDE.has(u.email.toLowerCase()))
-  .filter(matches)
+  .filter((u) => matches(u) || also.includes(u.email.toLowerCase()))
   .map((u) => ({ email: u.email, first: firstName(u), classOf: label(u) }));
 
 if (onlyTo) recipients = [{ email: onlyTo, first: "there", classOf: "test" }];
