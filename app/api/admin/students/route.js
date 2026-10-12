@@ -8,7 +8,7 @@
 import { getAuthedUser, getAdminClient } from "@/lib/auth";
 import { effectiveGrade } from "@/lib/grade";
 
-const ADMINS = (process.env.SUPPORT_ADMIN_EMAILS || "ankur.crawford@gmail.com")
+const ADMINS = (process.env.SUPPORT_ADMIN_EMAILS || "ankur.crawford@gmail.com,acrawford@alger.com")
   .split(",")
   .map((e) => e.trim().toLowerCase())
   .filter(Boolean);
