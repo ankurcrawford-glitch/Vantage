@@ -49,6 +49,7 @@ export default function AdminStudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [gradeFilter, setGradeFilter] = useState<string>('all');
   const [sort, setSort] = useState<keyof Student>('last_active');
 
@@ -63,12 +64,12 @@ export default function AdminStudentsPage() {
         });
         if (res.status === 403) { setDenied(true); return; }
         const data = await res.json();
-        if (data.error) throw new Error(data.error);
+        if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
         setSummary(data.summary);
         setStudents(data.students);
       } catch (e) {
         console.error(e);
-        setDenied(true);
+        setLoadError(e instanceof Error ? e.message : 'Unknown error');
       } finally {
         setLoading(false);
       }
@@ -110,7 +111,8 @@ export default function AdminStudentsPage() {
         </p>
 
         {loading && <p className="font-body text-sm" style={{ color: dim }}>Loading…</p>}
-        {denied && <p className="font-body text-sm" style={{ color: '#A35A6A' }}>Admin only.</p>}
+        {denied && <p className="font-body text-sm" style={{ color: '#A35A6A' }}>Admin only — sign in with an address listed in SUPPORT_ADMIN_EMAILS (defaults to the owner&apos;s Gmail).</p>}
+        {loadError && <p className="font-body text-sm" style={{ color: '#A35A6A' }}>Couldn&apos;t load: {loadError}</p>}
 
         {summary && (
           <>

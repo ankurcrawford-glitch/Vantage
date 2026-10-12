@@ -180,6 +180,6 @@ export async function GET(request) {
     return Response.json({ summary, students, generated_at: new Date().toISOString() });
   } catch (err) {
     console.error("admin students error:", err);
-    return Response.json({ error: "Couldn't load students" }, { status: 500 });
+    return Response.json({ error: `Couldn't load students: ${err?.message || err}` }, { status: 500 });
   }
 }
