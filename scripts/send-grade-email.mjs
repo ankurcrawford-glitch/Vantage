@@ -56,6 +56,32 @@ https://www.my-vantage.app`,
 <p style="margin-top:28px;color:#555"><em>My Vantage. Your advantage.</em><br><a href="https://www.my-vantage.app" style="color:#8a6d3b">my-vantage.app</a></p>
 </div>`,
   },
+  nograde: {
+    classOf: [],
+    grades: [],
+    noGrade: true, // students with no class_of and no legacy grade
+    subject: "One quick thing so Vantage fits your year",
+    text: (first) => `Hi ${first},
+
+Vantage works differently depending on where you are in high school: sophomores and juniors get Foundations (your counselor, Spark, your roadmap), and seniors get the application side (essays, strategy, the Round Table). Right now your account doesn't have a grade on it, so you're getting the generic version of everything.
+
+It takes ten seconds to fix. Sign in, and you'll be asked what year you're in. That's it.
+
+Set my grade: https://www.my-vantage.app/gateway
+
+If anything's unclear or you've forgotten your login, reply to this email and I'll sort it out.
+
+My Vantage. Your advantage.
+https://www.my-vantage.app`,
+    html: (first) => `<div style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#1a1a1a;max-width:600px">
+<p>Hi ${first},</p>
+<p>Vantage works differently depending on where you are in high school: sophomores and juniors get Foundations (your counselor, Spark, your roadmap), and seniors get the application side (essays, strategy, the Round Table). Right now your account doesn't have a grade on it, so you're getting the generic version of everything.</p>
+<p>It takes ten seconds to fix. Sign in, and you'll be asked what year you're in. That's it.</p>
+<p><a href="https://www.my-vantage.app/gateway" style="color:#8a6d3b"><strong>Set my grade &rarr;</strong></a></p>
+<p>If anything's unclear or you've forgotten your login, reply to this email and I'll sort it out.</p>
+<p style="margin-top:28px;color:#555"><em>My Vantage. Your advantage.</em><br><a href="https://www.my-vantage.app" style="color:#8a6d3b">my-vantage.app</a></p>
+</div>`,
+  },
   underclassmen: {
     classOf: [2028, 2029],
     grades: [10, 11],
@@ -136,13 +162,15 @@ const statsById = new Map(stats.map((s) => [s.user_id, s]));
 // Same rule as lib/grade.ts: class_of wins; legacy grade is the fallback.
 const matches = (u) => {
   const s = statsById.get(u.id);
+  if (template.noGrade) return !s || (s.class_of == null && s.grade == null);
   if (!s) return false;
   if (s.class_of != null) return template.classOf.includes(s.class_of);
   return template.grades.includes(s.grade);
 };
 const label = (u) => {
   const s = statsById.get(u.id);
-  return s?.class_of != null ? `class of ${s.class_of}` : `grade ${s?.grade} (legacy)`;
+  if (!s || (s.class_of == null && s.grade == null)) return "no grade";
+  return s.class_of != null ? `class of ${s.class_of}` : `grade ${s.grade} (legacy)`;
 };
 
 const firstName = (u) => {
