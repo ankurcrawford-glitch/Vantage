@@ -74,6 +74,15 @@ Open your Spark: https://www.my-vantage.app/foundations/spark
 
 My Vantage. Your advantage.
 https://www.my-vantage.app`,
+    html: (first) => `<div style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#1a1a1a;max-width:600px">
+<p>Hi ${first},</p>
+<p>Quick one. Your October Spark is waiting in Vantage, and this month's question is a good one: <strong>What's the hardest conversation you had recently?</strong></p>
+<p>Nobody grades it. Nobody reads it but you. It doesn't need a point or a lesson. It just needs to be true, and it takes about five minutes.</p>
+<p>Here's why it matters more than it looks: by the time you're a senior, the hardest part of applying isn't writing well, it's remembering what actually happened to you. Students sit down in front of a blank essay box and can't recall a single specific moment from the last three years. The ones who kept a few honest notes along the way have a vault of real material, in their own voice, that no prompt can scare.</p>
+<p>That's what Spark is. One reflection a month, banked. Start now and you'll have 20-plus by the time it counts.</p>
+<p><a href="https://www.my-vantage.app/foundations/spark" style="color:#8a6d3b"><strong>Open your Spark &rarr;</strong></a><br><span style="color:#555;font-size:14px">In Vantage: Foundations &rarr; Spark.</span></p>
+<p style="margin-top:28px;color:#555"><em>My Vantage. Your advantage.</em><br><a href="https://www.my-vantage.app" style="color:#8a6d3b">my-vantage.app</a></p>
+</div>`,
   },
 };
 
