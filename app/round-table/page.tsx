@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import { supabase } from '@/lib/supabase';
 import { ROUND_TABLE_WORD_RATIO, ROUND_TABLE_MIN_VERSIONS } from '@/lib/roundTableGate';
+import { track } from '@vercel/analytics';
 
 const COMMON_APP_COLLEGE_ID = 'a0000000-0000-0000-0000-000000000000';
 
@@ -109,6 +110,7 @@ function Point({ n, title, children }: { n: string; title: string; children: Rea
 
 export default function RoundTablePage() {
   const { rows, signedIn } = useSchoolReadiness();
+  useEffect(() => { track('round_table_page_view'); }, []);
   return (
     <div className="min-h-screen" style={{ background: '#0B1320' }}>
       <Navigation />

@@ -2,6 +2,7 @@
 // edits: tier pill, classification panel, direct nav (no modal).
 
 import { useState, useEffect, useMemo } from 'react';
+import { track } from '@vercel/analytics';
 import { useParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -197,6 +198,7 @@ export default function CollegeDetailPage() {
   const triggerRoundTable = async () => {
     if (!collegeId || collegeId === COMMON_APP_COLLEGE_ID) return;
     setLoadingRoundTable(true);
+    track('round_table_convene', { college: collegeId });
     setRoundTableGateMessage(null);
     try {
       const response = await fetch('/api/round-table', {
@@ -212,11 +214,13 @@ export default function CollegeDetailPage() {
 
       const data = await response.json();
       if (data.gated) {
+        track('round_table_gated', { college: collegeId, ready: data.writtenCount ?? 0, total: data.totalCount ?? 0 });
         setRoundTableGateMessage(data.message);
         setRoundTableResponse(null);
         return;
       }
       setRoundTableResponse(data.response);
+      track('round_table_complete', { college: collegeId });
       loadRoundTableHistory();
     } catch (error: any) {
       console.error('Error loading round table:', error);

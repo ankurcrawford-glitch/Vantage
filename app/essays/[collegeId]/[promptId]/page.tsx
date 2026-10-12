@@ -5,6 +5,7 @@ import { draftBackupKey, readDraftBackup, writeDraftBackup, clearDraftBackup, ty
 import { useParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { ROUND_TABLE_WORD_RATIO } from '@/lib/roundTableGate';
+import { track } from '@vercel/analytics';
 import { supabase } from '@/lib/supabase';
 import Card from '@/components/Card';
 import Navigation from '@/components/Navigation';
@@ -1164,6 +1165,7 @@ export default function EssayWritingPage() {
                       </span>
                       <Link
                         href={`/colleges/${collegeId}#round-table`}
+                        onClick={() => track('round_table_nudge_click', { college: collegeId, ready })}
                         className="font-body font-bold text-xs uppercase tracking-wider"
                         style={{ background: ready ? '#C9A977' : 'transparent', color: ready ? '#0B1320' : '#C9A977', padding: '8px 14px', border: ready ? 'none' : '1px solid rgba(201,169,119,0.5)', textDecoration: 'none', whiteSpace: 'nowrap' }}
                       >
