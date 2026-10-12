@@ -62,13 +62,13 @@ https://www.my-vantage.app`,
     subject: "Five honest minutes this month",
     text: (first) => `Hi ${first},
 
-Most of what will make your college application good hasn't happened yet. It's happening now, in ordinary weeks like this one: the conversation you didn't want to have, the thing you figured out the hard way. Nobody's keeping track of those moments for you. Spark is where you do it yourself, five minutes a month.
+A lot happens in a month that nobody writes down. The conversation you didn't want to have. The thing you figured out the hard way. The small win nobody else noticed. Those moments are the real record of who you're becoming, and they fade fast unless you catch them. Spark is where you catch them: one question a month, five minutes, in your own words.
 
 Your October Spark is waiting, and this month's question is a good one: What's the hardest conversation you had recently?
 
 Nobody grades it. Nobody reads it but you. It doesn't need a point or a lesson. It just needs to be true.
 
-Here's why it matters more than it looks: by the time you're a senior, the hardest part of applying isn't writing well, it's remembering what actually happened to you. Students sit down in front of a blank essay box and can't recall a single specific moment from the last three years. The ones who kept a few honest notes along the way have a vault of real material, in their own voice, that no prompt can scare.
+And here's the quiet payoff down the road: when you're a senior and someone asks you to write about yourself, you won't be staring at a blank box trying to remember your own life. You'll have a vault of real moments, in your own voice, that no prompt can scare.
 
 Start now and you'll have 20-plus by the time it counts.
 
@@ -81,10 +81,10 @@ My Vantage. Your advantage.
 https://www.my-vantage.app`,
     html: (first) => `<div style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#1a1a1a;max-width:600px">
 <p>Hi ${first},</p>
-<p>Most of what will make your college application good hasn't happened yet. It's happening now, in ordinary weeks like this one: the conversation you didn't want to have, the thing you figured out the hard way. Nobody's keeping track of those moments for you. Spark is where you do it yourself, five minutes a month.</p>
+<p>A lot happens in a month that nobody writes down. The conversation you didn't want to have. The thing you figured out the hard way. The small win nobody else noticed. Those moments are the real record of who you're becoming, and they fade fast unless you catch them. Spark is where you catch them: one question a month, five minutes, in your own words.</p>
 <p>Your October Spark is waiting, and this month's question is a good one: <strong>What's the hardest conversation you had recently?</strong></p>
 <p>Nobody grades it. Nobody reads it but you. It doesn't need a point or a lesson. It just needs to be true.</p>
-<p>Here's why it matters more than it looks: by the time you're a senior, the hardest part of applying isn't writing well, it's remembering what actually happened to you. Students sit down in front of a blank essay box and can't recall a single specific moment from the last three years. The ones who kept a few honest notes along the way have a vault of real material, in their own voice, that no prompt can scare.</p>
+<p>And here's the quiet payoff down the road: when you're a senior and someone asks you to write about yourself, you won't be staring at a blank box trying to remember your own life. You'll have a vault of real moments, in your own voice, that no prompt can scare.</p>
 <p>Start now and you'll have 20-plus by the time it counts.</p>
 <p><a href="https://www.my-vantage.app/foundations/spark" style="color:#8a6d3b"><strong>Open your Spark &rarr;</strong></a><br><span style="color:#555;font-size:14px">In Vantage: Foundations &rarr; Spark.</span></p>
 <p>And while you're there: <strong>check in with your counselor</strong> and tell it how things are going, and <strong>log your activities</strong> as they happen. Everything you put in now is what your story is built from later.</p>
