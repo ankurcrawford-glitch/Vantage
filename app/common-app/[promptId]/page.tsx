@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+const MAX_ESSAY_CHARS = 100_000; // ~15,000 words; a sanity cap, not a word limit
 import { draftBackupKey, readDraftBackup, writeDraftBackup, clearDraftBackup, type DraftBackup } from '@/lib/draftBackup';
 import { useParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -163,6 +164,7 @@ export default function CommonAppEssayPage() {
     if (!isOwner) return;
     if (!currentVersion?.id) return;
     if (content === lastSavedContentRef.current) return;
+    if (content.length > MAX_ESSAY_CHARS) return; // manual save will explain
 
     setAutosaveStatus('saving');
     if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
@@ -683,6 +685,10 @@ export default function CommonAppEssayPage() {
   const saveNewVersion = async () => {
     if (!content.trim()) {
       alert('Please write something before saving.');
+      return;
+    }
+    if (content.length > MAX_ESSAY_CHARS) {
+      alert(`This draft is over ${MAX_ESSAY_CHARS.toLocaleString()} characters — far past any college's limit. Trim it before saving.`);
       return;
     }
 

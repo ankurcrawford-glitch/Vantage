@@ -25,7 +25,7 @@ import { NextResponse } from 'next/server';
  *   // ...proceed with the expensive call
  */
 
-type RouteKey = 'thinking-partner' | 'round-table' | 'extract-activities' | 'school-lookup';
+type RouteKey = 'thinking-partner' | 'round-table' | 'extract-activities' | 'school-lookup' | 'redeem-code' | 'support';
 
 interface RouteLimits {
   perMinute: number;
@@ -42,6 +42,11 @@ const LIMITS: Record<RouteKey, RouteLimits> = {
   'extract-activities': { perMinute: 6, perHour: 30, perDay: 100 },
   // Cheap Haiku call, and a student only changes schools ~once. Tight.
   'school-lookup':      { perMinute: 3, perHour: 10, perDay: 20 },
+  // Access codes are shared secrets; stop anyone guessing them.
+  'redeem-code':        { perMinute: 5, perHour: 15, perDay: 30 },
+  // Support form is unauthenticated (keyed by IP); honeypot catches bots,
+  // this catches a human with a script.
+  'support':            { perMinute: 3, perHour: 10, perDay: 30 },
 };
 
 // Lazy-initialize the Upstash client so local dev without env vars still works.

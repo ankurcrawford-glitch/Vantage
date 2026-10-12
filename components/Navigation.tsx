@@ -90,6 +90,8 @@ export default function Navigation() {
   };
 
   const handleLogout = async () => {
+    // Shared/school computers: don't leave unsaved essay text behind.
+    try { Object.keys(localStorage).filter((k) => k.startsWith('vantage:draft:')).forEach((k) => localStorage.removeItem(k)); } catch { /* ignore */ }
     await supabase.auth.signOut();
     setUser(null);
     router.push('/');

@@ -8,6 +8,7 @@
 
 import { Resend } from "resend";
 import { getAdminClient } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const ADMIN_EMAIL = process.env.SUPPORT_EMAIL || process.env.DIGEST_ADMIN_EMAIL || "ankur.crawford@gmail.com";
 
@@ -22,6 +23,11 @@ export async function POST(request) {
     } catch {
       return Response.json({ error: "Bad request" }, { status: 400 });
     }
+
+    // Unauthenticated endpoint: limit by IP so a script can't flood the inbox.
+    const ip = (request.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "unknown";
+    const limit = await checkRateLimit(`ip:${ip}`, "support");
+    if (!limit.ok) return limit.response;
 
     // Honeypot: real users never fill this hidden field.
     if (String(body?.website ?? "").trim() !== "") {

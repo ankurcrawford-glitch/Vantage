@@ -57,6 +57,7 @@ export default function FoundationsNav() {
 
   const logout = async () => {
     try {
+      try { Object.keys(localStorage).filter((k) => k.startsWith('vantage:draft:')).forEach((k) => localStorage.removeItem(k)); } catch { /* ignore */ }
       await supabase.auth.signOut();
     } catch { /* sign out anyway */ }
     router.push("/");
