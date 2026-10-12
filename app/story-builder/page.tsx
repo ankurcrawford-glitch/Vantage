@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import Card from '@/components/Card';
 import Navigation from '@/components/Navigation';
 import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
+import { draftBackupKey, readDraftBackup, writeDraftBackup, clearDraftBackup, type DraftBackup } from '@/lib/draftBackup';
 
 export default function DiscoveryPage() {
   const router = useRouter();
@@ -19,6 +20,10 @@ export default function DiscoveryPage() {
   const [saving, setSaving] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  // Local backups of answers that were being typed but never saved
+  // (tab closed, crash, failed save). See lib/draftBackup.ts.
+  const [draftBackups, setDraftBackups] = useState<Record<string, DraftBackup>>({});
+  const backupKeyFor = (questionId: string) => (userId ? draftBackupKey(userId, `story-builder:${questionId}`) : null);
   const [accessCode, setAccessCode] = useState('');
   const [codeLoading, setCodeLoading] = useState(false);
   const [codeError, setCodeError] = useState('');
@@ -63,6 +68,13 @@ export default function DiscoveryPage() {
             answersMap[item.question_id] = item.answer;
           });
           setDiscoveryAnswers(answersMap);
+          // Any answer typed but not saved last time? Offer it back.
+          const found: Record<string, DraftBackup> = {};
+          for (const q of DISCOVERY_QUESTIONS) {
+            const b = readDraftBackup(draftBackupKey(user.id, `story-builder:${q.id}`));
+            if (b && b.content.trim() && b.content.trim() !== (answersMap[q.id] || '').trim()) found[q.id] = b;
+          }
+          setDraftBackups(found);
         }
       }
     } catch (e) {
@@ -73,12 +85,28 @@ export default function DiscoveryPage() {
     }
   };
 
+  useEffect(() => {
+    if (!editingAnswer) return;
+    const key = backupKeyFor(editingAnswer);
+    if (!key) return;
+    const saved = (discoveryAnswers[editingAnswer] || '').trim();
+    if (editAnswerText.trim() === saved || !editAnswerText.trim()) {
+      clearDraftBackup(key);
+      return;
+    }
+    const id = setTimeout(() => writeDraftBackup(key, editAnswerText), 400);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingAnswer, editAnswerText]);
+
   const handleEditAnswer = (questionId: string) => {
     setEditingAnswer(questionId);
     setEditAnswerText(discoveryAnswers[questionId] || '');
   };
 
   const handleCancelEditAnswer = () => {
+    const k = editingAnswer ? backupKeyFor(editingAnswer) : null;
+    if (k) clearDraftBackup(k);
     setEditingAnswer(null);
     setEditAnswerText('');
   };
@@ -150,6 +178,9 @@ export default function DiscoveryPage() {
       if (error) throw error;
 
       setDiscoveryAnswers((prev) => ({ ...prev, [questionId]: editAnswerText.trim() }));
+      const k = backupKeyFor(questionId);
+      if (k) clearDraftBackup(k);
+      setDraftBackups((prev) => { const n = { ...prev }; delete n[questionId]; return n; });
       setEditingAnswer(null);
       setEditAnswerText('');
       alert('Answer saved.');
@@ -297,6 +328,29 @@ export default function DiscoveryPage() {
                         <h3 className="font-heading text-lg" style={{ color: '#E8DDC9', flex: 1 }}>{question.question}</h3>
                       </div>
                       <div style={{ marginLeft: '44px' }}>
+                        {draftBackups[question.id] && !isEditing && (
+                          <div style={{ marginBottom: '12px', padding: '10px 14px', background: 'rgba(201,169,119,0.10)', border: '1px solid rgba(201,169,119,0.35)', borderRadius: '4px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
+                            <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', flex: 1, minWidth: '200px' }}>
+                              Unsaved answer from {new Date(draftBackups[question.id].at).toLocaleString()} on this device.
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => { setEditingAnswer(question.id); setEditAnswerText(draftBackups[question.id].content); }}
+                              className="font-body font-bold text-xs uppercase tracking-wider"
+                              style={{ background: '#C9A977', color: '#0B1320', padding: '6px 12px', border: 'none', cursor: 'pointer' }}
+                            >
+                              Restore
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { const k = backupKeyFor(question.id); if (k) clearDraftBackup(k); setDraftBackups((prev) => { const n = { ...prev }; delete n[question.id]; return n; }); }}
+                              className="font-body text-xs uppercase tracking-wider"
+                              style={{ background: 'transparent', color: 'rgba(232,221,201,0.68)', padding: '6px 10px', border: '1px solid rgba(232,221,201,0.25)', cursor: 'pointer' }}
+                            >
+                              Discard
+                            </button>
+                          </div>
+                        )}
                         {isEditing ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             <textarea
