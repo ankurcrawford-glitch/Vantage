@@ -63,6 +63,8 @@ function DashboardContent() {
   const [discoveryCount, setDiscoveryCount] = useState(0);
   // Per-school rows for the timeline (gantt) — name, operative deadline,
   // status, and how many of its essays have been started.
+  // College ids with at least one completed Round Table (for the countdown card).
+  const [roundTabled, setRoundTabled] = useState<Set<string>>(new Set());
   const [schools, setSchools] = useState<{
     id: string; name: string; kind: string; deadline: string | null;
     status: string | null; essaysStarted: number; essaysTotal: number;
@@ -338,6 +340,14 @@ function DashboardContent() {
           return (a2.deadline || '9999').localeCompare(b2.deadline || '9999');
         });
         setSchools(rows);
+        try {
+          const { data: rt } = await supabase
+            .from('strategic_guidance_history')
+            .select('college_id')
+            .eq('user_id', user.id)
+            .eq('mode', 'round_table');
+          setRoundTabled(new Set(((rt ?? []) as { college_id: string | null }[]).map((r) => r.college_id).filter((x): x is string => !!x)));
+        } catch { /* countdown card just omits the Round Table count */ }
         // Every upcoming deadline, no cap — students plan off this list.
         const groups = [...byDate.entries()]
           .sort((a, b) => a[0].localeCompare(b[0]))
@@ -530,8 +540,39 @@ function DashboardContent() {
             decision: { label: '✓ Decision', color: '#8FB89A' },
             in_progress: { label: 'In progress', color: '#C9A977' },
           };
+          // Countdown to the next deadline, with the schools due inside 30
+          // days that haven't had a Round Table yet. Only shown while
+          // something is actually due soon.
+          const todayIso = now.toISOString().slice(0, 10);
+          const soonLimit = new Date(now.getTime() + 30 * 86400000).toISOString().slice(0, 10);
+          const open = schools.filter((r) => r.status !== 'submitted' && r.status !== 'decision' && r.deadline && r.deadline >= todayIso);
+          const next = open.length ? open.reduce((a, b) => (a.deadline! <= b.deadline! ? a : b)) : null;
+          const daysToNext = next ? Math.max(0, Math.round((new Date(next.deadline + 'T00:00:00').getTime() - new Date(todayIso + 'T00:00:00').getTime()) / 86400000)) : null;
+          const dueSoon = open.filter((r) => r.deadline! <= soonLimit);
+          const unreviewed = dueSoon.filter((r) => !roundTabled.has(r.id));
+          const countdown = next && daysToNext !== null ? (
+            <div style={{ marginBottom: '20px', padding: '14px 18px', background: 'rgba(201,169,119,0.10)', border: '1px solid rgba(201,169,119,0.35)', borderRadius: '4px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px 20px' }}>
+              <span className="font-heading text-2xl" style={{ color: '#C9A977', whiteSpace: 'nowrap' }}>
+                {daysToNext === 0 ? 'Due today' : `${daysToNext} day${daysToNext === 1 ? '' : 's'}`}
+              </span>
+              <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.85)', flex: 1, minWidth: '220px' }}>
+                until {next.name} ({next.kind}, {new Date(next.deadline + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}).
+                {dueSoon.length > 0 && (
+                  unreviewed.length === 0
+                    ? ` Every school due in the next 30 days has had a Round Table read.`
+                    : ` ${unreviewed.length} of ${dueSoon.length} school${dueSoon.length === 1 ? '' : 's'} due in the next 30 days ${unreviewed.length === 1 ? 'hasn\'t' : 'haven\'t'} had a Round Table read: ${unreviewed.map((r) => r.name).join(', ')}.`
+                )}
+              </span>
+              {unreviewed.length > 0 && (
+                <Link href="/round-table" className="font-body font-bold text-xs uppercase tracking-wider" style={{ background: '#C9A977', color: '#0B1320', padding: '8px 14px', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                  Round Table →
+                </Link>
+              )}
+            </div>
+          ) : null;
           return (
             <div className="mb-12">
+              {countdown}
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
                 <h2 className="font-heading text-3xl text-cream" style={{ margin: 0 }}>Your Applications</h2>
                 <span className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.45)' }}>
