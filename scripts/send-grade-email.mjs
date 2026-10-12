@@ -63,9 +63,9 @@ https://www.my-vantage.app`,
     subject: "One quick thing so Vantage fits your year",
     text: (first) => `Hi ${first},
 
-Vantage works differently depending on where you are in high school: sophomores and juniors get Foundations (your counselor, Spark, your roadmap), and seniors get the application side (essays, strategy, the Round Table). Right now your account doesn't have a grade on it, so you're getting the generic version of everything.
+Vantage works differently depending on where you are in high school: sophomores and juniors get Foundations (your counselor, Spark, your roadmap), and seniors get the application side (essays, strategy, the Round Table). Right now your account doesn't have a grade on it, so you'll get a generic version of everything.
 
-It takes ten seconds to fix. Sign in, and you'll be asked what year you're in. That's it.
+It takes ten seconds to fix. Log in and set your grade, and we can really make Vantage your advantage.
 
 Set my grade: https://www.my-vantage.app/gateway
 
@@ -75,8 +75,8 @@ My Vantage. Your advantage.
 https://www.my-vantage.app`,
     html: (first) => `<div style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#1a1a1a;max-width:600px">
 <p>Hi ${first},</p>
-<p>Vantage works differently depending on where you are in high school: sophomores and juniors get Foundations (your counselor, Spark, your roadmap), and seniors get the application side (essays, strategy, the Round Table). Right now your account doesn't have a grade on it, so you're getting the generic version of everything.</p>
-<p>It takes ten seconds to fix. Sign in, and you'll be asked what year you're in. That's it.</p>
+<p>Vantage works differently depending on where you are in high school: sophomores and juniors get Foundations (your counselor, Spark, your roadmap), and seniors get the application side (essays, strategy, the Round Table). Right now your account doesn't have a grade on it, so you'll get a generic version of everything.</p>
+<p>It takes ten seconds to fix. <strong>Log in and set your grade</strong>, and we can really make Vantage your advantage.</p>
 <p><a href="https://www.my-vantage.app/gateway" style="color:#8a6d3b"><strong>Set my grade &rarr;</strong></a></p>
 <p>If anything's unclear or you've forgotten your login, reply to this email and I'll sort it out.</p>
 <p style="margin-top:28px;color:#555"><em>My Vantage. Your advantage.</em><br><a href="https://www.my-vantage.app" style="color:#8a6d3b">my-vantage.app</a></p>
