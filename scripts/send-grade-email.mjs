@@ -65,12 +65,23 @@ https://www.my-vantage.app`,
 
 Two weeks to November 1. A check-in for everyone applying early.
 
-One ask: log in to Vantage this weekend and paste in whatever you have for your Common App essay, even if it's rough. Once it's there, the Round Table will read it together with your supplements and tell you what's working and what's missing - the same read an admissions committee does, before it counts.
+One ask: log in to Vantage this weekend and paste in whatever you have for your Common App essay, even if it's rough.
+
+Then run the ROUND TABLE. Here's what it is: a simulated admissions committee that reads your whole application for one school at once - your Common App essay, every supplement, your activities - the way the real committee will. It tells you what's carrying the application, what's missing, and the one change to make. It's in the top menu of Vantage, and it unlocks for a school once that school's essays are near full length.
 
 If you're not applying early, or you've already submitted, just reply and say so. And if you're stuck on anything - a prompt, a school choice, the essay itself - reply to this email and a real person will help.
 
 My Vantage. Your advantage.
 https://www.my-vantage.app`,
+    html: (first) => `<div style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#1a1a1a;max-width:600px">
+<p>Hi ${first},</p>
+<p>Two weeks to November 1. A check-in for everyone applying early.</p>
+<p>One ask: log in to Vantage this weekend and paste in whatever you have for your Common App essay, even if it's rough.</p>
+<p>Then run the <strong>Round Table</strong>. Here's what it is: a simulated admissions committee that reads your whole application for one school at once &mdash; your Common App essay, every supplement, your activities &mdash; the way the real committee will. It tells you <strong>what's carrying the application, what's missing, and the one change to make.</strong> It's in the top menu of Vantage, and it unlocks for a school once that school's essays are near full length.</p>
+<p><a href="https://www.my-vantage.app/round-table" style="color:#8a6d3b"><strong>Open the Round Table &rarr;</strong></a></p>
+<p>If you're not applying early, or you've already submitted, just reply and say so. And if you're stuck on anything &mdash; a prompt, a school choice, the essay itself &mdash; reply to this email and a real person will help.</p>
+<p style="margin-top:28px;color:#555"><em>My Vantage. Your advantage.</em><br><a href="https://www.my-vantage.app" style="color:#8a6d3b">my-vantage.app</a></p>
+</div>`,
   },
   nograde: {
     classOf: [],
