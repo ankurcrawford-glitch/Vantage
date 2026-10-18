@@ -1,11 +1,10 @@
 // scripts/send-grade-email.mjs
 //
 // One-off grade-segmented email to Vantage students, sent through Resend.
-// Run from the repo root in PowerShell with the two keys in the environment:
+// Run from the repo root in PowerShell. Keys are read from .env.local
+// (NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY) —
+// add RESEND_API_KEY=... there once and never paste keys again.
 //
-//   $env:NEXT_PUBLIC_SUPABASE_URL = "https://akwslxhnzhpnhfcfkwba.supabase.co"
-//   $env:SUPABASE_SERVICE_ROLE_KEY = "<service role key>"
-//   $env:RESEND_API_KEY = "<resend key>"
 //   node scripts/send-grade-email.mjs --template seniors --dry-run   # list recipients, send nothing
 //   node scripts/send-grade-email.mjs --template seniors             # actually send
 //
@@ -19,6 +18,20 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
+import { readFileSync } from "node:fs";
+
+// Read keys from .env.local in the repo root (never committed) so nothing
+// has to be pasted into PowerShell. Values already in the environment win.
+try {
+  for (const line of readFileSync(new URL("../.env.local", import.meta.url), "utf8").split(/\r?\n/)) {
+    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
+    if (!m || line.trim().startsWith("#")) continue;
+    const val = m[2].replace(/^["']|["']$/g, "");
+    if (!process.env[m[1]]) process.env[m[1]] = val;
+  }
+} catch {
+  // no .env.local — fall back to whatever is in the environment
+}
 
 const EXCLUDE = new Set([
   "acrawford@alger.com", // test student
@@ -170,7 +183,7 @@ if (!url || !serviceKey) {
   process.exit(1);
 }
 if (!dryRun && !resendKey) {
-  console.error("Set RESEND_API_KEY in the environment (or use --dry-run).");
+  console.error("Add RESEND_API_KEY=... to .env.local (or use --dry-run).");
   process.exit(1);
 }
 
