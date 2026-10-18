@@ -60,17 +60,16 @@ https://www.my-vantage.app`,
   seniors2: {
     classOf: [2027],
     grades: [12],
-    fromName: "Ankur (Vantage)",
     subject: "Your ED essays - two weeks out",
     text: (first) => `Hi ${first},
 
-Two weeks to November 1. I'm checking in on everyone applying early.
+Two weeks to November 1. A check-in for everyone applying early.
 
 One ask: log in to Vantage this weekend and paste in whatever you have for your Common App essay, even if it's rough. Once it's there, the Round Table will read it together with your supplements and tell you what's working and what's missing - the same read an admissions committee does, before it counts.
 
-If you're not applying early, or you've already submitted, just reply and tell me so I stop nagging. And if you're stuck on anything - a prompt, a school choice, the essay itself - reply to this and I'll help directly.
+If you're not applying early, or you've already submitted, just reply and say so. And if you're stuck on anything - a prompt, a school choice, the essay itself - reply to this email and a real person will help.
 
-Ankur
+My Vantage. Your advantage.
 https://www.my-vantage.app`,
   },
   nograde: {
