@@ -73,7 +73,7 @@ https://www.my-vantage.app`,
   seniors2: {
     classOf: [2027],
     grades: [12],
-    subject: "Your ED essays - two weeks out",
+    subject: "Your ED essays: use the Round Table before you submit",
     text: (first) => `Hi ${first},
 
 Two weeks to November 1. A check-in for everyone applying early.
