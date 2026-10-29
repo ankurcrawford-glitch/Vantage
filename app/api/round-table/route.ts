@@ -22,7 +22,8 @@ export const maxDuration = 60;
 // infrequently (once per major revision pass), so we use Gemini 2.5 Pro for
 // the strongest reasoning and instruction-following even though it costs
 // ~4x Flash.
-const AI_MODEL = 'gemini-2.5-pro';
+import { GEMINI_MODEL_PRO, geminiFailureMessage } from '@/lib/gemini-models';
+const AI_MODEL = GEMINI_MODEL_PRO;
 const COMMON_APP_COLLEGE_ID = 'a0000000-0000-0000-0000-000000000000';
 
 // Feedback rules for Round Table (holistic application review). This is
@@ -429,7 +430,7 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
         );
       }
       return NextResponse.json(
-        { error: 'Unable to generate the review right now. Please try again shortly.' },
+        { error: geminiFailureMessage(response.status, 'Unable to generate the review right now. Please try again shortly.') },
         { status: 500 }
       );
     }

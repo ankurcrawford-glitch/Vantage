@@ -21,8 +21,9 @@ export const maxDuration = 60;
 // - 'gemini-2.5-flash' at higher temperature (0.5+)
 // - 'gemini-2.0-flash' (different version, more stable at low temp)
 // - 'gemini-2.5-pro' (expensive but highest quality)
-const MODEL_BRAINSTORM = 'gemini-2.5-flash-lite';
-const MODEL_FEEDBACK = 'gemini-2.5-flash-lite';
+import { GEMINI_MODEL_FAST, geminiFailureMessage } from '@/lib/gemini-models';
+const MODEL_BRAINSTORM = GEMINI_MODEL_FAST;
+const MODEL_FEEDBACK = GEMINI_MODEL_FAST;
 const MIN_INSIGHT_ANSWERS = 6;
 
 // Shared feedback rules for per-essay (standalone) review. These are injected
@@ -500,7 +501,7 @@ Do NOT rewrite their essay.${formatRules}`;
         );
       }
       return NextResponse.json(
-        { error: 'Unable to generate guidance right now. Please try again shortly.' },
+        { error: geminiFailureMessage(response.status, 'Unable to generate guidance right now. Please try again shortly.') },
         { status: 500 }
       );
     }

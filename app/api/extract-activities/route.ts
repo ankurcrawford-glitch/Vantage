@@ -11,7 +11,8 @@ import { createHash } from 'crypto';
 // rapid Story Builder edits don't hammer Gemini.
 export const maxDuration = 30;
 
-const AI_MODEL = 'gemini-2.5-flash';
+import { GEMINI_MODEL_FAST } from '@/lib/gemini-models';
+const AI_MODEL = GEMINI_MODEL_FAST;
 
 // How often we'll re-run extraction for a given user. Short enough that
 // a student adding a paragraph and hopping to Profile sees suggestions;
