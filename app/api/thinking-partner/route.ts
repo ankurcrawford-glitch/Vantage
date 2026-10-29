@@ -467,7 +467,7 @@ Do NOT rewrite their essay.${formatRules}`;
         );
       }
       return NextResponse.json(
-        { error: aiFailureMessage(ai.status, 'Unable to generate guidance right now. Please try again shortly.') },
+        { error: aiFailureMessage(ai.status, 'Unable to generate guidance right now. Please try again shortly.'), detail: ai.message },
         { status: 500 }
       );
     }

@@ -389,7 +389,7 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
         );
       }
       return NextResponse.json(
-        { error: aiFailureMessage(ai.status, 'Unable to generate the review right now. Please try again shortly.') },
+        { error: aiFailureMessage(ai.status, 'Unable to generate the review right now. Please try again shortly.'), detail: ai.message },
         { status: 500 }
       );
     }
