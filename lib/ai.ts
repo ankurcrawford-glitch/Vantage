@@ -121,8 +121,19 @@ export async function callClaude(opts: ClaudeCallOptions): Promise<ClaudeResult>
     model,
     stopReason: data.stop_reason ?? null,
     usage: data.usage,
+    blockTypes: (data.content || []).map((b: { type: string }) => b.type),
     rawLength: text.length,
   }));
+
+  if (!text) {
+    const blockTypes = (data.content || []).map((b: { type: string }) => b.type).join(',');
+    return {
+      ok: false,
+      status: 500,
+      message: `empty response: stop_reason=${data.stop_reason ?? 'null'} blocks=[${blockTypes}] usage=${JSON.stringify(data.usage ?? {})}`,
+      transient: false,
+    };
+  }
 
   return { ok: true, text, model, stopReason: data.stop_reason ?? null, usage: data.usage };
 }

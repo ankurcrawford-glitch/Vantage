@@ -454,7 +454,7 @@ Do NOT rewrite their essay.${formatRules}`;
       model: modelForMode,
       system: systemMessage,
       prompt: aiPrompt,
-      maxTokens: 1200,
+      maxTokens: 3000,
       temperature: modeTemperature,
       label: 'thinking-partner',
     });

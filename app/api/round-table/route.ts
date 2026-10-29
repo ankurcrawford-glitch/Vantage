@@ -375,8 +375,9 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
       model: AI_MODEL,
       system: systemMessage,
       prompt: aiPrompt,
-      // Verdict-first review is 300-450 words; 1500 tokens is ample headroom.
-      maxTokens: 1500,
+      // Verdict-first review is 300-450 words, but Claude 5.5 may reason
+      // before answering and that counts against max_tokens. Keep headroom.
+      maxTokens: 6000,
       temperature: 0.6,
       label: 'round-table',
     });
