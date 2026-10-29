@@ -75,7 +75,9 @@ export async function callClaude(opts: ClaudeCallOptions): Promise<ClaudeResult>
       body: JSON.stringify({
         model,
         max_tokens: opts.maxTokens,
-        ...(opts.temperature !== undefined && { temperature: opts.temperature }),
+        // `temperature` is rejected (400) by Claude 5.5+ models; only send it
+        // when a route explicitly opts in via CLAUDE_SEND_TEMPERATURE=1.
+        ...(opts.temperature !== undefined && process.env.CLAUDE_SEND_TEMPERATURE === '1' && { temperature: opts.temperature }),
         ...(opts.system && { system: opts.system }),
         messages: [{ role: 'user', content: opts.prompt }],
       }),
