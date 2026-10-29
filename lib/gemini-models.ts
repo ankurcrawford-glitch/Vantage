@@ -12,7 +12,10 @@
 //   GEMINI_MODEL_PRO   — the heavy, highest-quality call (Round Table)
 //   GEMINI_MODEL_FAST  — cheap per-essay feedback and extraction
 
-export const GEMINI_MODEL_PRO = process.env.GEMINI_MODEL_PRO || 'gemini-3.8-flash';
+// Round Table gets the flagship reasoning model (Gemini 4 Argon, stable as of
+// Oct 2026). It is the one expensive call in the app and the one students
+// act on; per-user rate limits + monthly budget keep the cost bounded.
+export const GEMINI_MODEL_PRO = process.env.GEMINI_MODEL_PRO || 'gemini-4-argon';
 export const GEMINI_MODEL_FAST = process.env.GEMINI_MODEL_FAST || 'gemini-3.5-flash-lite';
 
 /** Human-readable hint for the student when Gemini rejects the request. */
