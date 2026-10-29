@@ -360,10 +360,10 @@ One sentence on the package as a whole: what portrait emerges and whether it is 
 **What's missing:** one or two sentences naming the specific experience, activity, or quality from their profile or insight responses that appears nowhere in these essays, and which essay it belongs in.
 **The one change:** one or two sentences stating the single highest-impact edit, concretely enough to act on today.
 
-Then a blank line, then two or three short paragraphs that justify the verdict: where the essays overlap or repeat a story, how the application reads as a whole (one-note or multi-dimensional), and whether a reader at ${collegeName} specifically would be excited. Every claim points at a specific essay or a specific line. No restating the verdict, no summary at the end. Make each point once — if a paragraph repeats something already in the verdict block, delete it.
+Then a blank line, then two to four short paragraphs that justify the verdict: where the essays overlap or repeat a story, how the application reads as a whole (one-note or multi-dimensional), and whether a reader at ${collegeName} specifically would be excited. Every claim points at a specific essay or a specific line. No restating the verdict, no summary at the end.
 
 CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
-1. Total length 300-400 words — 400 is a hard ceiling, not a target. Short sentences. Cut every sentence that praises without pointing at something specific.
+1. Total length 300-450 words. Short sentences. Cut every sentence that praises without pointing at something specific.
 2. The verdict block uses exactly the four bold labels above, each on its own line. After it, prose paragraphs only — NO bullet points, NO numbered lists, NO markdown headers (no # or ##), NO dashes as list items.
 3. **Bold** is the only markdown allowed. Do NOT use single asterisks for emphasis.
 4. Separate paragraphs with a single blank line. No horizontal rules, no "---" lines, no dividers of any kind.
@@ -375,7 +375,7 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
       model: AI_MODEL,
       system: systemMessage,
       prompt: aiPrompt,
-      // Verdict-first review is 300-400 words, but Claude 5.5 may reason
+      // Verdict-first review is 300-450 words, but Claude 5.5 may reason
       // before answering and that counts against max_tokens. Keep headroom.
       maxTokens: 6000,
       temperature: 0.6,
