@@ -11,8 +11,8 @@ import { createHash } from 'crypto';
 // rapid Story Builder edits don't hammer Gemini.
 export const maxDuration = 30;
 
-import { GEMINI_MODEL_FAST } from '@/lib/gemini-models';
-const AI_MODEL = GEMINI_MODEL_FAST;
+import { CLAUDE_MODEL_FAST, callClaude } from '@/lib/ai';
+const AI_MODEL = CLAUDE_MODEL_FAST;
 
 // How often we'll re-run extraction for a given user. Short enough that
 // a student adding a paragraph and hopping to Profile sees suggestions;
@@ -43,9 +43,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Supabase config missing' }, { status: 500 });
     }
 
-    const geminiApiKey = process.env.GEMINI_API_KEY;
-    if (!geminiApiKey) {
-      return NextResponse.json({ error: 'GEMINI_API_KEY env var is not set.' }, { status: 500 });
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return NextResponse.json({ error: 'ANTHROPIC_API_KEY env var is not set.' }, { status: 500 });
     }
 
     // ============================================
@@ -143,37 +142,29 @@ If you find nothing new, return an empty array: []
 Do not include any prose, markdown, or commentary outside the JSON.`;
 
     // ============================================
-    // 5. Call Gemini
+    // 5. Call Claude (Anthropic)
     // ============================================
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${geminiApiKey}`;
-    const geminiBody = JSON.stringify({
-      contents: [{ parts: [{ text: aiPrompt }] }],
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 1200,
-        responseMimeType: 'application/json',
-      },
+    const ai = await callClaude({
+      model: AI_MODEL,
+      prompt: aiPrompt,
+      maxTokens: 1200,
+      temperature: 0.2,
+      label: 'extract-activities',
     });
 
-    const response = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: geminiBody,
-    });
-
-    if (!response.ok) {
+    if (!ai.ok) {
       return NextResponse.json({ error: 'Extraction request failed.' }, { status: 502 });
     }
 
-    const data = await response.json();
-    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '[]';
+    // Claude may wrap JSON in a ```json fence despite instructions — strip it.
+    const raw = (ai.text || '[]').replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim() || '[]';
 
     let extracted: ExtractedActivity[] = [];
     try {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) extracted = parsed;
     } catch (e) {
-      console.error('extract-activities: invalid JSON from Gemini', { raw: raw.slice(0, 400) });
+      console.error('extract-activities: invalid JSON from Claude', { raw: raw.slice(0, 400) });
       // Still record the run so we don't retry immediately.
     }
 

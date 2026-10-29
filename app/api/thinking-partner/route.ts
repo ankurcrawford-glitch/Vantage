@@ -21,9 +21,9 @@ export const maxDuration = 60;
 // - 'gemini-2.5-flash' at higher temperature (0.5+)
 // - 'gemini-2.0-flash' (different version, more stable at low temp)
 // - 'gemini-2.5-pro' (expensive but highest quality)
-import { GEMINI_MODEL_FAST, geminiFailureMessage } from '@/lib/gemini-models';
-const MODEL_BRAINSTORM = GEMINI_MODEL_FAST;
-const MODEL_FEEDBACK = GEMINI_MODEL_FAST;
+import { CLAUDE_MODEL_FAST, callClaude, aiFailureMessage } from '@/lib/ai';
+const MODEL_BRAINSTORM = CLAUDE_MODEL_FAST;
+const MODEL_FEEDBACK = CLAUDE_MODEL_FAST;
 const MIN_INSIGHT_ANSWERS = 6;
 
 // Shared feedback rules for per-essay (standalone) review. These are injected
@@ -180,9 +180,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Supabase configuration missing' }, { status: 500 });
     }
 
-    const geminiApiKey = process.env.GEMINI_API_KEY;
-    if (!geminiApiKey) {
-      return NextResponse.json({ error: 'GEMINI_API_KEY env var is not set.' }, { status: 500 });
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return NextResponse.json({ error: 'ANTHROPIC_API_KEY env var is not set.' }, { status: 500 });
     }
 
     // ============================================
@@ -443,7 +442,7 @@ Do NOT rewrite their essay.${formatRules}`;
     }
 
     // ============================================
-    // Call Gemini
+    // Call Claude (Anthropic)
     // ============================================
     // Lower temperature for feedback modes (less sycophantic, less generic praise,
     // stronger instruction-following).
@@ -451,79 +450,29 @@ Do NOT rewrite their essay.${formatRules}`;
     const modeTemperature = mode === 'pre_writing' ? 0.7 : 0.3;
     const modelForMode = mode === 'pre_writing' ? MODEL_BRAINSTORM : MODEL_FEEDBACK;
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelForMode}:generateContent?key=${geminiApiKey}`;
-    const geminiBody = JSON.stringify({
-      systemInstruction: { parts: [{ text: systemMessage }] },
-      contents: [{ parts: [{ text: aiPrompt }] }],
-      generationConfig: { temperature: modeTemperature, maxOutputTokens: 1200 },
-      // Override default safety thresholds. Gemini's defaults are aggressive
-      // enough that feedback essays touching on identity, mental health, or
-      // difficult experiences can trigger silent mid-generation truncation.
-      safetySettings: [
-        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
-        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
-        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
-        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
-      ],
+    const ai = await callClaude({
+      model: modelForMode,
+      system: systemMessage,
+      prompt: aiPrompt,
+      maxTokens: 1200,
+      temperature: modeTemperature,
+      label: 'thinking-partner',
     });
 
-    // Call Gemini with one automatic retry on transient capacity errors.
-    // Gemini returns 429 (rate-limited) or 503 (overloaded) during demand
-    // spikes; these are usually over within a couple of seconds. Retrying
-    // once with a short backoff absorbs most of them silently.
-    async function callGemini(attempt: number): Promise<Response> {
-      const res = await fetch(geminiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: geminiBody,
-      });
-      if ((res.status === 429 || res.status === 503) && attempt === 0) {
-        await new Promise((r) => setTimeout(r, 1500));
-        return callGemini(1);
-      }
-      return res;
-    }
-
-    const response = await callGemini(0);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      let errorDetails;
-      try { errorDetails = JSON.parse(errorText); } catch { errorDetails = { message: errorText }; }
-      console.error('Gemini API error:', response.status, errorDetails);
-      // Surface friendly errors for transient capacity problems (429/503).
-      // For anything else, log details server-side but return a generic
-      // message to avoid leaking internals.
-      if (response.status === 429 || response.status === 503) {
+    if (!ai.ok) {
+      if (ai.transient) {
         return NextResponse.json(
           { error: 'The AI is temporarily busy. Please try again in a minute.' },
           { status: 503 }
         );
       }
       return NextResponse.json(
-        { error: geminiFailureMessage(response.status, 'Unable to generate guidance right now. Please try again shortly.') },
+        { error: aiFailureMessage(ai.status, 'Unable to generate guidance right now. Please try again shortly.') },
         { status: 500 }
       );
     }
 
-    const data = await response.json();
-    const rawResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-    // Log Gemini response metadata so we can diagnose truncation / safety
-    // filter issues. The `rawTailPreview` field contains 200 chars of the
-    // generated guidance (i.e. essay feedback text). We gate it behind
-    // non-production so student-essay fragments never land in production logs.
-    console.log('[thinking-partner] gemini response', JSON.stringify({
-      mode,
-      model: modelForMode,
-      finishReason: data.candidates?.[0]?.finishReason,
-      safetyRatings: data.candidates?.[0]?.safetyRatings,
-      promptFeedback: data.promptFeedback,
-      rawLength: rawResponse.length,
-      ...(process.env.NODE_ENV !== 'production' && {
-        rawTailPreview: rawResponse.slice(-200),
-      }),
-    }));
+    const rawResponse = ai.text;
 
     if (!rawResponse) {
       return NextResponse.json({ error: 'No response generated. Please try again.' }, { status: 500 });

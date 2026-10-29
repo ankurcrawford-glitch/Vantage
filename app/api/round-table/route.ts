@@ -22,8 +22,8 @@ export const maxDuration = 60;
 // infrequently (once per major revision pass), so we use Gemini 2.5 Pro for
 // the strongest reasoning and instruction-following even though it costs
 // ~4x Flash.
-import { GEMINI_MODEL_PRO, geminiFailureMessage } from '@/lib/gemini-models';
-const AI_MODEL = GEMINI_MODEL_PRO;
+import { CLAUDE_MODEL_PRO, callClaude, aiFailureMessage } from '@/lib/ai';
+const AI_MODEL = CLAUDE_MODEL_PRO;
 const COMMON_APP_COLLEGE_ID = 'a0000000-0000-0000-0000-000000000000';
 
 // Feedback rules for Round Table (holistic application review). This is
@@ -100,8 +100,8 @@ export async function POST(request: NextRequest) {
     if (!auth.ok) return auth.response;
     const userId = auth.userId;
 
-    // Rate limit (per-user: 2/min, 5/hr, 15/day). Round Table uses Gemini
-    // Pro at ~2¢ per call — stricter limits than per-essay feedback.
+    // Rate limit (per-user: 2/min, 5/hr, 15/day). Round Table uses Claude
+    // Sonnet at ~2-3¢ per call — stricter limits than per-essay feedback.
     const rl = await checkRateLimit(userId, 'round-table');
     if (!rl.ok) return rl.response;
 
@@ -122,12 +122,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Supabase configuration missing' }, { status: 500 });
     }
 
-    // Get Gemini API key
-    const geminiApiKey = process.env.GEMINI_API_KEY;
-    if (!geminiApiKey) {
-      return NextResponse.json({ 
-        error: 'GEMINI_API_KEY env var is not set.' 
-      }, { status: 500 });
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return NextResponse.json({ error: 'ANTHROPIC_API_KEY env var is not set.' }, { status: 500 });
     }
 
     // ============================================
@@ -374,83 +370,31 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
 5. No greeting, no "thank you for sharing", no closing encouragement. Start with **The verdict** and end on the last analytical sentence.
 6. Tone: direct and specific, like a trusted admissions advisor who respects this student enough to tell them the truth about their ${collegeName} application.`;
 
-    // Call Gemini
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${geminiApiKey}`;
-    const geminiBody = JSON.stringify({
-      systemInstruction: { parts: [{ text: systemMessage }] },
-      contents: [{ parts: [{ text: aiPrompt }] }],
-      generationConfig: {
-        // Pro had mid-generation truncation at lower temperatures (0.35) on
-        // long structured output — same pattern we saw with Flash. Bumping
-        // to 0.6 stabilizes it. With the tightened anti-sycophancy rules in
-        // FEEDBACK_RULES, moderate temperature doesn't cause drift back to
-        // generic praise.
-        temperature: 0.6,
-        // Round Table synthesizes the full application package plus a
-        // Mechanics section — needs more output headroom than per-essay
-        // feedback. 4000 tokens ≈ 3000 words.
-        maxOutputTokens: 4000,
-      },
-      // Override default safety thresholds. Gemini's defaults are aggressive
-      // enough that feedback on essays touching on identity, mental health,
-      // or difficult experiences can trigger silent mid-generation truncation.
-      safetySettings: [
-        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
-        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
-        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
-        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
-      ],
+    // Call Claude (Anthropic). See lib/ai.ts for model choice + fallbacks.
+    const ai = await callClaude({
+      model: AI_MODEL,
+      system: systemMessage,
+      prompt: aiPrompt,
+      // Verdict-first review is 300-450 words; 1500 tokens is ample headroom.
+      maxTokens: 1500,
+      temperature: 0.6,
+      label: 'round-table',
     });
 
-    // One automatic retry on transient capacity errors (429 / 503).
-    async function callGemini(attempt: number): Promise<Response> {
-      const res = await fetch(geminiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: geminiBody,
-      });
-      if ((res.status === 429 || res.status === 503) && attempt === 0) {
-        await new Promise((r) => setTimeout(r, 2000));
-        return callGemini(1);
-      }
-      return res;
-    }
-
-    const response = await callGemini(0);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      let errorDetails;
-      try { errorDetails = JSON.parse(errorText); } catch { errorDetails = { message: errorText }; }
-      console.error('Gemini API error:', response.status, errorDetails);
-      if (response.status === 429 || response.status === 503) {
+    if (!ai.ok) {
+      if (ai.transient) {
         return NextResponse.json(
           { error: 'The AI is temporarily busy. Please try again in a minute.' },
           { status: 503 }
         );
       }
       return NextResponse.json(
-        { error: geminiFailureMessage(response.status, 'Unable to generate the review right now. Please try again shortly.') },
+        { error: aiFailureMessage(ai.status, 'Unable to generate the review right now. Please try again shortly.') },
         { status: 500 }
       );
     }
 
-    const data = await response.json();
-    let aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated';
-
-    // Log Gemini response metadata so we can diagnose truncation / safety
-    // filter issues. `rawTailPreview` leaks essay-feedback content and is
-    // gated to non-production to avoid landing student content in logs.
-    console.log('[round-table] gemini response', JSON.stringify({
-      model: AI_MODEL,
-      finishReason: data.candidates?.[0]?.finishReason,
-      safetyRatings: data.candidates?.[0]?.safetyRatings,
-      promptFeedback: data.promptFeedback,
-      rawLength: aiResponse.length,
-      ...(process.env.NODE_ENV !== 'production' && {
-        rawTailPreview: aiResponse.slice(-200),
-      }),
-    }));
+    let aiResponse = ai.text || 'No response generated';
 
     if (!aiResponse || aiResponse === 'No response generated') {
       return NextResponse.json({ error: 'No response generated. Please try again.' }, { status: 500 });
