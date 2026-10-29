@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
 
     // Rate limit (per-user: 10/min, 60/hr, 200/day). Blocks runaway loops
     // and automated abuse before they burn through your Gemini budget.
-    const rl = await checkRateLimit(userId, 'thinking-partner');
+    const rl = await checkRateLimit(userId, 'thinking-partner', auth.email);
     if (!rl.ok) return rl.response;
 
     // Budget circuit breaker: per-user cap (primary), global cap (backstop),

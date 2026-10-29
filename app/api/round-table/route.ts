@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
 
     // Rate limit (per-user: 2/min, 5/hr, 15/day). Round Table uses Claude
     // Sonnet at ~2-3¢ per call — stricter limits than per-essay feedback.
-    const rl = await checkRateLimit(userId, 'round-table');
+    const rl = await checkRateLimit(userId, 'round-table', auth.email);
     if (!rl.ok) return rl.response;
 
     // Budget circuit breaker — per-user cap, global backstop, kill-switch.

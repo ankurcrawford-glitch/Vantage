@@ -103,11 +103,23 @@ export type RateLimitResult =
  * If Upstash env vars aren't configured, this silently allows the request
  * through — use local dev only in that state. Production must have Upstash.
  */
+// Admin / tester accounts skip rate limits so debugging a live outage doesn't
+// lock the founder out of her own app. Same list as the admin pages.
+const RATE_LIMIT_EXEMPT = new Set(
+  (process.env.SUPPORT_ADMIN_EMAILS || 'ankur.crawford@gmail.com,acrawford@alger.com')
+    .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)
+);
+
 export async function checkRateLimit(
   userId: string,
-  route: RouteKey
+  route: RouteKey,
+  email?: string | null
 ): Promise<RateLimitResult> {
   const limits = LIMITS[route];
+
+  if (email && RATE_LIMIT_EXEMPT.has(email.toLowerCase())) {
+    return { ok: true };
+  }
 
   // If Upstash isn't configured, log once and allow through. We don't want
   // to break dev by blocking every request.
