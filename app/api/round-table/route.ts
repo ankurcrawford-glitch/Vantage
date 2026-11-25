@@ -4,6 +4,7 @@ import { getAuthedUser, getAdminClient } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { checkBudget, recordSpend } from '@/lib/budget';
 import { buildSchoolLine } from '@/lib/school-context';
+import { applicantStatusLine } from '@/lib/grade';
 import { buildFoundationsBridge } from '@/lib/foundationsBridge';
 import {
   evaluatePromptReadiness,
@@ -293,6 +294,7 @@ ${flattened.join('\n\n---\n\n')}`;
       awards?.length ? `Awards: ${awards.map((a: any) => a.award_name).join(', ')}` : '',
       userStats?.narrative_summary ? `Counselor's profile of this student (built over their years in Vantage Foundations — draw on it to understand who they are and surface authentic, specific material): ${userStats.narrative_summary}` : '',
       buildSchoolLine(userStats),
+      applicantStatusLine(userStats),
     ].filter(Boolean).join('\n');
 
     // ============================================

@@ -62,7 +62,8 @@ export default function Gateway() {
     router.push('/foundations/start');
   };
 
-  const goToVantage = async () => {
+  // gapYear: already graduated high school, applying (or reapplying) this cycle.
+  const goToVantage = async (gapYear = false) => {
     if (saving) return;
     setSaving(true);
     setError('');
@@ -81,7 +82,7 @@ export default function Gateway() {
           'Content-Type': 'application/json',
           ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
         },
-        body: JSON.stringify({ grade: 12 }),
+        body: JSON.stringify(gapYear === true ? { gapYear: true } : { grade: 12 }),
       });
       if (!res.ok) throw new Error('save failed');
 
@@ -159,7 +160,7 @@ export default function Gateway() {
 
           {/* Vantage door */}
           <button
-            onClick={goToVantage}
+            onClick={() => goToVantage(false)}
             disabled={saving}
             style={{
               background: 'rgba(201,169,119,0.06)',
@@ -185,6 +186,17 @@ export default function Gateway() {
             </p>
           </button>
         </div>
+
+        <p className="font-body text-sm text-center" style={{ marginTop: '20px' }}>
+          <button
+            onClick={() => goToVantage(true)}
+            disabled={saving}
+            className="font-body"
+            style={{ background: 'none', border: 'none', color: '#C9A977', cursor: saving ? 'wait' : 'pointer', textDecoration: 'underline', fontSize: '14px' }}
+          >
+            Already graduated? Taking a gap year and applying this cycle →
+          </button>
+        </p>
 
         <p className="font-body text-xs text-center" style={{ color: 'rgba(232,221,201,0.45)', marginTop: '28px' }}>
           We'll remember your choice — next time you'll go straight in.

@@ -12,8 +12,8 @@ export async function POST(req) {
     if (!auth.ok) return auth.response;
     const userId = auth.userId;
 
-    const { grade } = await req.json();
-    const g = Number(grade);
+    const { grade, gapYear } = await req.json();
+    const g = gapYear ? 12 : Number(grade);
     if (!Number.isInteger(g) || g < 9 || g > 12) {
       return Response.json({ error: "Grade must be 9, 10, 11, or 12." }, { status: 400 });
     }
@@ -23,14 +23,19 @@ export async function POST(req) {
     // Update if the row exists, otherwise insert (mirrors lib/save-user-stats).
     const { data: existing, error: selErr } = await supabase
       .from("user_stats")
-      .select("user_id")
+      .select("user_id, class_of")
       .eq("user_id", userId)
       .maybeSingle();
     if (selErr) throw selErr;
 
     // class_of is the durable value (auto-rolls every August); grade is
     // kept in sync for legacy readers.
-    const class_of = classOfFromGrade(g);
+    // Gap year: keep their real graduation year (it's what marks them as
+    // graduated); if none is on file, assume they finished last spring.
+    const priorClassOf = Number.isInteger(existing?.class_of) ? existing.class_of : null;
+    const class_of = gapYear
+      ? (priorClassOf !== null && priorClassOf < schoolYearEnd() ? priorClassOf : schoolYearEnd() - 1)
+      : classOfFromGrade(g);
     // Saving a grade IS confirming it for the current school year.
     const grade_confirmed_for = schoolYearEnd();
     const result = existing
@@ -38,7 +43,7 @@ export async function POST(req) {
       : await supabase.from("user_stats").insert({ user_id: userId, grade: g, class_of, grade_confirmed_for });
     if (result.error) throw result.error;
 
-    return Response.json({ ok: true, grade: g });
+    return Response.json({ ok: true, grade: g, gapYear: !!gapYear });
   } catch (err) {
     console.error("set-grade error:", err);
     return Response.json({ error: "Could not save grade." }, { status: 500 });

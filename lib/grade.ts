@@ -50,3 +50,30 @@ export function effectiveGrade(
   const g = (row as { grade?: unknown }).grade;
   return typeof g === "number" && Number.isInteger(g) ? g : null;
 }
+
+/**
+ * Gap-year / reapplying student: already graduated high school (class_of is
+ * before the current seniors' class) and applying this cycle. They get the
+ * full senior experience (effectiveGrade clamps them to 12), but every AI
+ * prompt must know they are NOT a current high-school senior.
+ */
+export function isGapYear(
+  row: { class_of?: unknown } | null | undefined,
+  d: Date = new Date()
+): boolean {
+  const c = row?.class_of;
+  return typeof c === "number" && Number.isInteger(c) && c < schoolYearEnd(d);
+}
+
+/**
+ * One prompt line for the AI tools describing a gap-year applicant, or ''
+ * for everyone else.
+ */
+export function applicantStatusLine(
+  row: { class_of?: unknown } | null | undefined,
+  d: Date = new Date()
+): string {
+  if (!isGapYear(row, d)) return "";
+  const c = row!.class_of as number;
+  return `Applicant status: this student GRADUATED from high school in ${c} and is taking a gap year, applying (possibly reapplying) to college this cycle. They are not a current high-school senior — do not refer to senior year, current classes, or their high school in the present tense. Gap-year experiences are legitimate essay material, and if they applied before, growth since that application matters.`;
+}

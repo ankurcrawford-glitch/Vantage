@@ -11,7 +11,7 @@
 // follows the same secure pattern as the rest of the API (never trust a
 // body-supplied userId — see lib/auth.ts).
 import { getAuthedUser, getAdminClient } from "@/lib/auth";
-import { effectiveGrade } from "@/lib/grade";
+import { effectiveGrade, isGapYear, applicantStatusLine } from "@/lib/grade";
 import { buildStudentContext } from "@/lib/foundations-context";
 
 const MONTHLY_CAP = 40;
@@ -110,11 +110,11 @@ function faqMatch(text) {
 }
 
 // ─── System prompt ───────────────────────────────────────────────
-function systemPrompt(narrativeSummary, grade, studentContext) {
+function systemPrompt(narrativeSummary, grade, studentContext, statusLine = "") {
   return `You are the student's private college counselor inside Vantage Foundations — a premium college planning platform. You are warm, direct, and strategic. You have worked with this student for years and know their story.
 
 STUDENT PROFILE (grade ${grade}):
-${narrativeSummary}
+${narrativeSummary}${statusLine ? `\n${statusLine}` : ""}
 ${studentContext ? `
 WHAT YOU KNOW ABOUT THIS STUDENT'S CURRENT WORK:
 ${studentContext}
@@ -262,7 +262,12 @@ export async function POST(req) {
       body: JSON.stringify({
         model: MODEL,
         max_tokens: MAX_TOKENS,
-        system: systemPrompt(narrative, effectiveGrade(profile) ?? "unknown", studentContext),
+        system: systemPrompt(
+          narrative,
+          isGapYear(profile) ? `gap year — graduated ${profile.class_of}` : effectiveGrade(profile) ?? "unknown",
+          studentContext,
+          applicantStatusLine(profile)
+        ),
         messages: history,
       }),
     });

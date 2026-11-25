@@ -21,7 +21,7 @@ import { getAuthedUser, getAdminClient } from "@/lib/auth";
 // Room for the reply plus the background extraction/notes passes that run
 // after the response is sent (see after() below).
 export const maxDuration = 60;
-import { effectiveGrade } from "@/lib/grade";
+import { effectiveGrade, isGapYear, applicantStatusLine } from "@/lib/grade";
 import { buildStudentContext } from "@/lib/foundations-context";
 
 const MODEL = "claude-haiku-4-5-20251001";
@@ -362,7 +362,12 @@ export async function POST(req) {
     }));
 
     const reply = await callHaiku(
-      systemPrompt(narrative, notes, effectiveGrade(profile) ?? "9-11", studentContext),
+      systemPrompt(
+        narrative,
+        notes,
+        isGapYear(profile) ? `gap-year (graduated ${profile.class_of})` : effectiveGrade(profile) ?? "9-11",
+        [applicantStatusLine(profile), studentContext].filter(Boolean).join("\n")
+      ),
       history,
       MAX_TOKENS
     );
