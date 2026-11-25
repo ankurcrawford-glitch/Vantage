@@ -12,16 +12,15 @@ import {
   ROUND_TABLE_MIN_VERSIONS,
 } from '@/lib/roundTableGate';
 
-// Round Table uses Gemini Pro and synthesizes multiple essays — can take
+// Round Table synthesizes multiple essays in one Claude call — can take
 // 20-40s on larger applications. Bump the serverless function timeout to 60s
 // so responses don't get cut off mid-generation.
 export const maxDuration = 60;
 
 // Round Table is the most important feedback moment in the product — holistic
 // review of a student's entire application to a specific school. It runs
-// infrequently (once per major revision pass), so we use Gemini 2.5 Pro for
-// the strongest reasoning and instruction-following even though it costs
-// ~4x Flash.
+// infrequently (once per major revision pass), so it uses the PRO Claude model
+// (lib/ai.ts) for the strongest reasoning and instruction-following.
 import { CLAUDE_MODEL_PRO, callClaude, aiFailureMessage } from '@/lib/ai';
 const AI_MODEL = CLAUDE_MODEL_PRO;
 const COMMON_APP_COLLEGE_ID = 'a0000000-0000-0000-0000-000000000000';
@@ -77,13 +76,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Supabase config missing' }, { status: 500 });
     }
 
-    const { data: history } = await supabase
+    const { data: history, error } = await supabase
       .from('strategic_guidance_history')
       .select('id, guidance_text, mode, created_at')
       .eq('user_id', userId)
       .eq('college_id', collegeId)
       .eq('mode', 'round_table')
       .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching Round Table history:', error);
+      return NextResponse.json({ error: 'Failed to load Round Table history' }, { status: 500 });
+    }
 
     return NextResponse.json({ history: history || [] });
   } catch (error: any) {
@@ -99,15 +103,6 @@ export async function POST(request: NextRequest) {
     const auth = await getAuthedUser(request);
     if (!auth.ok) return auth.response;
     const userId = auth.userId;
-
-    // Rate limit (per-user: 2/min, 5/hr, 15/day). Round Table uses Claude
-    // Sonnet at ~2-3¢ per call — stricter limits than per-essay feedback.
-    const rl = await checkRateLimit(userId, 'round-table', auth.email);
-    if (!rl.ok) return rl.response;
-
-    // Budget circuit breaker — per-user cap, global backstop, kill-switch.
-    const budget = await checkBudget(userId);
-    if (!budget.ok) return budget.response;
 
     const { collegeId } = await request.json();
 
@@ -304,17 +299,19 @@ ${flattened.join('\n\n---\n\n')}`;
     // 7. Build the essay summaries for the prompt
     // ============================================
 
-    // Common App essay(s)
+    // Common App essay. A student submits ONE of the seven Common App
+    // prompts, so only send the one they've written — listing the other six
+    // as "(Not yet written)" made the panel read the package as unfinished.
+    // If they've drafted more than one while deciding, send the most
+    // developed (longest) draft as the one being submitted.
     let commonAppSection = '';
-    if (commonAppPrompts && commonAppPrompts.length > 0) {
-      const commonAppEssays = commonAppPrompts.map(p => {
-        const essay = essayMap[p.id];
-        if (essay) {
-          return `COMMON APP PROMPT: "${p.prompt_text}"\nSTUDENT'S RESPONSE (${essay.wordCount} words):\n${essay.content}`;
-        }
-        return `COMMON APP PROMPT: "${p.prompt_text}"\n(Not yet written)`;
-      });
-      commonAppSection = commonAppEssays.join('\n\n---\n\n');
+    const writtenCommonApp = (commonAppPrompts || [])
+      .filter(p => essayMap[p.id])
+      .sort((a, b) => essayMap[b.id].wordCount - essayMap[a.id].wordCount);
+    if (writtenCommonApp.length > 0) {
+      const p = writtenCommonApp[0];
+      const essay = essayMap[p.id];
+      commonAppSection = `COMMON APP PROMPT: "${p.prompt_text}"\nSTUDENT'S RESPONSE (${essay.wordCount} words):\n${essay.content}`;
     }
 
     // This college's essays
@@ -369,6 +366,14 @@ CRITICAL FORMATTING RULES — YOU MUST FOLLOW THESE EXACTLY:
 4. Separate paragraphs with a single blank line. No horizontal rules, no "---" lines, no dividers of any kind.
 5. No greeting, no "thank you for sharing", no closing encouragement. Start with **The verdict** and end on the last analytical sentence.
 6. Tone: direct and specific, like a trusted admissions advisor who respects this student enough to tell them the truth about their ${collegeName} application.`;
+
+    // Rate limit (per-user: 2/min, 5/hr, 15/day) and budget circuit breaker.
+    // Checked here, after the readiness gate, so a student re-checking
+    // whether their essays are ready doesn't burn their Round Table quota.
+    const rl = await checkRateLimit(userId, 'round-table', auth.email);
+    if (!rl.ok) return rl.response;
+    const budget = await checkBudget(userId);
+    if (!budget.ok) return budget.response;
 
     // Call Claude (Anthropic). See lib/ai.ts for model choice + fallbacks.
     const ai = await callClaude({

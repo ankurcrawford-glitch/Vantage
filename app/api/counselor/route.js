@@ -86,17 +86,23 @@ const FAQS = [
   {
     match: ["what is early decision", "ed vs ea", "early action vs early decision"],
     reply:
-      "Early Decision (ED) is binding — if accepted, you attend. Early Action (EA) is non-binding early notification. ED can meaningfully boost admit odds at some schools but locks your financial aid comparison. This becomes a real strategic decision in Application mode senior year — for now, just know the terms.",
+      "Early Decision (ED) is binding — if accepted, you attend. Early Action (EA) is non-binding early notification. ED can meaningfully boost admit odds at some schools but locks your financial aid comparison. If you're a senior, the ED Strategy panel on your Strategy page shows where applying early pays most for you; if you're younger, just know the terms for now.",
   },
   {
-    match: ["how many ap", "how many aps"],
+    match: ["how many ap classes", "how many ap courses", "how many aps", "how many ap should"],
     reply:
       "There's no magic number — colleges evaluate rigor relative to what your school offers. The honest rule: take the hardest load you can sustain with strong grades. A B in AP usually beats an A in regular for selective schools, but three Bs don't. Your Roadmap sequences your AP load by grade.",
   },
 ];
 
+// Only short, navigational questions go to the FAQ. A longer message that
+// happens to contain a phrase ("my teacher's essay feedback says…") is a real
+// question and must reach the counselor.
+const FAQ_MAX_WORDS = 12;
+
 function faqMatch(text) {
-  const q = text.toLowerCase();
+  const q = String(text || "").toLowerCase();
+  if (q.trim().split(/\s+/).length > FAQ_MAX_WORDS) return null;
   for (const f of FAQS) {
     if (f.match.some((m) => q.includes(m))) return f.reply;
   }

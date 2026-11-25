@@ -91,6 +91,14 @@ export default function CounselorChat() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading, hydrated]);
 
+  // A question that failed stays on screen but is kept out of the history
+  // sent to the model, along with the error bubble, so user/assistant turns
+  // still alternate and the model never sees a fake counselor reply.
+  const dropLastQuestion = (list) => {
+    const i = list.length - 1;
+    return i >= 0 && list[i].role === "user" ? [...list.slice(0, i), { ...list[i], synthetic: true }] : list;
+  };
+
   const send = async (text) => {
     const q = (text ?? input).trim();
     if (!q || loading || used >= MONTHLY_CAP) return;
@@ -117,17 +125,25 @@ export default function CounselorChat() {
       });
       const data = await res.json();
 
+      if (res.status === 429) {
+        // Monthly cap: show the real message, keep it out of model history.
+        setMessages((m) => [...dropLastQuestion(m), { role: "assistant", content: data.error || "You've used this month's counselor sessions. They reset on the 1st.", synthetic: true }]);
+        setUsed(MONTHLY_CAP);
+        return;
+      }
       if (data.error) throw new Error(data.error);
 
       setMessages((m) => [...m, { role: "assistant", content: data.reply }]);
       if (!data.cached) setUsed(data.used ?? used + 1); // FAQ hits don't count
     } catch (err) {
       setMessages((m) => [
-        ...m,
+        ...dropLastQuestion(m),
         {
           role: "assistant",
           content:
             "Something went wrong on my end. Give it a moment and ask again — your question wasn't counted.",
+          // Never send this back to the model as if the counselor said it.
+          synthetic: true,
         },
       ]);
     } finally {

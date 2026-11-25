@@ -6,21 +6,12 @@ import { checkBudget, recordSpend } from '@/lib/budget';
 import { buildSchoolLine } from '@/lib/school-context';
 import { buildFoundationsBridge } from '@/lib/foundationsBridge';
 
-// Feedback generation with Flash can take 10-20s. Bump the serverless
+// Feedback generation can take 10-20s. Bump the serverless
 // function timeout to 60s so responses don't get cut off mid-generation.
 export const maxDuration = 60;
 
-// Model selection by mode. Currently both use flash-lite:
-// - Flash (gemini-2.5-flash) had mid-generation truncation with non-empty
-//   essay content at low temperatures; flash-lite is stable under the same
-//   conditions.
-// - With the tightened FEEDBACK_RULES / temperature 0.3, flash-lite follows
-//   the anti-sycophancy rules well enough to pass the acceptance bar, so
-//   the extra cost of Flash is not justified right now.
-// If quality regresses or we need stronger reasoning, revisit:
-// - 'gemini-2.5-flash' at higher temperature (0.5+)
-// - 'gemini-2.0-flash' (different version, more stable at low temp)
-// - 'gemini-2.5-pro' (expensive but highest quality)
+// Model selection by mode. Both use the FAST Claude model (lib/ai.ts); switch
+// MODEL_FEEDBACK to CLAUDE_MODEL_PRO if per-essay quality ever needs it.
 import { CLAUDE_MODEL_FAST, callClaude, aiFailureMessage } from '@/lib/ai';
 const MODEL_BRAINSTORM = CLAUDE_MODEL_FAST;
 const MODEL_FEEDBACK = CLAUDE_MODEL_FAST;
@@ -55,10 +46,15 @@ GRAMMAR AND LINE-LEVEL ISSUES — if you notice a specific grammar, apostrophe, 
 
 TONE — warm, honest, specific. Like a trusted mentor who respects the student enough to tell them the truth about this draft. No exaggerated enthusiasm. No exclamation points. No emoji.`;
 
-// Determine guidance mode based on essay maturity
-function determineMode(essayContent: string | null, wordCount: number, versionNumber: number): string {
+// Determine guidance mode based on essay maturity. A draft counts as a
+// revision once it has been saved more than once OR is already near its
+// word limit — one saved version is enough to unlock the Round Table, so a
+// polished first save must not be coached as "just getting started".
+function determineMode(essayContent: string | null, wordCount: number, versionNumber: number, wordLimit: number | null): string {
   if (!essayContent || wordCount < 50) return 'pre_writing';
-  if (wordCount < 200 || versionNumber <= 1) return 'early_draft';
+  if (wordCount < 200) return 'early_draft';
+  const nearLimit = !!wordLimit && wordCount >= wordLimit * 0.8;
+  if (versionNumber <= 1 && !nearLimit) return 'early_draft';
   return 'revision';
 }
 
@@ -150,16 +146,6 @@ export async function POST(request: NextRequest) {
     if (!auth.ok) return auth.response;
     const userId = auth.userId;
 
-    // Rate limit (per-user: 10/min, 60/hr, 200/day). Blocks runaway loops
-    // and automated abuse before they burn through your Gemini budget.
-    const rl = await checkRateLimit(userId, 'thinking-partner', auth.email);
-    if (!rl.ok) return rl.response;
-
-    // Budget circuit breaker: per-user cap (primary), global cap (backstop),
-    // and manual kill-switch. Rejects with 503 if any fires.
-    const budget = await checkBudget(userId);
-    if (!budget.ok) return budget.response;
-
     const { essayContent, promptId, collegeId, focusDirective } = await request.json();
 
     if (!promptId) {
@@ -223,7 +209,6 @@ export async function POST(request: NextRequest) {
     // Determine mode based on essay maturity
     // ============================================
     const wordCount = essayContent ? essayContent.trim().split(/\s+/).filter((w: string) => w.length > 0).length : 0;
-    const mode = determineMode(essayContent, wordCount, currentVersionNumber);
 
     // ============================================
     // Pull context
@@ -238,6 +223,7 @@ export async function POST(request: NextRequest) {
     // Students were getting warm revision notes on drafts that were over the
     // limit, with no mention of it.
     const limit = currentPrompt?.word_limit ?? null;
+    const mode = determineMode(essayContent, wordCount, currentVersionNumber, limit);
     const overBy = limit && wordCount > limit ? wordCount - limit : 0;
     const wordLimitLine = limit
       ? overBy > 0
@@ -447,6 +433,14 @@ Do NOT rewrite their essay.${formatRules}`;
     // Lower temperature for feedback modes (less sycophantic, less generic praise,
     // stronger instruction-following).
     // Keep higher temperature for pre-writing brainstorming where variety helps.
+    // Rate limit (per-user: 10/min, 60/hr, 200/day) and budget circuit
+    // breaker. Checked after the Story Builder gate so a gated request
+    // doesn't count against the student.
+    const rl = await checkRateLimit(userId, 'thinking-partner', auth.email);
+    if (!rl.ok) return rl.response;
+    const budget = await checkBudget(userId);
+    if (!budget.ok) return budget.response;
+
     const modeTemperature = mode === 'pre_writing' ? 0.7 : 0.3;
     const modelForMode = mode === 'pre_writing' ? MODEL_BRAINSTORM : MODEL_FEEDBACK;
 
