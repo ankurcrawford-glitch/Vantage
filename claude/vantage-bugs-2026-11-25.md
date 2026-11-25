@@ -1,5 +1,5 @@
 # Vantage bug sweep: November 25, 2026
-**Scope:** code review of the AI routes after the Gemini-to-Claude move (Round Table, Strategic Intelligence, activity extraction), the counselor and Foundations conversation routes, payments and access codes, account deletion, and the shared libs (`ai`, `budget`, `rate-limit`, `grade`, `roundTableGate`).
+**Scope:** code review of the AI routes after the Gemini-to-Claude move (Round Table, Strategic Intelligence, activity extraction), the counselor and Foundations conversation routes, account deletion, and the shared libs (`ai`, `budget`, `rate-limit`, `grade`, `roundTableGate`).
 **Method:** read the code paths and checked them against the SQL in the repo. Nothing was run against production.
 
 ---
@@ -42,10 +42,6 @@
 `lib/budget.ts:47`: `'round-table': 0.020`. The comment in `lib/ai.ts:18-20` puts a Sonnet 5.5 call at roughly 2–3¢, and `maxTokens` is now 6000 to leave room for reasoning, so heavy calls cost more. The per-user monthly cap will under-count by roughly 25–50%.
 **Fix:** raise it to about `0.03`. Better: compute cost from the returned `usage` (callClaude already returns it) instead of a flat estimate.
 
-### A10. Redeeming an access code overwrites a paying customer's Stripe record
-`app/api/redeem-code/route.ts:58-70` upserts `stripe_customer_id: null` and `stripe_subscription_id: 'code:…'` over whatever was there. If a student who already paid then redeems a cohort code (a parent buys, then the school hands out a code), the Stripe customer and session id are lost, which makes refunds and receipts harder.
-**Fix:** if an active row already exists, return success without writing.
-
 ---
 
 ## B. Minor, or needs checking against the live database
@@ -62,6 +58,5 @@
 - **Account deletion:** the Foundations tables (`foundations_activities`, `foundations_courses`, `conversation_messages`, `roadmap_progress`, `foundations_spark_entries`, `counselor_messages`, `activity_extraction_runs`) aren't in the explicit purge list, but all of them `references auth.users(id) on delete cascade`, so `auth.admin.deleteUser` removes them.
 - **Junior College Prep gate** (`lib/college-prep-access.ts`): the July fix is in. It opens Jan–Jul and is locked Aug–Dec.
 - **Grade rollover** (`lib/grade.ts`): the class_of derivation and the Aug 1 boundary are correct.
-- **Stripe webhook:** verifies the signature and only activates paid sessions. Checkout is card-only, so there are no async payment events to miss.
 - **Cron routes:** both check `CRON_SECRET`. The digest approval and unsubscribe links are HMAC-signed.
 - **`lib/ai.ts`:** temperature is correctly withheld from 5.5 models, the 404 model fallback and transient retry happen in the right order, and empty responses get a clear diagnostic.
