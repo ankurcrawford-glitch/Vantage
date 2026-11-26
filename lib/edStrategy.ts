@@ -8,6 +8,51 @@ import {
   type StudentProfile,
   type Tier,
 } from './classifier';
+import { schoolYearEnd } from './grade';
+
+/* ----- application-round deadlines ----- */
+// Most ED and EA deadlines are November 1; ED II is usually January 1.
+// Schools with no deadline on file fall back to those dates for the
+// current application cycle.
+
+function isoDate(d: Date): string {
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
+function roundDeadline(college: SchoolClassification['college'], round: 'ED' | 'ED2' | 'EA', today: Date): string {
+  const end = schoolYearEnd(today); // e.g. 2027 for the 2026-27 cycle
+  const onFile =
+    round === 'ED' ? college.deadline_ed : round === 'ED2' ? college.deadline_ed2 : college.deadline_ea;
+  if (onFile) return String(onFile).slice(0, 10);
+  return round === 'ED2' ? `${end}-01-01` : `${end - 1}-11-01`;
+}
+
+/** True once the deadline day for this round has fully passed. */
+export function roundDeadlinePassed(
+  college: SchoolClassification['college'],
+  round: 'ED' | 'ED2' | 'EA',
+  today: Date = new Date()
+): boolean {
+  return isoDate(today) > roundDeadline(college, round, today);
+}
+
+function offersEd2(college: SchoolClassification['college']): boolean {
+  return !!college.deadline_ed2 || (college.available_rounds ?? []).includes('ED2');
+}
+
+export interface EdStrategyOptions {
+  /** Defaults to now. */
+  today?: Date;
+  /** The student already committed to an ED school (application_plan = 'ED'). */
+  edChosen?: boolean;
+}
+
+export interface Ed2Option {
+  school: SchoolClassification;
+  deadline: string; // 'YYYY-MM-DD'
+}
 
 export interface EdDont {
   school: SchoolClassification;
@@ -47,6 +92,13 @@ export interface EdRecommendation {
   hookNotes: string[];
   noEdSchools: SchoolClassification[];
   scored: { c: SchoolClassification; leverage: number; ratio: number }[];
+  /**
+   * True when the student hasn't chosen ED and the ED deadline has passed
+   * at every ED school on their list — ED is no longer a choice to make.
+   */
+  edWindowClosed: boolean;
+  /** When the ED window has closed: schools on the list whose ED II is still open. */
+  ed2Open: Ed2Option[];
 }
 
 interface ScoredEdCandidate {
@@ -94,9 +146,27 @@ function scoreLeverage(
 
 export function computeEdStrategy(
   classifications: SchoolClassification[],
-  profile: StudentProfile
+  profile: StudentProfile,
+  opts: EdStrategyOptions = {}
 ): EdRecommendation {
+  const today = opts.today ?? new Date();
+  // Once a school's ED deadline has passed, ED there is no longer a choice —
+  // unless the student already picked ED (then leave their strategy alone).
+  const edOpen = (c: SchoolClassification) =>
+    opts.edChosen || !roundDeadlinePassed(c.college, 'ED', today);
+  const offersEd = (c: SchoolClassification) =>
+    (c.college.available_rounds ?? ['RD']).includes('ED') || !!c.college.deadline_ed;
+  const edSchools = classifications.filter(offersEd);
+  const edWindowClosed = !opts.edChosen && edSchools.length > 0 && !edSchools.some(edOpen);
+  const ed2Open: Ed2Option[] = opts.edChosen
+    ? []
+    : classifications
+        .filter((c) => offersEd2(c.college) && !roundDeadlinePassed(c.college, 'ED2', today))
+        .map((c) => ({ school: c, deadline: roundDeadline(c.college, 'ED2', today) }))
+        .sort((a, b) => a.deadline.localeCompare(b.deadline));
+
   const scored: ScoredEdCandidate[] = classifications
+    .filter(edOpen)
     .map((c) => scoreLeverage(c, profile))
     .filter((x): x is ScoredEdCandidate => x !== null)
     .sort((a, b) => b.leverage - a.leverage);
@@ -144,6 +214,8 @@ export function computeEdStrategy(
   // These are NOT don'ts — they're legitimate early plays that aren't bindable.
   const earlyNonBinding: EarlyNonBindingOption[] = [];
   for (const c of classifications) {
+    // Early Action deadline gone (usually Nov 1) — not an early play anymore.
+    if (roundDeadlinePassed(c.college, 'EA', today)) continue;
     const rounds = c.college.available_rounds ?? ['RD'];
     const hasEd = rounds.includes('ED');
     const hasRea = rounds.includes('REA');
@@ -188,6 +260,7 @@ export function computeEdStrategy(
   // Safeties / Likelies that look tempting to lock in via ED.
   for (const c of classifications) {
     if (c.bucket !== 'Safety' && c.bucket !== 'Likely') continue;
+    if (!edOpen(c)) continue; // ED closed here — nothing to warn against
     const rounds = c.college.available_rounds ?? ['RD'];
     if (!rounds.includes('ED')) continue;
     donts.push({
@@ -243,5 +316,7 @@ export function computeEdStrategy(
     hookNotes,
     noEdSchools,
     scored: scored.map((s) => ({ c: s.c, leverage: s.leverage, ratio: s.ratio })),
+    edWindowClosed,
+    ed2Open,
   };
 }
