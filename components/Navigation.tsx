@@ -142,6 +142,11 @@ export default function Navigation() {
   // page via direct URL, send them back to their own home.
   useEffect(() => {
     if (loading || !user || collegeSideAllowed) return;
+    // The counselor exists on both sides — send them to their own version.
+    if (pathname.startsWith('/counselor')) {
+      router.replace('/foundations/counselor');
+      return;
+    }
     if (COLLEGE_PREP_PATHS.some((p) => pathname.startsWith(p))) {
       router.replace('/foundations/compass');
     }
@@ -284,7 +289,7 @@ export default function Navigation() {
                   <Link href="/colleges" style={getLinkStyle('/colleges')}>Strategy</Link>
                   <Link href="/round-table" style={getLinkStyle('/round-table')}>Round Table</Link>
                   <Link href="/profile" style={getLinkStyle('/profile')}>My Profile</Link>
-                  <Link href="/foundations/counselor" style={getLinkStyle('/counselor')}>Counselor</Link>
+                  <Link href="/counselor" style={getLinkStyle('/counselor')}>Counselor</Link>
                 </>
               )}
               {/* Foundations is the other world — set apart by a divider,

@@ -703,7 +703,7 @@ function DashboardContent() {
               </Card>
             </Link>
 
-            <Link href="/foundations/counselor">
+            <Link href="/counselor">
               <Card className="cursor-pointer hover:bg-royal-blue/80 transition-colors">
                 <h3 className="font-heading text-xl text-gold-leaf mb-3">Talk to Your Counselor</h3>
                 <p className="font-body text-cream/70 text-sm">
