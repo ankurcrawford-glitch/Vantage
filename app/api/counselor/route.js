@@ -2,9 +2,9 @@
 // ─── Vantage Foundations — Counselor API ─────────────────────────
 // Token-frugal architecture:
 //   1. FAQ layer answers common questions for free (no API call)
-//   2. Haiku handles chat (~10x cheaper than Sonnet)
-//   3. Context = 500-word narrative summary + last 8 messages only
-//   4. max_tokens capped at 400 — counselors give tight answers
+//   2. Sonnet handles chat so it reads like Claude (COUNSELOR_MODEL overrides)
+//   3. Context = narrative summary + last 12 messages only
+//   4. max_tokens 2000 — length is steered by the prompt, not truncation
 //   5. Monthly cap enforced server-side (40 messages)
 
 // Auth + service-role client come from the app's shared helper so this route
@@ -13,11 +13,18 @@
 import { getAuthedUser, getAdminClient } from "@/lib/auth";
 import { effectiveGrade, isGapYear, applicantStatusLine } from "@/lib/grade";
 import { buildStudentContext } from "@/lib/foundations-context";
+import { CLAUDE_MODEL_PRO } from "@/lib/ai";
 
 const MONTHLY_CAP = 40;
-const MODEL = "claude-haiku-4-5-20251001"; // chat tier; exact string (alias can 404)
-const MAX_TOKENS = 400;
-const HISTORY_LIMIT = 8;
+// Sonnet, so the counselor reads like talking to Claude directly. Roughly
+// 1¢ per message; the 40-message monthly cap keeps it under ~50¢ per
+// student. Override with COUNSELOR_MODEL (e.g. CLAUDE_MODEL_FAST) to save.
+const MODEL = process.env.COUNSELOR_MODEL || CLAUDE_MODEL_PRO;
+const FALLBACK_MODEL = "claude-haiku-4-5-20251001"; // if the model name ever 404s
+// Room for a full answer (5.5 models may reason first, which counts here).
+// Length is steered by the prompt, not by cutting replies off.
+const MAX_TOKENS = 2000;
+const HISTORY_LIMIT = 12;
 
 // ─── FAQ layer — zero-cost answers ───────────────────────────────
 // Keyword-matched. Personalized questions fall through to Claude.
@@ -110,13 +117,16 @@ function faqMatch(text) {
 }
 
 // ─── System prompt ───────────────────────────────────────────────
+// Written to sound like talking to Claude directly: answer what was asked,
+// plainly and warmly, at the length the question needs. Students (Sahana
+// among them) preferred plain Claude to the old scripted counselor voice.
 function systemPrompt(narrativeSummary, grade, studentContext, statusLine = "") {
-  return `You are the student's private college counselor inside Vantage Foundations — a premium college planning platform. You are warm, direct, and strategic. You have worked with this student for years and know their story.
+  return `You're a college counselor inside Vantage, a college-planning app, talking with a student (grade ${grade}). Be the kind of thoughtful, knowledgeable person they'd want to ask: friendly, honest, genuinely helpful, and easy to talk to.
 
-STUDENT PROFILE (grade ${grade}):
+WHAT YOU KNOW ABOUT THEM:
 ${narrativeSummary}${statusLine ? `\n${statusLine}` : ""}
 ${studentContext ? `
-WHAT YOU KNOW ABOUT THIS STUDENT'S CURRENT WORK:
+THEIR CURRENT WORK IN VANTAGE:
 ${studentContext}
 ` : ""}
 HOW VANTAGE IS LAID OUT (use this when the student asks where something is or how to do something in the app; be concrete, name the menu item):
@@ -129,21 +139,15 @@ HOW VANTAGE IS LAID OUT (use this when the student asks where something is or ho
 - My Profile: GPA, SAT/ACT, AP classes, activities, awards, high school, strategy profile (state, major, hooks).
 - Foundations → (the other side, for grades 9-11 and still open to seniors): Compass (home), Conversation (long-form chat with you), Story, Roadmap, Activities, Spark (one reflection a month), Counselor. College Prep → goes back to the application side.
 - Need help? (bottom-right on every page) emails Vantage support for anything you cannot answer.
-
-RULES:
-- Answer like a seasoned counselor: specific, honest, tight. 2-4 short paragraphs maximum. No bullet lists unless truly necessary.
-- PLAIN LANGUAGE: you're talking to a teenager. Use everyday words and short sentences — the way you'd explain it face to face, not in a report. Skip admissions jargon ("holistic review", "institutional priorities", "yield", "demonstrated interest") unless you explain it in a few words. If a simpler word works, use it. Stay warm and smart, just easy to read on a first pass.
-- Ground every answer in THIS student's profile, threads, and grade. Generic advice is a failure.
-- Depth over breadth. Self-initiated over joined. Story over checklist. These are your philosophy.
-- LEAD — don't wait. You are the expert; the student is a teenager who doesn't know what they don't know. Never offload the agenda with "What's on your mind?" or "Is there anything else?" Hold their hand: steer toward the next thing that actually matters for their grade and their story.
-- CONTINUITY — open by briefly anchoring to where you left off: one sentence recapping the last thing the two of you were working on, then move it forward. They should feel picked-up-with, not restarted.
-- CRAFT THE STORY — every exchange should nudge their narrative forward. Connect what they tell you to the throughline you're building (their spike, their Story page). You are shaping an arc, not answering trivia.
-- END WITH A MOVE — close each reply with one specific, proposed next step or question grounded in their profile or Roadmap. Give them the next handhold, never an open-ended "anything else?"
-- If a question needs information you don't have (specific grades, a school policy, a family situation), say what you'd need to know rather than guessing.
-- STAY IN YOUR LANE: you are a COLLEGE counselor, not a therapist. Your domain is academics, testing, activities, and college strategy. Do not diagnose, process emotions, or do therapy/reflective-listening. Acknowledge a feeling in one sentence if needed, then steer back to their path.
-- If a question is about mental-health crisis, anxiety, self-harm, family conflict, or safety, respond briefly with care, do NOT counsel it, and direct them to a trusted adult, parent, or their school counselor. You are not a substitute for professional mental-health support.
-- Never invent deadlines or statistics. If unsure of a specific date, tell them to verify on the official source.
-- You may reference their Compass, Story, Roadmap, Activities, and Spark pages by name.`;
+HOW TO RESPOND:
+- Answer the question they actually asked, directly, in the first sentence or two. Then add whatever context helps.
+- Match the length to the question. A quick question gets a short answer; a big decision gets a fuller one. Don't pad, and don't cut a useful answer short.
+- Write the way you'd talk: plain words, natural sentences, no admissions jargon unless you explain it. Use a short list or a few steps when that genuinely makes things clearer; otherwise just write normally. The chat shows plain text, so no markdown: no **bold**, no # headings — a simple dash or number at the start of a line is fine for a list.
+- Use what you know about them when it's relevant, so the answer is about their situation, not generic. Don't force it in when it isn't.
+- It's fine to ask a clarifying question if you need one, or to suggest a next step when there's an obvious one. You don't have to do either every time, and you don't need to recap past conversations unless it helps.
+- Be honest, including about uncertainty. Never invent deadlines, statistics, or school policies; if you're not sure, say so and point them to the official source.
+- Encouraging is good; flattery isn't. Don't write their essays for them — help them think and improve their own writing.
+- If something is personal or stressful, respond like a kind person would. For anything involving their safety, self-harm, a mental-health crisis, or serious family trouble, respond with care and encourage them to talk to a parent, trusted adult, or their school counselor (or a crisis line if it's urgent) — you're not a substitute for that support.`;
 }
 
 // ─── GET: resume — full history + this month's usage ─────────────
@@ -252,8 +256,8 @@ export async function POST(req) {
       content: m.content,
     }));
 
-    // 5) Call Haiku
-    const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
+    // 5) Call Claude (see MODEL above)
+    const callModel = (model) => fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -261,7 +265,7 @@ export async function POST(req) {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: MODEL,
+        model,
         max_tokens: MAX_TOKENS,
         system: systemPrompt(
           narrative,
@@ -272,6 +276,11 @@ export async function POST(req) {
         messages: history,
       }),
     });
+    let anthropicRes = await callModel(MODEL);
+    if (anthropicRes.status === 404 && MODEL !== FALLBACK_MODEL) {
+      console.warn(`[counselor] model ${MODEL} returned 404; falling back to ${FALLBACK_MODEL}`);
+      anthropicRes = await callModel(FALLBACK_MODEL);
+    }
 
     if (!anthropicRes.ok) {
       const errBody = await anthropicRes.text();
@@ -284,7 +293,12 @@ export async function POST(req) {
       .filter((b) => b.type === "text")
       .map((b) => b.text)
       .join("\n")
+      .replace(/\*\*(.+?)\*\*/g, "$1") // the chat shows plain text
       .trim();
+    if (!reply) {
+      console.error("[counselor] empty reply", data.stop_reason, data.usage);
+      throw new Error("Empty AI reply");
+    }
 
     // 6) Persist both sides (for cap counting + future thread analysis)
     await supabase.from("counselor_messages").insert([
