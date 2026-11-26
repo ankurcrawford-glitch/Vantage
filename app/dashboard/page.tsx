@@ -505,15 +505,15 @@ function DashboardContent() {
           title="How Vantage works"
           activeIndex={
             !(stats && (stats.gpa_unweighted || stats.gpa_weighted || stats.sat_score || stats.act_score)) ? 0
-              : collegeCount === 0 ? 1
-              : discoveryCount === 0 ? 2
+              : discoveryCount === 0 ? 1
+              : collegeCount === 0 ? 2
               : essayCount === 0 ? 3
               : 4
           }
           steps={[
             { label: 'Profile', href: '/profile', desc: 'Your stats and activities — the raw inputs every other stage builds on.' },
-            { label: 'Strategy', href: '/colleges', desc: 'Build a balanced list, see your real odds at each school, and commit to an early round.' },
             { label: 'Story Builder', href: '/story-builder', desc: 'Twelve questions that teach the AI who you are. Without this, essay guidance can only be generic — this is where it learns your story.' },
+            { label: 'Strategy', href: '/colleges', desc: 'Build a balanced list, see your real odds at each school, and commit to an early round.' },
             { label: 'Essays', href: '/applications', desc: 'Write every essay with Strategic Intelligence — per-essay coaching that knows your story.' },
             { label: 'Round Table', href: '/round-table', desc: 'The final read: a full-committee review of your whole application, school by school. Tap to learn how it works.' },
           ]}

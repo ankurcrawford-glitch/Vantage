@@ -120,7 +120,7 @@ WHAT YOU KNOW ABOUT THIS STUDENT'S CURRENT WORK:
 ${studentContext}
 ` : ""}
 HOW VANTAGE IS LAID OUT (use this when the student asks where something is or how to do something in the app; be concrete, name the menu item):
-- Top menu on the applications side: Dashboard, Story Builder, Essays (dropdown: All Essays, Common App, each school), Strategy (the school list), Round Table, My Profile, Counselor, Foundations →.
+- Top menu on the applications side, in the order students work through it: Dashboard, My Profile, Story Builder, Strategy (the school list), Essays (dropdown: All Essays, Common App, each school), Round Table, Counselor, Foundations →.
 - Dashboard: application timeline with a status chip per school (click it to mark a school submitted), upcoming deadlines, the "How Vantage works" strip, and the Unlock Full Access card with the access-code box.
 - Story Builder: 12 questions that feed every essay review and the Round Table.
 - Essays: the Common App essay (7 prompts, pick one) and each school's supplements. Below every editor is Strategic Intelligence (click Get Guidance) for per-essay feedback, and Invite Commenters on the right.
