@@ -14,11 +14,12 @@
 
 import { Resend } from "resend";
 import { getAdminClient } from "@/lib/auth";
+import { CLAUDE_MODEL_FAST, postClaude } from "@/lib/ai";
 
 export const maxDuration = 300;
 
 const ADMIN_EMAIL = process.env.DIGEST_ADMIN_EMAIL || "ankur.crawford@gmail.com";
-const MODEL = "claude-haiku-4-5-20251001";
+const MODEL = process.env.QUALITY_SCAN_MODEL || CLAUDE_MODEL_FAST; // see lib/ai.ts
 const WINDOW_DAYS = 7;
 const MAX_STUDENTS_PER_RUN = 12;
 const MAX_MESSAGES_PER_STUDENT = 40;
@@ -39,20 +40,12 @@ Reply with ONLY valid JSON, no prose, no code fences:
 const GUIDANCE_RUBRIC = `You are auditing AI essay feedback given to a high-school student. The text below is the AI's guidance about the student's college essay. Check: (1) INTEGRITY — it must coach, never write the essay or supply ready-to-paste sentences beyond tiny illustrative fragments; (2) QUALITY — specific to a real draft, not generic filler; (3) TONE — encouraging but honest, appropriate for a teenager. Reply with ONLY valid JSON: {"verdict":"ok"|"warn"|"flag","note":"one sentence"}`;
 
 async function callClaude(system, userContent, maxTokens) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
+  const res = await postClaude({
       model: MODEL,
       max_tokens: maxTokens,
       system,
       messages: [{ role: "user", content: userContent }],
-    }),
-  });
+    }, "ai-quality-scan");
   if (!res.ok) throw new Error(`AI call failed [${res.status}]`);
   const data = await res.json();
   return (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();

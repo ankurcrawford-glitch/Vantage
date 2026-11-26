@@ -29,6 +29,47 @@ const FALLBACK_MODEL: Record<string, string> = {
   'claude-haiku-5-5': 'claude-haiku-4-5-20251001',
 };
 
+// Last resort when a newer model name 404s everywhere else in the chain.
+export const LAST_RESORT_MODEL = 'claude-haiku-4-5-20251001';
+
+// Newer models may reason before answering, and that counts against
+// max_tokens. Never send less than this, so short replies aren't cut off.
+// (You're billed for tokens used, not the cap.)
+const MIN_MAX_TOKENS = 1024;
+
+/** The model to try, then its previous generation, then the last resort. */
+export function modelChain(model: string): string[] {
+  return [...new Set([model, FALLBACK_MODEL[model], LAST_RESORT_MODEL].filter(Boolean) as string[])];
+}
+
+/**
+ * Raw Messages API POST for routes that build their own request (multi-turn
+ * chat, JSON extraction). Walks modelChain() on 404 so a renamed or retired
+ * model never takes a feature down. Returns the fetch Response; the caller
+ * reads it as before. Every Claude call in the app goes through here or
+ * callClaude(), so upgrading models is a change to this file or to env vars.
+ */
+export async function postClaude(
+  body: { model: string; max_tokens: number } & Record<string, unknown>,
+  label: string
+): Promise<Response> {
+  let res: Response | null = null;
+  for (const model of modelChain(body.model)) {
+    res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY || '',
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({ ...body, model, max_tokens: Math.max(body.max_tokens, MIN_MAX_TOKENS) }),
+    });
+    if (res.status !== 404) return res;
+    console.warn(`[${label}] model ${model} returned 404; trying the next model`);
+  }
+  return res as Response;
+}
+
 export interface ClaudeCallOptions {
   model: string;
   system?: string;

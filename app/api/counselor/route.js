@@ -13,14 +13,13 @@
 import { getAuthedUser, getAdminClient } from "@/lib/auth";
 import { effectiveGrade, isGapYear, applicantStatusLine } from "@/lib/grade";
 import { buildStudentContext } from "@/lib/foundations-context";
-import { CLAUDE_MODEL_PRO } from "@/lib/ai";
+import { CLAUDE_MODEL_PRO, postClaude } from "@/lib/ai";
 
 const MONTHLY_CAP = 40;
 // Sonnet, so the counselor reads like talking to Claude directly. Roughly
 // 1¢ per message; the 40-message monthly cap keeps it under ~50¢ per
 // student. Override with COUNSELOR_MODEL (e.g. CLAUDE_MODEL_FAST) to save.
 const MODEL = process.env.COUNSELOR_MODEL || CLAUDE_MODEL_PRO;
-const FALLBACK_MODEL = "claude-haiku-4-5-20251001"; // if the model name ever 404s
 // Room for a full answer (5.5 models may reason first, which counts here).
 // Length is steered by the prompt, not by cutting replies off.
 const MAX_TOKENS = 2000;
@@ -257,15 +256,8 @@ export async function POST(req) {
     }));
 
     // 5) Call Claude (see MODEL above)
-    const callModel = (model) => fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model,
+    const anthropicRes = await postClaude({
+        model: MODEL,
         max_tokens: MAX_TOKENS,
         system: systemPrompt(
           narrative,
@@ -274,13 +266,7 @@ export async function POST(req) {
           applicantStatusLine(profile)
         ),
         messages: history,
-      }),
-    });
-    let anthropicRes = await callModel(MODEL);
-    if (anthropicRes.status === 404 && MODEL !== FALLBACK_MODEL) {
-      console.warn(`[counselor] model ${MODEL} returned 404; falling back to ${FALLBACK_MODEL}`);
-      anthropicRes = await callModel(FALLBACK_MODEL);
-    }
+      }, "counselor");
 
     if (!anthropicRes.ok) {
       const errBody = await anthropicRes.text();
