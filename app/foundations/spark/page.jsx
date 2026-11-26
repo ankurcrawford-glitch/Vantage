@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import FoundationsNav from "@/components/FoundationsNav";
 import { C, display, body } from "@/lib/foundations-theme";
+import { draftBackupKey, readDraftBackup, writeDraftBackup, clearDraftBackup } from "@/lib/draftBackup";
 
 // ─── Vantage Foundations — Spark ─────────────────────────────────
 // Monthly reflection ritual, wired to /api/foundations/spark. Each
@@ -19,22 +20,53 @@ export default function FoundationsSpark() {
   const [openEntries, setOpenEntries] = useState({}); // index -> true when reading in full
   const [bankCount, setBankCount] = useState(0);
   const [error, setError] = useState("");
+  const [backupKey, setBackupKey] = useState(null);
 
   const authHeaders = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     return session ? { Authorization: `Bearer ${session.access_token}` } : {};
   };
 
+  // Fetch with the session token; if the token has gone stale (401), refresh
+  // the session once and retry, so a student who left the tab open for a
+  // long time can still bank what they wrote.
+  const authedFetch = async (init = {}) => {
+    const go = async () =>
+      fetch("/api/foundations/spark", { ...init, headers: { ...(init.headers || {}), ...(await authHeaders()) } });
+    let res = await go();
+    if (res.status === 401) {
+      await supabase.auth.refreshSession().catch(() => {});
+      res = await go();
+    }
+    return res;
+  };
+
+  // Keep a local copy of the draft while it's unsaved, so writing survives a
+  // failed save, a refresh, or a closed tab.
+  useEffect(() => {
+    if (!backupKey || saved) return;
+    if (draft.trim()) writeDraftBackup(backupKey, draft);
+    else clearDraftBackup(backupKey);
+  }, [draft, backupKey, saved]);
+
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/foundations/spark", { headers: await authHeaders() });
+        const { data: { user } } = await supabase.auth.getUser();
+        const res = await authedFetch();
         const data = await res.json();
         if (data.error) throw new Error(data.error);
         setSpark({ month: data.month, prompt: data.prompt, hint: data.hint });
         setArchive(Array.isArray(data.archive) ? data.archive : []);
         setBankCount(data.bankCount || 0);
         setSaved(Boolean(data.banked));
+        if (user && data.monthKey) {
+          const k = draftBackupKey(user.id, `spark:${data.monthKey}`);
+          setBackupKey(k);
+          const b = readDraftBackup(k);
+          if (data.banked) clearDraftBackup(k);
+          else if (b && b.content.trim()) setDraft(b.content); // restore unsaved writing
+        }
       } catch {
         setError("Couldn't load this month's spark. Refresh to try again.");
       } finally {
@@ -50,13 +82,21 @@ export default function FoundationsSpark() {
     setSaving(true);
     setError("");
     try {
-      const res = await fetch("/api/foundations/spark", {
+      const res = await authedFetch({
         method: "POST",
-        headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content }),
       });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
+      let data = {};
+      try { data = await res.json(); } catch { /* non-JSON (e.g. timeout page) */ }
+      if (!res.ok || data.error) {
+        const why =
+          res.status === 401 ? "You've been signed out — sign in again and your writing will still be here."
+          : data.error ? `${data.error} (code ${res.status})`
+          : `Server error (code ${res.status}).`;
+        throw new Error(why);
+      }
+      if (backupKey) clearDraftBackup(backupKey);
       setSaved(true);
       setBankCount((n) => n + 1);
       setArchive((a) => [
@@ -69,8 +109,8 @@ export default function FoundationsSpark() {
         },
         ...a,
       ]);
-    } catch {
-      setError("Couldn't save just now — your writing is still here. Try again in a moment.");
+    } catch (e) {
+      setError(`Couldn't save just now — your writing is still here (and kept on this device). ${e?.message || ""}`.trim());
     } finally {
       setSaving(false);
     }
