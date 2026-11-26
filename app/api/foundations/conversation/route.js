@@ -17,6 +17,7 @@
 
 import { after } from "next/server";
 import { getAuthedUser, getAdminClient } from "@/lib/auth";
+import { CLAUDE_MODEL_FAST } from "@/lib/ai";
 
 // Room for the reply plus the background extraction/notes passes that run
 // after the response is sent (see after() below).
@@ -24,7 +25,9 @@ export const maxDuration = 60;
 import { effectiveGrade, isGapYear, applicantStatusLine } from "@/lib/grade";
 import { buildStudentContext } from "@/lib/foundations-context";
 
-const MODEL = "claude-haiku-4-5-20251001";
+// Models come from lib/ai.ts (env-overridable) so upgrading is one change.
+const MODEL = process.env.CONVERSATION_MODEL || CLAUDE_MODEL_FAST;
+const FALLBACK_MODEL = "claude-haiku-4-5-20251001"; // if the model name ever 404s
 const MAX_TOKENS = 250;
 const HISTORY_LIMIT = 12; // messages sent to the model per turn
 const DAILY_CAP = 150; // student messages per day
@@ -74,15 +77,22 @@ function parseJsonArray(text) {
 
 // ─── Anthropic helper ────────────────────────────────────────────
 async function callHaiku(system, messages, maxTokens) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const call = (model) => fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "x-api-key": process.env.ANTHROPIC_API_KEY,
       "anthropic-version": "2023-06-01",
     },
-    body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, system, messages }),
+    // Newer models may reason before answering, which counts against
+    // max_tokens — leave headroom so short replies aren't cut off.
+    body: JSON.stringify({ model, max_tokens: Math.max(maxTokens * 2, 1200), system, messages }),
   });
+  let res = await call(MODEL);
+  if (res.status === 404 && MODEL !== FALLBACK_MODEL) {
+    console.warn(`[conversation] model ${MODEL} returned 404; falling back to ${FALLBACK_MODEL}`);
+    res = await call(FALLBACK_MODEL);
+  }
   if (!res.ok) {
     const errBody = await res.text();
     console.error("Anthropic error:", errBody);

@@ -70,6 +70,7 @@ export async function GET(request) {
     }));
 
     return Response.json({
+      monthKey: month.key,
       month: month.label,
       prompt: month.prompt,
       hint: month.hint,
@@ -105,11 +106,14 @@ export async function POST(request) {
       prompt: month.prompt,
       content,
     });
-    if (error) throw error;
+    if (error) {
+      console.error("Spark POST insert error:", JSON.stringify(error));
+      return Response.json({ error: "Couldn't save to the database", detail: error.message }, { status: 500 });
+    }
 
     return Response.json({ ok: true });
   } catch (err) {
     console.error("Spark POST error:", err);
-    return Response.json({ error: "Something went wrong" }, { status: 500 });
+    return Response.json({ error: "Something went wrong", detail: String(err?.message || err) }, { status: 500 });
   }
 }
