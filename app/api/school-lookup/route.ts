@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthedUser, getAdminClient } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { CLAUDE_MODEL_PRO, postClaude } from '@/lib/ai';
 
 // School lookup + classification.
 //
@@ -29,14 +30,9 @@ export const maxDuration = 30;
 // actually nationally known?). A wrong tier here directly skews the
 // student's Safety/Target/Reach guidance — worth the bigger model.
 //
-// Fallback chain: model aliases can 404 depending on the account, so we try
-// Sonnet strings first and fall back to the exact Haiku string the counselor
-// route already uses successfully in production.
-const MODELS = [
-  'claude-sonnet-5',
-  'claude-sonnet-4-5-20250929',
-  'claude-haiku-4-5-20251001',
-];
+// Model comes from lib/ai.ts (env-overridable); postClaude() falls back to
+// older models automatically if this one 404s.
+const MODEL = process.env.SCHOOL_LOOKUP_MODEL || CLAUDE_MODEL_PRO;
 
 const VALID_TYPES = ['public', 'private', 'charter', 'magnet', 'parochial', 'homeschool', 'other'] as const;
 const VALID_TIERS = ['top_feeder', 'strong', 'standard'] as const;
@@ -99,32 +95,21 @@ export async function POST(request: NextRequest) {
   let parsed: Record<string, unknown> = {};
   try {
     let data: { content?: { type: string; text: string }[] } | null = null;
-    for (const model of MODELS) {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': process.env.ANTHROPIC_API_KEY,
-          'anthropic-version': '2023-06-01',
-        },
-        // No temperature param: deprecated on claude-sonnet-5 (400s the
-        // request). Default sampling + strict JSON prompt is fine here.
-        body: JSON.stringify({
-          model,
-          max_tokens: 500,
-          system: SYSTEM_PROMPT,
-          messages: [{ role: 'user', content: userMsg }],
-        }),
-      });
-      if (res.ok) {
-        data = await res.json();
-        break;
-      }
-      const errBody = await res.text();
-      console.error(`school-lookup: Anthropic error (model ${model}, status ${res.status})`, errBody);
-      // Only fall through to the next model on model-availability errors;
-      // anything else (bad key, overloaded) won't be fixed by a model swap.
-      if (res.status !== 404 && !errBody.includes('not_found')) break;
+    // No temperature param: newer models reject it (400). Default sampling +
+    // strict JSON prompt is fine here.
+    const res = await postClaude(
+      {
+        model: MODEL,
+        max_tokens: 500,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userMsg }],
+      },
+      'school-lookup'
+    );
+    if (res.ok) {
+      data = await res.json();
+    } else {
+      console.error(`school-lookup: Anthropic error (status ${res.status})`, await res.text());
     }
     if (!data) {
       return NextResponse.json({ error: 'Lookup failed, try again' }, { status: 502 });

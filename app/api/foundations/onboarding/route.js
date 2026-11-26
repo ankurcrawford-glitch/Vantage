@@ -5,8 +5,9 @@
 // token; never trusts a body userId.
 
 import { getAuthedUser, getAdminClient } from "@/lib/auth";
+import { CLAUDE_MODEL_FAST, postClaude } from "@/lib/ai";
 
-const MODEL = "claude-haiku-4-5-20251001";
+const MODEL = process.env.ONBOARDING_MODEL || CLAUDE_MODEL_FAST; // see lib/ai.ts
 const TARGET_TURNS = 6; // wrap up after ~6 student answers (medium length)
 const MAX_TOKENS = 300;
 
@@ -23,15 +24,7 @@ How to talk:
 const WRAP_INSTRUCTION = `The student has shared enough for a first conversation. Warmly wrap up in 2-3 sentences: thank them, reflect back one specific thing you noticed about them, and let them know their counselor and pages are ready whenever they are. Do NOT ask another question.`;
 
 async function callHaiku(system, messages, maxTokens) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, system, messages }),
-  });
+  const res = await postClaude({ model: MODEL, max_tokens: maxTokens, system, messages }, "onboarding");
   if (!res.ok) {
     console.error("Anthropic error:", await res.text());
     throw new Error("AI call failed");

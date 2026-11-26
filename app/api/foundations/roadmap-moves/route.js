@@ -10,8 +10,9 @@
 
 import { getAuthedUser, getAdminClient } from "@/lib/auth";
 import { effectiveGrade } from "@/lib/grade";
+import { CLAUDE_MODEL_FAST, postClaude } from "@/lib/ai";
 
-const MODEL = "claude-haiku-4-5-20251001";
+const MODEL = process.env.ROADMAP_MODEL || CLAUDE_MODEL_FAST; // see lib/ai.ts
 const MAX_TOKENS = 350;
 const CACHE_DAYS = 30;
 const SEASONS = ["now", "this month", "this season"];
@@ -84,14 +85,7 @@ export async function GET(req) {
     const grade = typeof eg === "number" ? eg : "unknown";
     const narrative = stats?.narrative_summary || "(no summary yet — student is early in profile building)";
 
-    const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
+    const anthropicRes = await postClaude({
         model: MODEL,
         max_tokens: MAX_TOKENS,
         system: "You are a strategic college counselor. Reply with ONLY a valid JSON array — no prose, no code fences.",
@@ -111,8 +105,7 @@ Reply with a JSON array of exactly 3 objects:
 {"title": "the move, 8 words max", "why": "why it matters for THIS student, 25 words max", "season": "now"|"this month"|"this season"}
 
 Rules: each move must be specific to this student's activities, courses, threads, and grade — generic advice is a failure. Be seasonal: match the calendar (e.g. selective summer program applications open in winter; PSAT is October; AP exams are May). Concrete actions only. Never invent facts about the student.` }],
-      }),
-    });
+      }, "roadmap-moves");
 
     if (!anthropicRes.ok) {
       console.error("Anthropic API error (roadmap-moves):", await anthropicRes.text());
