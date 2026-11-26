@@ -40,11 +40,13 @@ import { NextResponse } from 'next/server';
  */
 
 // Per-call cost estimates in USD. Conservative rounding of the actual
-// Gemini pricing (input + output for typical request sizes). Tune if the
+// Claude pricing (input + output for typical request sizes). Tune if the
 // real spend diverges materially from projections.
 const COST_PER_CALL: Record<string, number> = {
   'thinking-partner': 0.0006,
-  'round-table': 0.020,
+  // Claude Sonnet 5.5: ~8k in + up to several k out (reasoning headroom).
+  'round-table': 0.030,
+  'extract-activities': 0.0005,
 };
 
 function getRedis(): Redis | null {

@@ -56,6 +56,9 @@ export interface College {
   gpa_median_w?: number | null;
   test_optional?: boolean | null;
   available_rounds?: string[] | null; // e.g. ['RD','ED']
+  deadline_ed?: string | null; // 'YYYY-MM-DD'
+  deadline_ed2?: string | null;
+  deadline_ea?: string | null;
   program_admit_rate?: number | null;
   program_override_majors?: string[] | null;
 }

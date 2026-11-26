@@ -15,8 +15,13 @@
 // GET  → full history (resume support) + today's usage
 // POST → { messages } → { reply, used, cap }
 
+import { after } from "next/server";
 import { getAuthedUser, getAdminClient } from "@/lib/auth";
-import { effectiveGrade } from "@/lib/grade";
+
+// Room for the reply plus the background extraction/notes passes that run
+// after the response is sent (see after() below).
+export const maxDuration = 60;
+import { effectiveGrade, isGapYear, applicantStatusLine } from "@/lib/grade";
 import { buildStudentContext } from "@/lib/foundations-context";
 
 const MODEL = "claude-haiku-4-5-20251001";
@@ -56,6 +61,16 @@ STAY IN YOUR LANE — you are a COLLEGE counselor, not a therapist:
 
 const FIRST_SESSION_NOTES =
   "(none yet — this is the first session. Open warmly: you're here to get to know them, no wrong answers. Then ask the dream-school question.)";
+
+// Pull the JSON array out of a model reply even if it added a fence or a
+// sentence around it. Throws if there's no parseable array.
+function parseJsonArray(text) {
+  const t = String(text || "");
+  const first = t.indexOf("[");
+  const last = t.lastIndexOf("]");
+  if (first === -1 || last <= first) throw new Error("no JSON array");
+  return JSON.parse(t.slice(first, last + 1));
+}
 
 // ─── Anthropic helper ────────────────────────────────────────────
 async function callHaiku(system, messages, maxTokens) {
@@ -115,7 +130,7 @@ ${transcript}` }],
 
   let list;
   try {
-    list = JSON.parse(raw.replace(/```json|```/gi, "").trim());
+    list = parseJsonArray(raw);
   } catch {
     return; // model didn't return clean JSON — skip silently
   }
@@ -179,7 +194,7 @@ ${transcript}` }],
 
   let list;
   try {
-    list = JSON.parse(raw.replace(/```json|```/gi, "").trim());
+    list = parseJsonArray(raw);
   } catch {
     return; // model didn't return clean JSON — skip silently
   }
@@ -347,7 +362,12 @@ export async function POST(req) {
     }));
 
     const reply = await callHaiku(
-      systemPrompt(narrative, notes, effectiveGrade(profile) ?? "9-11", studentContext),
+      systemPrompt(
+        narrative,
+        notes,
+        isGapYear(profile) ? `gap-year (graduated ${profile.class_of})` : effectiveGrade(profile) ?? "9-11",
+        [applicantStatusLine(profile), studentContext].filter(Boolean).join("\n")
+      ),
       history,
       MAX_TOKENS
     );
@@ -365,31 +385,32 @@ export async function POST(req) {
     const newCount = count + 1;
     const recent = [...history, { role: "assistant", content: reply }];
 
-    // Pull newly mentioned activities onto the Activities page often, so they
-    // show up while the kid is still talking (not only on a notes refresh).
-    if (newCount >= ACTIVITIES_EVERY && newCount % ACTIVITIES_EVERY === 0) {
-      try {
-        await extractActivities(supabase, userId, profile?.discovery_notes || "", recent);
-      } catch (e) {
-        console.error("activity extraction failed:", e);
+    // Background passes — activities, courses, and the periodic notes
+    // refresh. They run AFTER the response is sent (Next.js after()) so the
+    // student never waits on up to three extra AI calls, and a slow pass can't
+    // time out a reply that's already been saved.
+    const discoveryNotes = profile?.discovery_notes || "";
+    after(async () => {
+      if (newCount >= ACTIVITIES_EVERY && newCount % ACTIVITIES_EVERY === 0) {
+        try {
+          await extractActivities(supabase, userId, discoveryNotes, recent);
+        } catch (e) {
+          console.error("activity extraction failed:", e);
+        }
+        try {
+          await extractCourses(supabase, userId, recent);
+        } catch (e) {
+          console.error("course extraction failed:", e);
+        }
       }
-      // Parallel lightweight pass for course mentions ("I'm taking AP Bio") —
-      // same cadence, same fire-and-forget contract as activities.
-      try {
-        await extractCourses(supabase, userId, recent);
-      } catch (e) {
-        console.error("course extraction failed:", e);
+      if (newCount % NOTES_EVERY === 0) {
+        try {
+          await refreshNotes(supabase, userId, profile?.discovery_notes, recent);
+        } catch (e) {
+          console.error("Conversation notes refresh failed:", e);
+        }
       }
-    }
-
-    // Periodic full notes/summary refresh — best-effort, never blocks the reply
-    if (newCount % NOTES_EVERY === 0) {
-      try {
-        await refreshNotes(supabase, userId, profile?.discovery_notes, recent);
-      } catch (e) {
-        console.error("Conversation notes refresh failed:", e);
-      }
-    }
+    });
 
     return Response.json({ reply, used: newCount, cap: DAILY_CAP, saved });
   } catch (err) {

@@ -11,7 +11,7 @@
 // follows the same secure pattern as the rest of the API (never trust a
 // body-supplied userId — see lib/auth.ts).
 import { getAuthedUser, getAdminClient } from "@/lib/auth";
-import { effectiveGrade } from "@/lib/grade";
+import { effectiveGrade, isGapYear, applicantStatusLine } from "@/lib/grade";
 import { buildStudentContext } from "@/lib/foundations-context";
 
 const MONTHLY_CAP = 40;
@@ -86,17 +86,23 @@ const FAQS = [
   {
     match: ["what is early decision", "ed vs ea", "early action vs early decision"],
     reply:
-      "Early Decision (ED) is binding — if accepted, you attend. Early Action (EA) is non-binding early notification. ED can meaningfully boost admit odds at some schools but locks your financial aid comparison. This becomes a real strategic decision in Application mode senior year — for now, just know the terms.",
+      "Early Decision (ED) is binding — if accepted, you attend. Early Action (EA) is non-binding early notification. ED can meaningfully boost admit odds at some schools but locks your financial aid comparison. If you're a senior, the ED Strategy panel on your Strategy page shows where applying early pays most for you; if you're younger, just know the terms for now.",
   },
   {
-    match: ["how many ap", "how many aps"],
+    match: ["how many ap classes", "how many ap courses", "how many aps", "how many ap should"],
     reply:
       "There's no magic number — colleges evaluate rigor relative to what your school offers. The honest rule: take the hardest load you can sustain with strong grades. A B in AP usually beats an A in regular for selective schools, but three Bs don't. Your Roadmap sequences your AP load by grade.",
   },
 ];
 
+// Only short, navigational questions go to the FAQ. A longer message that
+// happens to contain a phrase ("my teacher's essay feedback says…") is a real
+// question and must reach the counselor.
+const FAQ_MAX_WORDS = 12;
+
 function faqMatch(text) {
-  const q = text.toLowerCase();
+  const q = String(text || "").toLowerCase();
+  if (q.trim().split(/\s+/).length > FAQ_MAX_WORDS) return null;
   for (const f of FAQS) {
     if (f.match.some((m) => q.includes(m))) return f.reply;
   }
@@ -104,17 +110,17 @@ function faqMatch(text) {
 }
 
 // ─── System prompt ───────────────────────────────────────────────
-function systemPrompt(narrativeSummary, grade, studentContext) {
+function systemPrompt(narrativeSummary, grade, studentContext, statusLine = "") {
   return `You are the student's private college counselor inside Vantage Foundations — a premium college planning platform. You are warm, direct, and strategic. You have worked with this student for years and know their story.
 
 STUDENT PROFILE (grade ${grade}):
-${narrativeSummary}
+${narrativeSummary}${statusLine ? `\n${statusLine}` : ""}
 ${studentContext ? `
 WHAT YOU KNOW ABOUT THIS STUDENT'S CURRENT WORK:
 ${studentContext}
 ` : ""}
 HOW VANTAGE IS LAID OUT (use this when the student asks where something is or how to do something in the app; be concrete, name the menu item):
-- Top menu on the applications side: Dashboard, Story Builder, Essays (dropdown: All Essays, Common App, each school), Strategy (the school list), Round Table, My Profile, Counselor, Foundations →.
+- Top menu on the applications side, in the order students work through it: Dashboard, My Profile, Story Builder, Strategy (the school list), Essays (dropdown: All Essays, Common App, each school), Round Table, Counselor, Foundations →.
 - Dashboard: application timeline with a status chip per school (click it to mark a school submitted), upcoming deadlines, the "How Vantage works" strip, and the Unlock Full Access card with the access-code box.
 - Story Builder: 12 questions that feed every essay review and the Round Table.
 - Essays: the Common App essay (7 prompts, pick one) and each school's supplements. Below every editor is Strategic Intelligence (click Get Guidance) for per-essay feedback, and Invite Commenters on the right.
@@ -126,6 +132,7 @@ HOW VANTAGE IS LAID OUT (use this when the student asks where something is or ho
 
 RULES:
 - Answer like a seasoned counselor: specific, honest, tight. 2-4 short paragraphs maximum. No bullet lists unless truly necessary.
+- PLAIN LANGUAGE: you're talking to a teenager. Use everyday words and short sentences — the way you'd explain it face to face, not in a report. Skip admissions jargon ("holistic review", "institutional priorities", "yield", "demonstrated interest") unless you explain it in a few words. If a simpler word works, use it. Stay warm and smart, just easy to read on a first pass.
 - Ground every answer in THIS student's profile, threads, and grade. Generic advice is a failure.
 - Depth over breadth. Self-initiated over joined. Story over checklist. These are your philosophy.
 - LEAD — don't wait. You are the expert; the student is a teenager who doesn't know what they don't know. Never offload the agenda with "What's on your mind?" or "Is there anything else?" Hold their hand: steer toward the next thing that actually matters for their grade and their story.
@@ -256,7 +263,12 @@ export async function POST(req) {
       body: JSON.stringify({
         model: MODEL,
         max_tokens: MAX_TOKENS,
-        system: systemPrompt(narrative, effectiveGrade(profile) ?? "unknown", studentContext),
+        system: systemPrompt(
+          narrative,
+          isGapYear(profile) ? `gap year — graduated ${profile.class_of}` : effectiveGrade(profile) ?? "unknown",
+          studentContext,
+          applicantStatusLine(profile)
+        ),
         messages: history,
       }),
     });

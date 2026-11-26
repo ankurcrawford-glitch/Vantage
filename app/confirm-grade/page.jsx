@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { effectiveGrade, schoolYearEnd } from '@/lib/grade';
+import { effectiveGrade, schoolYearEnd, isGapYear } from '@/lib/grade';
 
 // ─── Vantage — Annual grade confirmation ─────────────────────────
 // Shown once per school year (first visit after Aug 1). We suggest the
@@ -18,7 +18,9 @@ const GRADE_LABELS = {
   10: '10th grade (sophomore)',
   11: '11th grade (junior)',
   12: '12th grade (senior)',
+  gap: 'Graduated — gap year, applying this cycle',
 };
+const OPTIONS = [9, 10, 11, 12, 'gap'];
 
 export default function ConfirmGrade() {
   const router = useRouter();
@@ -52,8 +54,11 @@ export default function ConfirmGrade() {
           router.replace('/gateway');
           return;
         }
-        setSuggested(g);
-        setSelected(g);
+        // Already graduated (class_of before this year's seniors): suggest the
+        // gap-year option instead of "12th grade".
+        const s = isGapYear(data) ? 'gap' : g;
+        setSuggested(s);
+        setSelected(s);
         setReady(true);
       } catch {
         router.replace('/gateway'); // fail open — never trap a student here
@@ -73,7 +78,7 @@ export default function ConfirmGrade() {
           'Content-Type': 'application/json',
           ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
         },
-        body: JSON.stringify({ grade: selected }),
+        body: JSON.stringify(selected === 'gap' ? { gapYear: true } : { grade: selected }),
       });
       if (!res.ok) throw new Error('save failed');
       router.replace('/gateway');
@@ -103,9 +108,15 @@ export default function ConfirmGrade() {
             Welcome back — new school year!
           </p>
           <p className="font-body text-sm" style={{ color: 'rgba(232,221,201,0.68)', lineHeight: 1.6 }}>
-            Quick check so your guidance fits: our records suggest you're entering{' '}
-            <strong style={{ color: '#C9A977' }}>{GRADE_LABELS[suggested]}</strong> this year.
-            Confirm or correct it below.
+            {suggested === 'gap' ? (
+              <>Quick check so your guidance fits: our records show you&apos;ve{' '}
+              <strong style={{ color: '#C9A977' }}>graduated high school</strong> and are taking a gap year
+              to apply this cycle. Confirm or correct it below.</>
+            ) : (
+              <>Quick check so your guidance fits: our records suggest you&apos;re entering{' '}
+              <strong style={{ color: '#C9A977' }}>{GRADE_LABELS[suggested]}</strong> this year.
+              Confirm or correct it below.</>
+            )}
           </p>
         </div>
 
@@ -114,7 +125,7 @@ export default function ConfirmGrade() {
         )}
 
         <div style={{ display: 'grid', gap: '12px', marginBottom: '28px' }}>
-          {[9, 10, 11, 12].map((g) => {
+          {OPTIONS.map((g) => {
             const active = selected === g;
             return (
               <button

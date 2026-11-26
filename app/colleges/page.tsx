@@ -135,8 +135,13 @@ export default function CollegesPage() {
   }, [profile, classifications, colleges, userColleges, tierCounts]);
 
   const edStrategy = useMemo(
-    () => (profile ? computeEdStrategy(classifications, profile) : null),
-    [classifications, profile]
+    () =>
+      profile
+        ? computeEdStrategy(classifications, profile, {
+            edChosen: Object.values(plans).includes('ED'),
+          })
+        : null,
+    [classifications, profile, plans]
   );
 
   const byTier: Record<Tier, SchoolClassification[]> = useMemo(() => {

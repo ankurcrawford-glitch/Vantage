@@ -142,6 +142,11 @@ export default function Navigation() {
   // page via direct URL, send them back to their own home.
   useEffect(() => {
     if (loading || !user || collegeSideAllowed) return;
+    // The counselor exists on both sides — send them to their own version.
+    if (pathname.startsWith('/counselor')) {
+      router.replace('/foundations/counselor');
+      return;
+    }
     if (COLLEGE_PREP_PATHS.some((p) => pathname.startsWith(p))) {
       router.replace('/foundations/compass');
     }
@@ -178,13 +183,17 @@ export default function Navigation() {
             <span style={{ color: 'rgba(232,221,201,0.45)', fontSize: '14px' }}>Loading...</span>
           ) : user ? (
             <>
-              {/* College-app links, Dashboard first. Seniors always; juniors
-                  from January (canAccessCollegePrep). Grade 9/10 stay in
-                  Foundations. */}
+              {/* College-app links in the order a student works through
+                  them: home, then profile → Story Builder → schools →
+                  essays → Round Table; Counselor (any time) last.
+                  Seniors always; juniors from January
+                  (canAccessCollegePrep). Grade 9/10 stay in Foundations. */}
               {collegeSideAllowed && (
                 <>
                   <Link href="/dashboard" style={getLinkStyle('/dashboard')}>Dashboard</Link>
+                  <Link href="/profile" style={getLinkStyle('/profile')}>My Profile</Link>
                   <Link href="/story-builder" style={getLinkStyle('/story-builder')}>Story Builder</Link>
+                  <Link href="/colleges" style={getLinkStyle('/colleges')}>Strategy</Link>
                   {/* Essays with a dropdown: Common App + the student's schools. */}
                   <div
                     style={{ position: 'relative', display: 'inline-flex', alignItems: 'baseline' }}
@@ -281,10 +290,8 @@ export default function Navigation() {
                       </div>
                     )}
                   </div>
-                  <Link href="/colleges" style={getLinkStyle('/colleges')}>Strategy</Link>
                   <Link href="/round-table" style={getLinkStyle('/round-table')}>Round Table</Link>
-                  <Link href="/profile" style={getLinkStyle('/profile')}>My Profile</Link>
-                  <Link href="/foundations/counselor" style={getLinkStyle('/counselor')}>Counselor</Link>
+                  <Link href="/counselor" style={getLinkStyle('/counselor')}>Counselor</Link>
                 </>
               )}
               {/* Foundations is the other world — set apart by a divider,

@@ -21,6 +21,8 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
     hookNotes,
     noEdSchools,
     scored,
+    edWindowClosed,
+    ed2Open,
   } = strategy;
   const hasAnyEdEligible = scored.length > 0;
   const athleteFirst = profile.hooks.recruitedAthlete;
@@ -90,8 +92,46 @@ export default function EdStrategyPanel({ strategy, profile }: Props) {
           </Block>
         )}
 
+        {/* ED deadlines have passed and no ED school was chosen */}
+        {edWindowClosed && (
+          <Block>
+            <h4
+              className="font-heading"
+              style={{ color: '#E8DDC9', fontSize: '20px', fontWeight: 600, margin: 0 }}
+            >
+              Early Decision deadlines have passed.
+            </h4>
+            <p
+              className="font-body"
+              style={{
+                color: 'rgba(232,221,201, 0.6)',
+                fontSize: '14px',
+                lineHeight: 1.6,
+                margin: '8px 0 0 0',
+              }}
+            >
+              {ed2Open.length > 0
+                ? 'The ED round closed (usually November 1), so there is no ED choice left to make. These schools on your list still take Early Decision II — still binding, one school only, but a real option if one of them is your clear first choice:'
+                : 'The ED round closed (usually November 1), so there is no ED choice left to make. Put your energy into strong Regular Decision applications.'}
+            </p>
+            {ed2Open.length > 0 && (
+              <ul className="font-body" style={{ color: '#E8DDC9', fontSize: '14px', lineHeight: 1.8, margin: '10px 0 0 0', paddingLeft: '18px' }}>
+                {ed2Open.map(({ school, deadline }) => (
+                  <li key={school.college.id}>
+                    {school.college.name}{' '}
+                    <span style={{ color: 'rgba(232,221,201, 0.6)' }}>
+                      — ED II deadline{' '}
+                      {new Date(`${deadline}T12:00:00`).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Block>
+        )}
+
         {/* No ED-eligible at all */}
-        {!hasAnyEdEligible && (
+        {!hasAnyEdEligible && !edWindowClosed && (
           <Block>
             <h4
               className="font-heading"

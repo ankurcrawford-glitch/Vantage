@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { DISCOVERY_QUESTIONS } from '@/lib/discovery';
 import { getAuthedUser, getAdminClient } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { checkBudget, recordSpend } from '@/lib/budget';
 import { createHash } from 'crypto';
 
 // Activity extraction reads the student's Story Builder answers and
@@ -14,11 +15,11 @@ export const maxDuration = 30;
 import { CLAUDE_MODEL_FAST, callClaude } from '@/lib/ai';
 const AI_MODEL = CLAUDE_MODEL_FAST;
 
-// How often we'll re-run extraction for a given user. Short enough that
-// a student adding a paragraph and hopping to Profile sees suggestions;
-// long enough that a save-as-you-type pattern wouldn't trigger one call
-// per keystroke.
-const DEBOUNCE_MS = 60 * 1000;
+// Extraction runs only when the Story Builder answers have actually changed
+// (content hash below). There used to be a 60s time debounce on top of that,
+// but it silently dropped the second of two quick saves — nothing retried
+// it, so that answer's activities never reached Profile. The hash check
+// stops repeat work and the extract-activities rate limit stops loops.
 
 interface ExtractedActivity {
   name: string;
@@ -33,8 +34,12 @@ export async function POST(request: NextRequest) {
     if (!auth.ok) return auth.response;
     const userId = auth.userId;
 
-    const rl = await checkRateLimit(userId, 'extract-activities');
+    const rl = await checkRateLimit(userId, 'extract-activities', auth.email);
     if (!rl.ok) return rl.response;
+
+    // Kill-switch + monthly budget apply here too, like every other AI route.
+    const budget = await checkBudget(userId);
+    if (!budget.ok) return budget.response;
 
     let supabase;
     try {
@@ -75,16 +80,8 @@ export async function POST(request: NextRequest) {
       .eq('user_id', userId)
       .maybeSingle();
 
-    if (lastRun) {
-      const ageMs = Date.now() - new Date(lastRun.last_run_at).getTime();
-      const sameContent = lastRun.last_answer_hash === answerHash;
-      if (sameContent || ageMs < DEBOUNCE_MS) {
-        return NextResponse.json({
-          status: 'skipped',
-          reason: sameContent ? 'unchanged_content' : 'debounce',
-          added: 0,
-        });
-      }
+    if (lastRun && lastRun.last_answer_hash === answerHash) {
+      return NextResponse.json({ status: 'skipped', reason: 'unchanged_content', added: 0 });
     }
 
     // ============================================
@@ -156,16 +153,24 @@ Do not include any prose, markdown, or commentary outside the JSON.`;
       return NextResponse.json({ error: 'Extraction request failed.' }, { status: 502 });
     }
 
-    // Claude may wrap JSON in a ```json fence despite instructions — strip it.
-    const raw = (ai.text || '[]').replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim() || '[]';
+    recordSpend(userId, 'extract-activities').catch(() => {});
+
+    // Claude may wrap the JSON in a fence or add a sentence before it despite
+    // instructions — take everything from the first '[' to the last ']'.
+    const text = ai.text || '';
+    const first = text.indexOf('[');
+    const last = text.lastIndexOf(']');
+    const raw = first !== -1 && last > first ? text.slice(first, last + 1) : '';
 
     let extracted: ExtractedActivity[] = [];
     try {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) extracted = parsed;
-    } catch (e) {
-      console.error('extract-activities: invalid JSON from Claude', { raw: raw.slice(0, 400) });
-      // Still record the run so we don't retry immediately.
+    } catch {
+      // Unparseable output: don't record the run, so the next save retries
+      // instead of treating these answers as already scanned.
+      console.error('extract-activities: invalid JSON from Claude', { raw: text.slice(0, 400) });
+      return NextResponse.json({ error: 'Extraction returned an unreadable result.' }, { status: 502 });
     }
 
     // ============================================
